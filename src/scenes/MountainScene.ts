@@ -27,6 +27,8 @@ export class MountainScene extends Phaser.Scene {
   private windParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private collectibles!: Phaser.Physics.Arcade.Group;
   private inventoryText!: Phaser.GameObjects.Text;
+  private walkTween: Phaser.Tweens.Tween | null = null;
+  private isWalking: boolean = false;
 
   constructor() {
     super({ key: SCENES.MOUNTAIN });
@@ -51,7 +53,7 @@ export class MountainScene extends Phaser.Scene {
     this.createUI();
     this.createWindEffect();
 
-    SoundManager.playMusic('world');
+    SoundManager.playMusic('mountain');
   }
 
   update(): void {
@@ -228,8 +230,11 @@ export class MountainScene extends Phaser.Scene {
       'player_right'
     );
 
-    this.player.setSize(12, 8);
-    this.player.setOffset(2, PLAYER_HEIGHT - 10);
+    // Scale down the high-res sprite
+    this.player.setScale(0.015);
+
+    this.player.setSize(800, 400);
+    this.player.setOffset(400, 2400);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(this.player.y);
 
@@ -437,10 +442,41 @@ export class MountainScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
+    // Handle walk animation
+    const moving = velocityX !== 0 || velocityY !== 0;
+    if (moving && !this.isWalking) {
+      this.startWalkAnimation();
+    } else if (!moving && this.isWalking) {
+      this.stopWalkAnimation();
+    }
+
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
       this.player.setTexture(`player_${newDirection}`);
     }
+  }
+
+  private startWalkAnimation(): void {
+    this.isWalking = true;
+    if (this.walkTween) this.walkTween.stop();
+    this.walkTween = this.tweens.add({
+      targets: this.player,
+      scaleY: { from: 0.015, to: 0.014 },
+      scaleX: { from: 0.015, to: 0.016 },
+      duration: 100,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  private stopWalkAnimation(): void {
+    this.isWalking = false;
+    if (this.walkTween) {
+      this.walkTween.stop();
+      this.walkTween = null;
+    }
+    this.player.setScale(0.015);
   }
 
   private handlePetBehavior(): void {

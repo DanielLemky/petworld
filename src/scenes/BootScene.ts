@@ -18,8 +18,14 @@ export class BootScene extends Phaser.Scene {
     });
     loadingText.setOrigin(0.5, 0.5);
 
-    // Generate all placeholder sprites
-    this.createPlayerSprites();
+    // Load player sprites from image files
+    this.load.image('player_down', '/assets/sprites/player_down.png');
+    this.load.image('player_up', '/assets/sprites/player_up.png');
+    this.load.image('player_left', '/assets/sprites/player_left.png');
+    this.load.image('player_right', '/assets/sprites/player_right.png');
+    this.load.image('player', '/assets/sprites/player_down.png');
+
+    // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
 
@@ -28,9 +34,12 @@ export class BootScene extends Phaser.Scene {
     });
   }
 
-  create(): void {
+  async create(): Promise<void> {
     // Initialize sound system
     SoundManager.init();
+
+    // Load audio files (async but don't block game start)
+    SoundManager.loadAudioFiles();
 
     this.scene.start(SCENES.WORLD);
   }
