@@ -78,7 +78,7 @@ export class WorldScene extends Phaser.Scene {
 
     // Set up camera with higher zoom for 16px art
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2.5);
+    this.cameras.main.setZoom(1.8);
 
     // Create UI
     this.createUI();
@@ -197,8 +197,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createWorld(): void {
-    const worldWidth = 60;
-    const worldHeight = 45;
+    const worldWidth = 120;
+    const worldHeight = 90;
 
     // Set world bounds
     this.physics.world.setBounds(0, 0, worldWidth * TILE_SIZE, worldHeight * TILE_SIZE);
@@ -207,7 +207,7 @@ export class WorldScene extends Phaser.Scene {
     for (let y = 0; y < worldHeight; y++) {
       for (let x = 0; x < worldWidth; x++) {
         // Randomly choose grass or grass with flowers
-        const grassType = Math.random() > 0.9 ? 'grass_flower' : 'grass';
+        const grassType = Math.random() > 0.92 ? 'grass_flower' : 'grass';
         const tile = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -220,19 +220,39 @@ export class WorldScene extends Phaser.Scene {
     // Create paths
     this.createPaths();
 
-    // Create pond
-    this.createPond(30, 15, 8, 6);
+    // Create multiple ponds
+    this.createPond(50, 25, 10, 8);  // Main pond (larger)
+    this.createSmallPond(20, 55, 5, 4);  // Small pond
+    this.createSmallPond(85, 40, 6, 5);  // Eastern pond
 
     // Create trees as obstacles
     this.trees = this.physics.add.staticGroup();
 
+    // Many more trees for the expanded world
     const treePositions = [
-      { x: 5, y: 5 }, { x: 8, y: 3 }, { x: 14, y: 8 },
-      { x: 3, y: 15 }, { x: 20, y: 10 }, { x: 40, y: 6 },
-      { x: 45, y: 12 }, { x: 50, y: 8 }, { x: 48, y: 25 },
-      { x: 12, y: 28 }, { x: 25, y: 32 }, { x: 52, y: 20 },
-      { x: 8, y: 35 }, { x: 35, y: 38 }, { x: 55, y: 35 },
-      { x: 18, y: 5 }, { x: 42, y: 30 }, { x: 28, y: 22 },
+      // Northern forest area
+      { x: 5, y: 5 }, { x: 8, y: 3 }, { x: 14, y: 8 }, { x: 18, y: 5 },
+      { x: 25, y: 3 }, { x: 32, y: 6 }, { x: 38, y: 4 }, { x: 45, y: 7 },
+      { x: 55, y: 5 }, { x: 62, y: 8 }, { x: 70, y: 4 }, { x: 78, y: 6 },
+      { x: 85, y: 3 }, { x: 92, y: 7 }, { x: 100, y: 5 }, { x: 108, y: 8 },
+      // Western edge trees
+      { x: 3, y: 25 }, { x: 5, y: 35 }, { x: 4, y: 45 }, { x: 6, y: 55 },
+      { x: 3, y: 65 }, { x: 5, y: 75 },
+      // Eastern edge trees
+      { x: 112, y: 20 }, { x: 115, y: 35 }, { x: 113, y: 50 },
+      { x: 116, y: 65 }, { x: 114, y: 78 },
+      // Central scattered trees
+      { x: 30, y: 15 }, { x: 40, y: 18 }, { x: 70, y: 15 }, { x: 80, y: 12 },
+      { x: 95, y: 18 }, { x: 35, y: 35 }, { x: 65, y: 38 }, { x: 75, y: 32 },
+      { x: 100, y: 35 }, { x: 25, y: 45 }, { x: 45, y: 48 }, { x: 55, y: 42 },
+      { x: 90, y: 48 }, { x: 105, y: 42 },
+      // Southern area trees
+      { x: 10, y: 70 }, { x: 30, y: 72 }, { x: 50, y: 68 }, { x: 70, y: 75 },
+      { x: 90, y: 70 }, { x: 110, y: 72 },
+      { x: 15, y: 82 }, { x: 40, y: 78 }, { x: 65, y: 82 }, { x: 85, y: 78 },
+      // Grove areas (clusters)
+      { x: 12, y: 18 }, { x: 14, y: 20 }, { x: 10, y: 22 },
+      { x: 95, y: 55 }, { x: 98, y: 57 }, { x: 93, y: 59 },
     ];
 
     treePositions.forEach(pos => {
@@ -251,8 +271,10 @@ export class WorldScene extends Phaser.Scene {
       tree.setDepth(pos.y * TILE_SIZE + treeHeight);
     });
 
-    // Add some decorative flowers
+    // Add decorative elements
     this.addFlowers();
+    this.addRocks();
+    this.addBushes();
 
     // Create path to snow lands on the right
     this.createSnowZone();
@@ -266,12 +288,12 @@ export class WorldScene extends Phaser.Scene {
 
   private createSnowZone(): void {
     // Snow path on the right edge
-    const snowX = 57;
-    const snowY = 18;
+    const snowX = 117;
+    const snowY = 35;
 
     // Create snowy path tiles leading to exit
     for (let y = snowY - 2; y < snowY + 5; y++) {
-      for (let x = snowX - 2; x < 60; x++) {
+      for (let x = snowX - 2; x < 120; x++) {
         const snowTile = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -282,11 +304,11 @@ export class WorldScene extends Phaser.Scene {
     }
 
     // Transition zone
-    this.snowZone = this.add.zone(59 * TILE_SIZE, snowY * TILE_SIZE + TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 4);
+    this.snowZone = this.add.zone(119 * TILE_SIZE, snowY * TILE_SIZE + TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 4);
     this.physics.add.existing(this.snowZone, true);
 
     // Sign
-    const signText = this.add.text(56 * TILE_SIZE, (snowY - 1) * TILE_SIZE, 'SNOW LANDS', {
+    const signText = this.add.text(116 * TILE_SIZE, (snowY - 1) * TILE_SIZE, 'SNOW LANDS', {
       fontSize: '8px',
       color: '#87ceeb',
       backgroundColor: '#2d2d44dd',
@@ -296,7 +318,7 @@ export class WorldScene extends Phaser.Scene {
     signText.setDepth(100);
 
     // Arrow indicator
-    const arrow = this.add.text(58 * TILE_SIZE, snowY * TILE_SIZE + TILE_SIZE, '▶', {
+    const arrow = this.add.text(118 * TILE_SIZE, snowY * TILE_SIZE + TILE_SIZE, '▶', {
       fontSize: '10px',
       color: '#87ceeb',
     });
@@ -315,11 +337,11 @@ export class WorldScene extends Phaser.Scene {
 
   private createBeachZone(): void {
     // Beach path at the bottom edge
-    const beachX = 30;
-    const beachY = 42;
+    const beachX = 60;
+    const beachY = 87;
 
     // Create sandy path tiles leading to exit
-    for (let y = beachY - 2; y < 45; y++) {
+    for (let y = beachY - 2; y < 90; y++) {
       for (let x = beachX - 3; x < beachX + 4; x++) {
         const sandTile = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
@@ -331,7 +353,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     // Transition zone
-    this.beachZone = this.add.zone(beachX * TILE_SIZE, 44 * TILE_SIZE, TILE_SIZE * 6, TILE_SIZE * 2);
+    this.beachZone = this.add.zone(beachX * TILE_SIZE, 89 * TILE_SIZE, TILE_SIZE * 6, TILE_SIZE * 2);
     this.physics.add.existing(this.beachZone, true);
 
     // Sign
@@ -363,9 +385,9 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createMountainZone(): void {
-    // Mountain path on the left edge (top area)
+    // Mountain path on the left edge (middle area)
     const mountainX = 3;
-    const mountainY = 8;
+    const mountainY = 40;
 
     // Create rocky path tiles leading to exit
     for (let y = mountainY - 2; y < mountainY + 5; y++) {
@@ -412,8 +434,66 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createPaths(): void {
-    // Horizontal path
-    for (let x = 10; x < 50; x++) {
+    // Main horizontal path (center of world)
+    for (let x = 8; x < 112; x++) {
+      const path = this.add.image(
+        x * TILE_SIZE + TILE_SIZE / 2,
+        45 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+
+    // Main vertical path (extends from house to beach exit)
+    for (let y = 15; y < 88; y++) {
+      const path = this.add.image(
+        60 * TILE_SIZE + TILE_SIZE / 2,
+        y * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+
+    // Path to snow lands (east)
+    for (let x = 60; x < 118; x++) {
+      const path = this.add.image(
+        x * TILE_SIZE + TILE_SIZE / 2,
+        35 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+    // Connecting vertical path
+    for (let y = 35; y < 46; y++) {
+      const path = this.add.image(
+        60 * TILE_SIZE + TILE_SIZE / 2,
+        y * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+
+    // Path to mountain (west)
+    for (let x = 5; x < 61; x++) {
+      const path = this.add.image(
+        x * TILE_SIZE + TILE_SIZE / 2,
+        40 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+    // Connecting vertical path
+    for (let y = 40; y < 46; y++) {
+      const path = this.add.image(
+        60 * TILE_SIZE + TILE_SIZE / 2,
+        y * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+
+    // Northern exploration path
+    for (let x = 30; x < 90; x++) {
       const path = this.add.image(
         x * TILE_SIZE + TILE_SIZE / 2,
         20 * TILE_SIZE + TILE_SIZE / 2,
@@ -421,19 +501,39 @@ export class WorldScene extends Phaser.Scene {
       );
       path.setDepth(-5);
     }
+    // Connect north path to main
+    for (let y = 20; y < 46; y++) {
+      if (y < 35 || y > 40) { // Skip where other paths exist
+        const path = this.add.image(
+          60 * TILE_SIZE + TILE_SIZE / 2,
+          y * TILE_SIZE + TILE_SIZE / 2,
+          'path'
+        );
+        path.setDepth(-5);
+      }
+    }
 
-    // Vertical path (extends up to house)
-    for (let y = 5; y < 35; y++) {
+    // Southern path
+    for (let x = 25; x < 95; x++) {
       const path = this.add.image(
-        25 * TILE_SIZE + TILE_SIZE / 2,
+        x * TILE_SIZE + TILE_SIZE / 2,
+        70 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+    // Connect south path to main
+    for (let y = 45; y < 71; y++) {
+      const path = this.add.image(
+        60 * TILE_SIZE + TILE_SIZE / 2,
         y * TILE_SIZE + TILE_SIZE / 2,
         'path'
       );
       path.setDepth(-5);
     }
 
-    // Create house at the top of the path
-    this.createHouse(24, 2);
+    // Create house at the top of the main path
+    this.createHouse(59, 12);
   }
 
   private createHouse(tileX: number, tileY: number): void {
@@ -524,13 +624,59 @@ export class WorldScene extends Phaser.Scene {
     );
   }
 
+  private createSmallPond(startX: number, startY: number, width: number, height: number): void {
+    // Small decorative ponds without bridges
+    for (let y = startY; y < startY + height; y++) {
+      for (let x = startX; x < startX + width; x++) {
+        const water = this.add.image(
+          x * TILE_SIZE + TILE_SIZE / 2,
+          y * TILE_SIZE + TILE_SIZE / 2,
+          'water'
+        );
+        water.setDepth(-5);
+      }
+    }
+
+    // Add some lily pads or reeds around the edge for decoration
+    const decorPositions = [
+      { x: startX, y: startY },
+      { x: startX + width - 1, y: startY + height - 1 },
+      { x: startX + Math.floor(width / 2), y: startY },
+    ];
+
+    decorPositions.forEach(pos => {
+      const lilyPad = this.add.circle(
+        pos.x * TILE_SIZE + TILE_SIZE / 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2,
+        4,
+        0x228b22
+      );
+      lilyPad.setDepth(-4);
+    });
+  }
+
   private addFlowers(): void {
     const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
     const flowerPositions = [
-      { x: 7, y: 10 }, { x: 15, y: 12 }, { x: 22, y: 8 },
-      { x: 35, y: 14 }, { x: 45, y: 18 }, { x: 10, y: 25 },
-      { x: 38, y: 28 }, { x: 50, y: 32 }, { x: 16, y: 38 },
-      { x: 30, y: 40 }, { x: 55, y: 15 }, { x: 5, y: 40 },
+      // Northern meadow
+      { x: 7, y: 10 }, { x: 15, y: 12 }, { x: 22, y: 8 }, { x: 35, y: 14 },
+      { x: 45, y: 10 }, { x: 55, y: 12 }, { x: 68, y: 9 }, { x: 82, y: 11 },
+      { x: 95, y: 13 }, { x: 105, y: 10 },
+      // Western area
+      { x: 10, y: 28 }, { x: 12, y: 35 }, { x: 8, y: 48 }, { x: 15, y: 60 },
+      { x: 10, y: 75 },
+      // Eastern area
+      { x: 100, y: 25 }, { x: 108, y: 32 }, { x: 105, y: 45 }, { x: 110, y: 58 },
+      { x: 102, y: 72 },
+      // Central scattered
+      { x: 38, y: 30 }, { x: 72, y: 28 }, { x: 45, y: 52 }, { x: 78, y: 55 },
+      { x: 32, y: 62 }, { x: 88, y: 65 },
+      // Southern area
+      { x: 20, y: 80 }, { x: 45, y: 82 }, { x: 75, y: 78 }, { x: 95, y: 82 },
+      // Flower clusters (meadow areas)
+      { x: 25, y: 25 }, { x: 26, y: 26 }, { x: 27, y: 25 },
+      { x: 85, y: 50 }, { x: 86, y: 51 }, { x: 87, y: 50 },
+      { x: 40, y: 65 }, { x: 41, y: 66 }, { x: 42, y: 65 },
     ];
 
     flowerPositions.forEach((pos, i) => {
@@ -543,11 +689,80 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  private addRocks(): void {
+    const rockPositions = [
+      // Scattered throughout the world
+      { x: 18, y: 15 }, { x: 42, y: 22 }, { x: 75, y: 18 }, { x: 98, y: 15 },
+      { x: 15, y: 38 }, { x: 85, y: 42 }, { x: 30, y: 58 }, { x: 95, y: 62 },
+      { x: 22, y: 75 }, { x: 55, y: 78 }, { x: 88, y: 75 },
+      // Small clusters
+      { x: 48, y: 35 }, { x: 49, y: 36 },
+      { x: 72, y: 60 }, { x: 73, y: 61 },
+    ];
+
+    rockPositions.forEach(pos => {
+      const rock = this.add.ellipse(
+        pos.x * TILE_SIZE + TILE_SIZE / 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.6,
+        TILE_SIZE * 0.4,
+        0x808080
+      );
+      rock.setDepth(pos.y * TILE_SIZE - 1);
+
+      // Add highlight
+      const highlight = this.add.ellipse(
+        pos.x * TILE_SIZE + TILE_SIZE / 2 - 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2 - 2,
+        TILE_SIZE * 0.25,
+        TILE_SIZE * 0.15,
+        0xa0a0a0
+      );
+      highlight.setDepth(pos.y * TILE_SIZE);
+    });
+  }
+
+  private addBushes(): void {
+    const bushPositions = [
+      // Forest edges
+      { x: 8, y: 12 }, { x: 20, y: 8 }, { x: 38, y: 10 }, { x: 58, y: 6 },
+      { x: 75, y: 9 }, { x: 95, y: 12 }, { x: 110, y: 8 },
+      // Scattered throughout
+      { x: 15, y: 30 }, { x: 28, y: 42 }, { x: 45, y: 35 }, { x: 68, y: 48 },
+      { x: 82, y: 38 }, { x: 102, y: 30 },
+      // Southern area
+      { x: 18, y: 68 }, { x: 35, y: 75 }, { x: 58, y: 72 }, { x: 80, y: 68 },
+      { x: 98, y: 78 },
+    ];
+
+    bushPositions.forEach(pos => {
+      // Bush body
+      const bush = this.add.ellipse(
+        pos.x * TILE_SIZE + TILE_SIZE / 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.9,
+        TILE_SIZE * 0.7,
+        0x228b22
+      );
+      bush.setDepth(pos.y * TILE_SIZE - 1);
+
+      // Bush highlight
+      const highlight = this.add.ellipse(
+        pos.x * TILE_SIZE + TILE_SIZE / 2 - 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2 - 3,
+        TILE_SIZE * 0.4,
+        TILE_SIZE * 0.3,
+        0x32cd32
+      );
+      highlight.setDepth(pos.y * TILE_SIZE);
+    });
+  }
+
   private createPlayer(): void {
-    // Place player at starting position
+    // Place player at starting position (near the house)
     this.player = this.physics.add.sprite(
-      25 * TILE_SIZE + TILE_SIZE / 2,
-      22 * TILE_SIZE + PLAYER_HEIGHT / 2,
+      60 * TILE_SIZE + TILE_SIZE / 2,
+      45 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_down'
     );
 
@@ -571,14 +786,19 @@ export class WorldScene extends Phaser.Scene {
     // Only use ground pet types, not butterflies
     const petTypes = Object.keys(PET_TYPES).filter(key => !key.startsWith('BUTTERFLY'));
     const petPositions = [
-      { x: 18, y: 12 },
-      { x: 40, y: 18 },
-      { x: 12, y: 22 },
-      { x: 48, y: 10 },
-      { x: 22, y: 35 },
-      { x: 35, y: 8 },
-      { x: 8, y: 30 },
-      { x: 52, y: 28 },
+      // Northern area
+      { x: 18, y: 12 }, { x: 40, y: 15 }, { x: 65, y: 10 }, { x: 88, y: 14 },
+      // Western area
+      { x: 12, y: 32 }, { x: 8, y: 50 }, { x: 15, y: 68 },
+      // Eastern area
+      { x: 105, y: 28 }, { x: 110, y: 52 }, { x: 100, y: 70 },
+      // Central meadows
+      { x: 35, y: 28 }, { x: 48, y: 38 }, { x: 75, y: 32 }, { x: 82, y: 55 },
+      { x: 42, y: 58 }, { x: 68, y: 62 },
+      // Southern area
+      { x: 25, y: 75 }, { x: 55, y: 80 }, { x: 85, y: 78 },
+      // Near ponds
+      { x: 45, y: 22 }, { x: 92, y: 45 },
     ];
 
     petPositions.forEach((pos, index) => {
@@ -610,12 +830,16 @@ export class WorldScene extends Phaser.Scene {
 
     const butterflyColors = ['blue', 'pink', 'yellow', 'purple'];
     const butterflyPositions = [
-      { x: 10, y: 8 },
-      { x: 42, y: 14 },
-      { x: 20, y: 28 },
-      { x: 50, y: 22 },
-      { x: 15, y: 18 },
-      { x: 45, y: 35 },
+      // Near flower meadows
+      { x: 25, y: 25 }, { x: 27, y: 26 },
+      { x: 85, y: 50 }, { x: 87, y: 51 },
+      { x: 40, y: 65 }, { x: 42, y: 66 },
+      // Northern area
+      { x: 15, y: 12 }, { x: 55, y: 10 }, { x: 95, y: 14 },
+      // Central wanderers
+      { x: 35, y: 35 }, { x: 70, y: 42 }, { x: 50, y: 55 },
+      // Southern meadow
+      { x: 30, y: 78 }, { x: 75, y: 82 },
     ];
 
     butterflyPositions.forEach((pos, index) => {
@@ -665,7 +889,7 @@ export class WorldScene extends Phaser.Scene {
 
     // Define which tools spawn in this area (NET for catching butterflies)
     const toolSpawns: { tool: ToolType; x: number; y: number }[] = [
-      { tool: 'NET', x: 12, y: 10 },  // Near butterflies
+      { tool: 'NET', x: 28, y: 24 },  // Near butterfly meadow
     ];
 
     toolSpawns.forEach(spawn => {
