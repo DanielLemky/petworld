@@ -14,12 +14,31 @@ class SoundManagerClass {
   private nextNoteTime: number = 0;
   private currentNoteIndex: number = 0;
 
-  // Audio file support
-  private musicBuffers: Map<string, AudioBuffer> = new Map();
+  // Audio file support - using HTML Audio for better browser compatibility
+  private musicAudio: Map<string, HTMLAudioElement> = new Map();
   private currentMusicSource: AudioBufferSourceNode | null = null;
+  private currentAudioElement: HTMLAudioElement | null = null;
   private audioFilesLoaded: boolean = false;
 
+  private pendingTrack: MusicTrack = null;
+
   init(): void {
+    if (this.audioContext) return;
+
+    // Set up listeners for user interaction to initialize audio
+    const initOnInteraction = () => {
+      this.actuallyInit();
+      document.removeEventListener('click', initOnInteraction);
+      document.removeEventListener('keydown', initOnInteraction);
+      document.removeEventListener('touchstart', initOnInteraction);
+    };
+
+    document.addEventListener('click', initOnInteraction);
+    document.addEventListener('keydown', initOnInteraction);
+    document.addEventListener('touchstart', initOnInteraction);
+  }
+
+  private actuallyInit(): void {
     if (this.audioContext) return;
 
     try {
@@ -33,6 +52,14 @@ class SoundManagerClass {
       this.sfxGain = this.audioContext.createGain();
       this.sfxGain.gain.value = 0.5;
       this.sfxGain.connect(this.audioContext.destination);
+
+      // Start loading audio files (they'll auto-play when ready if pending)
+      this.loadAudioFiles();
+
+      // Also try to play pending track with programmatic music for now
+      if (this.pendingTrack) {
+        this.playMusic(this.pendingTrack);
+      }
     } catch (e) {
       console.warn('Web Audio API not supported');
     }
@@ -45,9 +72,9 @@ class SoundManagerClass {
     }
   }
 
-  // Load audio files
-  async loadAudioFiles(): Promise<void> {
-    if (!this.audioContext || this.audioFilesLoaded) return;
+  // Load audio files using HTML Audio elements for better compatibility
+  loadAudioFiles(): void {
+    if (this.audioFilesLoaded) return;
 
     const audioFiles = [
       { track: 'world', file: '/assets/audio/song-1.wav' },
@@ -56,21 +83,28 @@ class SoundManagerClass {
       { track: 'mountain', file: '/assets/audio/song-4.wav' },
     ];
 
-    try {
-      for (const { track, file } of audioFiles) {
-        const response = await fetch(file);
-        if (response.ok) {
-          const arrayBuffer = await response.arrayBuffer();
-          const buffer = await this.audioContext.decodeAudioData(arrayBuffer);
-          this.musicBuffers.set(track, buffer);
-          console.log(`${track} music loaded`);
+    for (const { track, file } of audioFiles) {
+      const audio = new Audio(file);
+      audio.loop = true;
+      audio.volume = 0.2;
+
+      audio.addEventListener('canplaythrough', () => {
+        this.musicAudio.set(track, audio);
+
+        // If this is the pending track, start playing it now
+        if (this.pendingTrack === track && !this.currentAudioElement) {
+          this.playMusic(track);
         }
-      }
-      this.audioFilesLoaded = true;
-    } catch (e) {
-      console.warn('Failed to load audio files, using generated music:', e);
-      this.audioFilesLoaded = true;
+      }, { once: true });
+
+      audio.addEventListener('error', () => {
+        // Failed to load, will use programmatic fallback
+      });
+
+      // Start loading
+      audio.load();
     }
+    this.audioFilesLoaded = true;
   }
 
   // Play a success sound (catching a pet)
@@ -309,10 +343,27 @@ class SoundManagerClass {
 
   // Start playing background music
   playMusic(track: 'world' | 'snow' | 'beach' | 'mountain' | 'home'): void {
-    if (!this.audioContext || !this.musicGain) return;
+    // Store track to play once audio is initialized (after user interaction)
+    this.pendingTrack = track;
 
-    // Stop current music if playing different track
-    if (this.currentTrack === track) return;
+    // If already playing this track, check if we should switch from programmatic to WAV
+    if (this.currentTrack === track) {
+      // Switch to WAV if it's now available and we're not already using it
+      const audio = this.musicAudio.get(track);
+      if (audio && !this.currentAudioElement) {
+        // Stop programmatic music
+        if (this.musicInterval) {
+          clearInterval(this.musicInterval);
+          this.musicInterval = null;
+        }
+        // Start WAV
+        this.currentAudioElement = audio;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      }
+      return;
+    }
+
     this.stopMusic();
 
     if (!this.musicEnabled) {
@@ -320,17 +371,23 @@ class SoundManagerClass {
       return;
     }
 
-    this.resume();
-    this.currentTrack = track;
-
-    // Use audio file if loaded for this track
-    const buffer = this.musicBuffers.get(track);
-    if (buffer) {
-      this.playMusicFile(buffer);
+    // Use HTML Audio if loaded for this track
+    const audio = this.musicAudio.get(track);
+    if (audio) {
+      this.currentTrack = track;
+      this.currentAudioElement = audio;
+      audio.currentTime = 0;
+      audio.play().catch(() => {
+        // Autoplay blocked, will retry on next user interaction
+      });
       return;
     }
 
     // Fall back to programmatic music for home (or if files not loaded)
+    if (!this.audioContext || !this.musicGain) return;
+    this.resume();
+
+    this.currentTrack = track;
     this.currentNoteIndex = 0;
     this.nextNoteTime = this.audioContext.currentTime + 0.1;
 
@@ -338,26 +395,6 @@ class SoundManagerClass {
     this.musicInterval = window.setInterval(() => {
       this.scheduleNotes();
     }, 100);
-  }
-
-  private playMusicFile(buffer: AudioBuffer): void {
-    if (!this.audioContext || !this.musicGain) return;
-
-    // Stop any existing source
-    if (this.currentMusicSource) {
-      try {
-        this.currentMusicSource.stop();
-      } catch (e) {
-        // Ignore if already stopped
-      }
-    }
-
-    // Create new source and play
-    this.currentMusicSource = this.audioContext.createBufferSource();
-    this.currentMusicSource.buffer = buffer;
-    this.currentMusicSource.loop = true;
-    this.currentMusicSource.connect(this.musicGain);
-    this.currentMusicSource.start(0);
   }
 
   private scheduleNotes(): void {
@@ -430,7 +467,13 @@ class SoundManagerClass {
       this.musicInterval = null;
     }
 
-    // Stop audio file playback
+    // Stop HTML Audio playback
+    if (this.currentAudioElement) {
+      this.currentAudioElement.pause();
+      this.currentAudioElement = null;
+    }
+
+    // Stop Web Audio source playback
     if (this.currentMusicSource) {
       try {
         this.currentMusicSource.stop();

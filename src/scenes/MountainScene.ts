@@ -5,6 +5,7 @@ import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
+import { FetchSystem } from '../systems/FetchSystem';
 
 const MOUNTAIN_PET_TYPES = ['GOAT', 'EAGLE', 'FOX', 'BEAR_CUB'];
 
@@ -31,6 +32,7 @@ export class MountainScene extends Phaser.Scene {
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
   private companionSystem!: CompanionSystem;
+  private fetchSystem!: FetchSystem;
 
   constructor() {
     super({ key: SCENES.MOUNTAIN });
@@ -51,6 +53,11 @@ export class MountainScene extends Phaser.Scene {
     if (this.companionSystem.hasCompanion()) {
       this.companionSystem.addCollider(this.boulders);
     }
+
+    // Initialize fetch system
+    this.fetchSystem = new FetchSystem(this, this.player);
+    this.fetchSystem.setCompanion(this.companionSystem.getSprite());
+    this.companionSystem.setFetchSystem(this.fetchSystem);
 
     this.createPets();
     this.createEagles();
@@ -74,6 +81,7 @@ export class MountainScene extends Phaser.Scene {
     this.handleEagleBehavior();
     this.updateDepthSorting();
     this.companionSystem.update();
+    this.fetchSystem.update();
     this.checkExitZone();
   }
 
@@ -346,6 +354,14 @@ export class MountainScene extends Phaser.Scene {
 
       this.interactKey.on('down', () => this.tryInteract());
     }
+
+    // Mouse click handler for fetch
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.fetchSystem.canPlay() && !this.isCatching && !this.isTransitioning) {
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        this.fetchSystem.throwBall(worldPoint.x, worldPoint.y);
+      }
+    });
   }
 
   private createUI(): void {

@@ -5,6 +5,7 @@ import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
+import { FetchSystem } from '../systems/FetchSystem';
 
 const SNOW_PET_TYPES = ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL'];
 
@@ -32,6 +33,7 @@ export class SnowScene extends Phaser.Scene {
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
   private companionSystem!: CompanionSystem;
+  private fetchSystem!: FetchSystem;
 
   constructor() {
     super({ key: SCENES.SNOW });
@@ -52,6 +54,11 @@ export class SnowScene extends Phaser.Scene {
     if (this.companionSystem.hasCompanion()) {
       this.companionSystem.addCollider(this.trees);
     }
+
+    // Initialize fetch system
+    this.fetchSystem = new FetchSystem(this, this.player);
+    this.fetchSystem.setCompanion(this.companionSystem.getSprite());
+    this.companionSystem.setFetchSystem(this.fetchSystem);
 
     this.createPets();
     this.createCollectibles();
@@ -77,6 +84,7 @@ export class SnowScene extends Phaser.Scene {
     this.handlePetBehavior();
     this.updateDepthSorting();
     this.companionSystem.update();
+    this.fetchSystem.update();
     this.checkExitZone();
   }
 
@@ -269,6 +277,14 @@ export class SnowScene extends Phaser.Scene {
 
       this.interactKey.on('down', () => this.tryInteract());
     }
+
+    // Mouse click handler for fetch
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.fetchSystem.canPlay() && !this.isCatching && !this.isTransitioning) {
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        this.fetchSystem.throwBall(worldPoint.x, worldPoint.y);
+      }
+    });
   }
 
   private createUI(): void {

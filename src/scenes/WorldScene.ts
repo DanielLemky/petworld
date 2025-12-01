@@ -5,6 +5,7 @@ import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
+import { FetchSystem } from '../systems/FetchSystem';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -35,6 +36,7 @@ export class WorldScene extends Phaser.Scene {
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
   private companionSystem!: CompanionSystem;
+  private fetchSystem!: FetchSystem;
 
   constructor() {
     super({ key: SCENES.WORLD });
@@ -60,6 +62,11 @@ export class WorldScene extends Phaser.Scene {
     if (this.companionSystem.hasCompanion()) {
       this.companionSystem.addCollider(this.trees);
     }
+
+    // Initialize fetch system (for playing fetch with puppy companion)
+    this.fetchSystem = new FetchSystem(this, this.player);
+    this.fetchSystem.setCompanion(this.companionSystem.getSprite());
+    this.companionSystem.setFetchSystem(this.fetchSystem);
 
     // Add overlap detection for home zone entry
     this.physics.add.overlap(this.player, this.homeZone, () => this.goHome());
@@ -113,6 +120,7 @@ export class WorldScene extends Phaser.Scene {
     this.handleButterflyBehavior();
     this.updateDepthSorting();
     this.companionSystem.update();
+    this.fetchSystem.update();
 
     // Handle water effects
     this.handleWaterEffects(delta, wasInWater);
@@ -1061,6 +1069,14 @@ export class WorldScene extends Phaser.Scene {
         }
       });
     }
+
+    // Mouse click handler for fetch
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (this.fetchSystem.canPlay() && !this.isCatching && !this.isTransitioning) {
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        this.fetchSystem.throwBall(worldPoint.x, worldPoint.y);
+      }
+    });
   }
 
   private goHome(): void {

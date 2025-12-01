@@ -25,6 +25,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player_right', '/assets/sprites/player_right.png');
     this.load.image('player', '/assets/sprites/player_down.png');
 
+    // Load puppy companion sprites
+    this.load.image('puppy_left', '/assets/sprites/puppy_left.png');
+    this.load.image('puppy_right', '/assets/sprites/puppy_right.png');
+    this.load.image('puppy_left_ball', '/assets/sprites/puppy_left_ball.png');
+    this.load.image('puppy_right_ball', '/assets/sprites/puppy_right_ball.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
@@ -34,13 +40,12 @@ export class BootScene extends Phaser.Scene {
     });
   }
 
-  async create(): Promise<void> {
-    // Initialize sound system
+  create(): void {
+    // Initialize sound system (sets up listeners for user interaction)
+    // Audio will actually start after user clicks/presses a key (browser requirement)
     SoundManager.init();
 
-    // Load audio files before starting the game
-    await SoundManager.loadAudioFiles();
-
+    // Start the game immediately
     this.scene.start(SCENES.WORLD);
   }
 
@@ -257,6 +262,7 @@ export class BootScene extends Phaser.Scene {
     this.createMountainSprites();
     this.createMountainPetSprites();
     this.createToolSprites();
+    this.createBallSprite();
   }
 
   private createGrassSprite(): void {
@@ -1728,5 +1734,25 @@ export class BootScene extends Phaser.Scene {
     g5.fillRect(7, 7, 2, 2);
     g5.generateTexture('collectible_sparkle', size, size);
     g5.destroy();
+  }
+
+  private createBallSprite(): void {
+    const g = this.make.graphics({ x: 0, y: 0 });
+    const size = 6;
+
+    // Red ball
+    g.fillStyle(0xe74c3c, 1);
+    g.fillCircle(size / 2, size / 2, size / 2 - 1);
+
+    // Highlight
+    g.fillStyle(0xffffff, 0.6);
+    g.fillCircle(size / 2 - 1, size / 2 - 1, 1);
+
+    // Darker edge
+    g.lineStyle(1, 0xc0392b, 1);
+    g.strokeCircle(size / 2, size / 2, size / 2 - 1);
+
+    g.generateTexture('ball', size, size);
+    g.destroy();
   }
 }

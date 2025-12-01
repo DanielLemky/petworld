@@ -795,7 +795,8 @@ export class HomeScene extends Phaser.Scene {
     });
 
     if (nearestPet) {
-      const petData = nearestPet.getData('petData') as CaughtPet;
+      const petSprite = nearestPet as Phaser.Physics.Arcade.Sprite;
+      const petData = petSprite.getData('petData') as CaughtPet;
       if (petData) {
         // Play feeding sound
         SoundManager.playPet();
@@ -805,11 +806,11 @@ export class HomeScene extends Phaser.Scene {
         // Refresh pet data
         const updatedPet = PetManager.getPetById(petData.id);
         if (updatedPet) {
-          nearestPet.setData('petData', updatedPet);
+          petSprite.setData('petData', updatedPet);
         }
 
         // Show feeding animation
-        const foodEmoji = this.add.text(nearestPet.x, nearestPet.y - 20, '🍖', {
+        const foodEmoji = this.add.text(petSprite.x, petSprite.y - 20, '🍖', {
           fontSize: '14px',
         });
         foodEmoji.setOrigin(0.5);
