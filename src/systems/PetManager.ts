@@ -20,11 +20,13 @@ interface SaveData {
   pets: CaughtPet[];
   nextId: number;
   savedAt: number;
+  companionId: string | null;
 }
 
 class PetManagerClass {
   private caughtPets: CaughtPet[] = [];
   private nextId: number = 1;
+  private companionId: string | null = null;
 
   constructor() {
     // Auto-load on initialization
@@ -129,6 +131,40 @@ class PetManagerClass {
     return this.caughtPets.length > 0;
   }
 
+  // Companion management
+  setCompanion(petId: string | null): boolean {
+    if (petId === null) {
+      this.companionId = null;
+      this.save();
+      return true;
+    }
+
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (!pet) return false;
+
+    this.companionId = petId;
+    this.save();
+    return true;
+  }
+
+  getCompanion(): CaughtPet | null {
+    if (!this.companionId) return null;
+    return this.caughtPets.find(p => p.id === this.companionId) || null;
+  }
+
+  getCompanionId(): string | null {
+    return this.companionId;
+  }
+
+  hasCompanion(): boolean {
+    return this.companionId !== null && this.getCompanion() !== null;
+  }
+
+  clearCompanion(): void {
+    this.companionId = null;
+    this.save();
+  }
+
   // Save to localStorage
   save(): boolean {
     try {
@@ -136,6 +172,7 @@ class PetManagerClass {
         pets: this.caughtPets,
         nextId: this.nextId,
         savedAt: Date.now(),
+        companionId: this.companionId,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
       console.log(`Game saved! ${this.caughtPets.length} pets.`);
@@ -158,6 +195,7 @@ class PetManagerClass {
       const saveData: SaveData = JSON.parse(saved);
       this.caughtPets = saveData.pets || [];
       this.nextId = saveData.nextId || this.caughtPets.length + 1;
+      this.companionId = saveData.companionId || null;
 
       console.log(`Game loaded! ${this.caughtPets.length} pets restored.`);
       return true;
@@ -172,6 +210,7 @@ class PetManagerClass {
     localStorage.removeItem(STORAGE_KEY);
     this.caughtPets = [];
     this.nextId = 1;
+    this.companionId = null;
     console.log('Save data cleared.');
   }
 

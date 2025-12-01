@@ -38,8 +38,8 @@ export class BootScene extends Phaser.Scene {
     // Initialize sound system
     SoundManager.init();
 
-    // Load audio files (async but don't block game start)
-    SoundManager.loadAudioFiles();
+    // Load audio files before starting the game
+    await SoundManager.loadAudioFiles();
 
     this.scene.start(SCENES.WORLD);
   }

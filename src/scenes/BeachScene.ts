@@ -4,6 +4,7 @@ import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
+import { CompanionSystem } from '../systems/CompanionSystem';
 
 const BEACH_PET_TYPES = ['CRAB', 'SEAGULL', 'TURTLE', 'STARFISH'];
 
@@ -29,6 +30,7 @@ export class BeachScene extends Phaser.Scene {
   private inventoryText!: Phaser.GameObjects.Text;
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
+  private companionSystem!: CompanionSystem;
 
   constructor() {
     super({ key: SCENES.BEACH });
@@ -42,6 +44,14 @@ export class BeachScene extends Phaser.Scene {
 
     this.createWorld();
     this.createPlayer();
+
+    // Initialize companion system
+    this.companionSystem = new CompanionSystem(this);
+    this.companionSystem.init(this.player);
+    if (this.companionSystem.hasCompanion()) {
+      this.companionSystem.addCollider(this.trees);
+    }
+
     this.createPets();
     this.createCollectibles();
     this.setupInput();
@@ -63,6 +73,7 @@ export class BeachScene extends Phaser.Scene {
     this.handlePlayerMovement();
     this.handlePetBehavior();
     this.updateDepthSorting();
+    this.companionSystem.update();
     this.checkExitZone();
   }
 

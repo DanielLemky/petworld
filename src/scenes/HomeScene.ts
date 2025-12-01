@@ -16,9 +16,12 @@ export class HomeScene extends Phaser.Scene {
   private infoText!: Phaser.GameObjects.Text;
   private petCountText!: Phaser.GameObjects.Text;
   private feedKey!: Phaser.Input.Keyboard.Key;
+  private takeKey!: Phaser.Input.Keyboard.Key;
   private moodIndicators: Map<string, Phaser.GameObjects.Text> = new Map();
+  private companionIndicators: Map<string, Phaser.GameObjects.Text> = new Map();
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
+  private companionText!: Phaser.GameObjects.Text;
 
   constructor() {
     super({ key: SCENES.HOME });
@@ -324,6 +327,19 @@ export class HomeScene extends Phaser.Scene {
       moodIndicator.setOrigin(0.5);
       moodIndicator.setDepth(2000);
       this.moodIndicators.set(petData.id, moodIndicator);
+
+      // Create companion indicator (star for current companion)
+      const companionIndicator = this.add.text(pet.x, pet.y - 20, '', {
+        fontSize: '8px',
+      });
+      companionIndicator.setOrigin(0.5);
+      companionIndicator.setDepth(2001);
+      this.companionIndicators.set(petData.id, companionIndicator);
+
+      // Show star if this is the current companion
+      if (PetManager.getCompanionId() === petData.id) {
+        companionIndicator.setText('⭐');
+      }
     });
 
     // Pets collide with fences and each other
@@ -365,7 +381,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createUI(): void {
-    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pet | F feed', {
+    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pet | F feed | T take', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44dd',
@@ -383,6 +399,18 @@ export class HomeScene extends Phaser.Scene {
     });
     this.petCountText.setScrollFactor(0);
     this.petCountText.setDepth(1000);
+
+    // Companion status
+    const companion = PetManager.getCompanion();
+    const companionLabel = companion ? `Companion: ${companion.name}` : 'No companion';
+    this.companionText = this.add.text(16, 60, companionLabel, {
+      fontSize: '10px',
+      color: companion ? '#f472b6' : '#888888',
+      backgroundColor: '#2d2d44dd',
+      padding: { x: 6, y: 3 },
+    });
+    this.companionText.setScrollFactor(0);
+    this.companionText.setDepth(1000);
 
     // Location indicator
     const locationText = this.add.text(
@@ -412,9 +440,11 @@ export class HomeScene extends Phaser.Scene {
       };
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.feedKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+      this.takeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
 
       this.interactKey.on('down', () => this.handleInteraction());
       this.feedKey.on('down', () => this.handleFeeding());
+      this.takeKey.on('down', () => this.handleTakeWithMe());
     }
   }
 
@@ -643,8 +673,106 @@ export class HomeScene extends Phaser.Scene {
           }
           indicator.setText(emoji);
         }
+
+        // Update companion indicator position
+        const companionIndicator = this.companionIndicators.get(petData.id);
+        if (companionIndicator) {
+          companionIndicator.setPosition(sprite.x, sprite.y - 22);
+        }
       }
       return true;
+    });
+  }
+
+  private handleTakeWithMe(): void {
+    let nearestPet: Phaser.Physics.Arcade.Sprite | null = null;
+    let nearestDistance = TILE_SIZE * 3;
+
+    this.pets.children.each((pet: Phaser.GameObjects.GameObject) => {
+      const sprite = pet as Phaser.Physics.Arcade.Sprite;
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        sprite.x, sprite.y
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPet = sprite;
+      }
+      return true;
+    });
+
+    if (nearestPet) {
+      const petData = (nearestPet as Phaser.Physics.Arcade.Sprite).getData('petData') as CaughtPet;
+      if (petData) {
+        const currentCompanionId = PetManager.getCompanionId();
+
+        // If clicking on current companion, remove them
+        if (currentCompanionId === petData.id) {
+          PetManager.clearCompanion();
+          this.showMessage(`${petData.name} will stay home`, '#888888');
+
+          // Clear all companion indicators
+          this.companionIndicators.forEach(indicator => indicator.setText(''));
+        } else {
+          // Set new companion
+          PetManager.setCompanion(petData.id);
+          this.showMessage(`${petData.name} will follow you!`, '#f472b6');
+
+          // Update companion indicators
+          this.companionIndicators.forEach((indicator, id) => {
+            indicator.setText(id === petData.id ? '⭐' : '');
+          });
+        }
+
+        // Update companion UI text
+        const companion = PetManager.getCompanion();
+        const companionLabel = companion ? `Companion: ${companion.name}` : 'No companion';
+        this.companionText.setText(companionLabel);
+        this.companionText.setColor(companion ? '#f472b6' : '#888888');
+
+        // Play sound
+        SoundManager.playClick();
+      }
+    }
+  }
+
+  private showMessage(text: string, color: string): void {
+    const message = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 - 40,
+      text,
+      {
+        fontSize: '12px',
+        color: color,
+        backgroundColor: '#2d2d44ee',
+        padding: { x: 10, y: 6 },
+      }
+    );
+    message.setOrigin(0.5);
+    message.setScrollFactor(0);
+    message.setDepth(2000);
+
+    // Animate
+    message.setAlpha(0);
+    message.setScale(0.5);
+
+    this.tweens.add({
+      targets: message,
+      alpha: 1,
+      scale: 1,
+      duration: 200,
+      ease: 'Back.easeOut',
+    });
+
+    this.tweens.add({
+      targets: message,
+      alpha: 0,
+      y: message.y - 30,
+      duration: 500,
+      delay: 1500,
+      ease: 'Quad.easeIn',
+      onComplete: () => message.destroy(),
     });
   }
 

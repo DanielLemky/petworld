@@ -4,6 +4,7 @@ import { CatchingUI, type CatchResult } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
+import { CompanionSystem } from '../systems/CompanionSystem';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -33,6 +34,7 @@ export class WorldScene extends Phaser.Scene {
   private inventoryText!: Phaser.GameObjects.Text;
   private walkTween: Phaser.Tweens.Tween | null = null;
   private isWalking: boolean = false;
+  private companionSystem!: CompanionSystem;
 
   constructor() {
     super({ key: SCENES.WORLD });
@@ -51,6 +53,13 @@ export class WorldScene extends Phaser.Scene {
 
     // Create the player
     this.createPlayer();
+
+    // Initialize companion system
+    this.companionSystem = new CompanionSystem(this);
+    this.companionSystem.init(this.player);
+    if (this.companionSystem.hasCompanion()) {
+      this.companionSystem.addCollider(this.trees);
+    }
 
     // Add overlap detection for home zone entry
     this.physics.add.overlap(this.player, this.homeZone, () => this.goHome());
@@ -103,6 +112,7 @@ export class WorldScene extends Phaser.Scene {
     this.handlePetBehavior();
     this.handleButterflyBehavior();
     this.updateDepthSorting();
+    this.companionSystem.update();
 
     // Handle water effects
     this.handleWaterEffects(delta, wasInWater);
