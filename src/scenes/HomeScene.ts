@@ -640,9 +640,6 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private goToWorld(): void {
-    // Play transition sound
-    SoundManager.playClick();
-
     // Fade out and switch scene
     this.cameras.main.fadeOut(300, 0, 0, 0);
 
