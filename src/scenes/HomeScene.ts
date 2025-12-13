@@ -570,6 +570,22 @@ export class HomeScene extends Phaser.Scene {
     this.physics.add.collider(this.pets, this.pets);
   }
 
+  private getRandomRoamingPosition(): { x: number; y: number } {
+    // Roaming zones spread across the farm (avoiding buildings and pens)
+    const roamingZones = [
+      { x: 5, y: 3, w: 20, h: 12 },   // Top-left (near farmhouse)
+      { x: 70, y: 3, w: 25, h: 12 },  // Top-right
+      { x: 60, y: 20, w: 35, h: 15 }, // Middle-right
+      { x: 60, y: 40, w: 35, h: 15 }, // Lower-middle-right
+      { x: 60, y: 60, w: 35, h: 15 }, // Bottom-right
+    ];
+    const zone = roamingZones[Math.floor(Math.random() * roamingZones.length)];
+    return {
+      x: (zone.x + Math.random() * zone.w) * TILE_SIZE,
+      y: (zone.y + Math.random() * zone.h) * TILE_SIZE,
+    };
+  }
+
   private spawnPet(petData: CaughtPet): Phaser.Physics.Arcade.Sprite {
     let spawnX: number;
     let spawnY: number;
@@ -581,14 +597,16 @@ export class HomeScene extends Phaser.Scene {
         spawnX = pen.bounds.x + petData.penPosition.x;
         spawnY = pen.bounds.y + petData.penPosition.y;
       } else {
-        // Fallback to roaming
-        spawnX = (25 + Math.random() * 10) * TILE_SIZE;
-        spawnY = (15 + Math.random() * 5) * TILE_SIZE;
+        // Fallback to roaming position
+        const pos = this.getRandomRoamingPosition();
+        spawnX = pos.x;
+        spawnY = pos.y;
       }
     } else {
-      // Roaming pet - spawn in central area
-      spawnX = (25 + Math.random() * 10) * TILE_SIZE;
-      spawnY = (15 + Math.random() * 5) * TILE_SIZE;
+      // Roaming pet - spawn across the farm
+      const pos = this.getRandomRoamingPosition();
+      spawnX = pos.x;
+      spawnY = pos.y;
     }
 
     const petType = petData.type.toLowerCase();
