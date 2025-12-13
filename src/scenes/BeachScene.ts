@@ -265,17 +265,21 @@ export class BeachScene extends Phaser.Scene {
       { x: 20, y: 28 }, { x: 26, y: 20 }, { x: 14, y: 25 },
     ];
 
+    // Define custom sprite configurations for Beach pets
+    const beachSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
+      starfish: { right: 'starfish_right', scale: 0.012, offset: { x: 170, y: 350 } },
+      turtle: { right: 'turtle_right', scale: 0.012, offset: { x: 200, y: 280 } },
+      crab: { right: 'crab_right', scale: 0.012, offset: { x: 200, y: 350 } },
+      seagull: { right: 'seagull_right', scale: 0.012, offset: { x: 170, y: 420 } },
+    };
+
     spawnPositions.forEach(pos => {
       const petType = BEACH_PET_TYPES[Math.floor(Math.random() * BEACH_PET_TYPES.length)];
       const petTypeLower = petType.toLowerCase();
-      const isStarfish = petTypeLower === 'starfish';
-      const isTurtle = petTypeLower === 'turtle';
-      const isCustomSprite = isStarfish || isTurtle;
+      const spriteConfig = beachSpriteMap[petTypeLower];
+      const isCustomSprite = !!spriteConfig;
       
-      let spriteKey: string;
-      if (isStarfish) spriteKey = 'starfish_right';
-      else if (isTurtle) spriteKey = 'turtle_right';
-      else spriteKey = `pet_${petTypeLower}`;
+      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petTypeLower}`;
       
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -291,11 +295,10 @@ export class BeachScene extends Phaser.Scene {
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (isCustomSprite) {
-        pet.setScale(0.012);
+      if (spriteConfig) {
+        pet.setScale(spriteConfig.scale);
         pet.setSize(400, 200);
-        if (isStarfish) pet.setOffset(170, 350);
-        else if (isTurtle) pet.setOffset(200, 280);
+        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
       } else {
         pet.setSize(14, 12);
         pet.setOffset(1, TILE_SIZE - 14);
@@ -499,6 +502,8 @@ export class BeachScene extends Phaser.Scene {
         const spriteMap: Record<string, { left: string; right: string }> = {
           starfish: { left: 'starfish_left', right: 'starfish_right' },
           turtle: { left: 'turtle_left', right: 'turtle_right' },
+          crab: { left: 'crab_left', right: 'crab_right' },
+          seagull: { left: 'seagull_left', right: 'seagull_right' },
         };
         
         const sprites = spriteMap[petType];

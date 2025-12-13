@@ -819,18 +819,20 @@ export class WorldScene extends Phaser.Scene {
       { x: 45, y: 22 }, { x: 92, y: 45 },
     ];
 
+    // Define custom sprite configurations for World pets
+    const worldSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
+      puppy: { right: 'puppy_right', scale: 0.012, offset: { x: 200, y: 500 } },
+      kitty: { right: 'cat_right', scale: 0.012, offset: { x: 180, y: 500 } },
+      chick: { right: 'chick_right', scale: 0.012, offset: { x: 170, y: 450 } },
+      bunny: { right: 'bunny_right', scale: 0.012, offset: { x: 160, y: 470 } },
+    };
+
     petPositions.forEach((pos, index) => {
       const petType = petTypes[index % petTypes.length].toLowerCase();
-      const isPuppy = petType === 'puppy';
-      const isKitty = petType === 'kitty';
-      const isChick = petType === 'chick';
-      const isCustomSprite = isPuppy || isKitty || isChick;
+      const spriteConfig = worldSpriteMap[petType];
+      const isCustomSprite = !!spriteConfig;
       
-      let spriteKey: string;
-      if (isPuppy) spriteKey = 'puppy_right';
-      else if (isKitty) spriteKey = 'cat_right';
-      else if (isChick) spriteKey = 'chick_right';
-      else spriteKey = `pet_${petType}`;
+      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petType}`;
 
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -846,12 +848,10 @@ export class WorldScene extends Phaser.Scene {
       pet.setData('facingRight', true);
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (isCustomSprite) {
-        pet.setScale(0.012);
+      if (spriteConfig) {
+        pet.setScale(spriteConfig.scale);
         pet.setSize(400, 200);
-        if (isPuppy) pet.setOffset(200, 500);
-        else if (isKitty) pet.setOffset(180, 500);
-        else if (isChick) pet.setOffset(170, 450);
+        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
       } else {
         // Collision box for programmatic sprites
         pet.setSize(14, 12);
@@ -1301,6 +1301,7 @@ export class WorldScene extends Phaser.Scene {
           kitty: { left: 'cat_left', right: 'cat_right' },
           chick: { left: 'chick_left', right: 'chick_right' },
           frog: { left: 'frog_left', right: 'frog_right' },
+          bunny: { left: 'bunny_left', right: 'bunny_right' },
         };
         
         const sprites = spriteMap[petType];

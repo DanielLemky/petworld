@@ -612,14 +612,23 @@ export class HomeScene extends Phaser.Scene {
     const petType = petData.type.toLowerCase();
     
     // Define which pet types use custom sprites
-    const customSpriteMap: Record<string, { left: string; right: string; offset: { x: number; y: number } }> = {
-      puppy: { left: 'puppy_left', right: 'puppy_right', offset: { x: 200, y: 500 } },
-      kitty: { left: 'cat_left', right: 'cat_right', offset: { x: 180, y: 500 } },
-      chick: { left: 'chick_left', right: 'chick_right', offset: { x: 170, y: 450 } },
-      frog: { left: 'frog_left', right: 'frog_right', offset: { x: 170, y: 400 } },
-      penguin: { left: 'penguin_left', right: 'penguin_right', offset: { x: 160, y: 480 } },
-      starfish: { left: 'starfish_left', right: 'starfish_right', offset: { x: 170, y: 350 } },
-      turtle: { left: 'turtle_left', right: 'turtle_right', offset: { x: 200, y: 280 } },
+    const customSpriteMap: Record<string, { left: string; right: string; scale: number; offset: { x: number; y: number } }> = {
+      puppy: { left: 'puppy_left', right: 'puppy_right', scale: 0.012, offset: { x: 200, y: 500 } },
+      kitty: { left: 'cat_left', right: 'cat_right', scale: 0.012, offset: { x: 180, y: 500 } },
+      chick: { left: 'chick_left', right: 'chick_right', scale: 0.012, offset: { x: 170, y: 450 } },
+      frog: { left: 'frog_left', right: 'frog_right', scale: 0.012, offset: { x: 170, y: 400 } },
+      bunny: { left: 'bunny_left', right: 'bunny_right', scale: 0.012, offset: { x: 160, y: 470 } },
+      penguin: { left: 'penguin_left', right: 'penguin_right', scale: 0.012, offset: { x: 160, y: 480 } },
+      polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
+      seal: { left: 'seal_left', right: 'seal_right', scale: 0.012, offset: { x: 170, y: 260 } },
+      snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right', scale: 0.022, offset: { x: 80, y: 230 } },
+      starfish: { left: 'starfish_left', right: 'starfish_right', scale: 0.012, offset: { x: 170, y: 350 } },
+      turtle: { left: 'turtle_left', right: 'turtle_right', scale: 0.012, offset: { x: 200, y: 280 } },
+      crab: { left: 'crab_left', right: 'crab_right', scale: 0.012, offset: { x: 200, y: 350 } },
+      seagull: { left: 'seagull_left', right: 'seagull_right', scale: 0.012, offset: { x: 170, y: 420 } },
+      fox: { left: 'fox_left', right: 'fox_right', scale: 0.012, offset: { x: 200, y: 420 } },
+      bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
+      eagle: { left: 'eagle_left', right: 'eagle_right', scale: 0.012, offset: { x: 160, y: 490 } },
     };
     
     const customSprite = customSpriteMap[petType];
@@ -645,7 +654,7 @@ export class HomeScene extends Phaser.Scene {
     pet.setDepth(spawnY);
 
     if (isCustomSprite && customSprite) {
-      pet.setScale(0.012);
+      pet.setScale(customSprite.scale);
       pet.setSize(400, 200);
       pet.setOffset(customSprite.offset.x, customSprite.offset.y);
     } else {
@@ -914,9 +923,18 @@ export class HomeScene extends Phaser.Scene {
           kitty: { left: 'cat_left', right: 'cat_right' },
           chick: { left: 'chick_left', right: 'chick_right' },
           frog: { left: 'frog_left', right: 'frog_right' },
+          bunny: { left: 'bunny_left', right: 'bunny_right' },
           penguin: { left: 'penguin_left', right: 'penguin_right' },
+          polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right' },
+          seal: { left: 'seal_left', right: 'seal_right' },
+          snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right' },
           starfish: { left: 'starfish_left', right: 'starfish_right' },
           turtle: { left: 'turtle_left', right: 'turtle_right' },
+          crab: { left: 'crab_left', right: 'crab_right' },
+          seagull: { left: 'seagull_left', right: 'seagull_right' },
+          fox: { left: 'fox_left', right: 'fox_right' },
+          bear_cub: { left: 'bear_left', right: 'bear_right' },
+          eagle: { left: 'eagle_left', right: 'eagle_right' },
         };
         
         const sprites = spriteMap[petType];
@@ -1269,13 +1287,18 @@ export class HomeScene extends Phaser.Scene {
       onComplete: () => foodEmoji.destroy(),
     });
 
+    const currentScaleX = nearestPet.scaleX;
+    const currentScaleY = nearestPet.scaleY;
     this.tweens.add({
       targets: nearestPet,
-      scaleX: 1.1,
-      scaleY: 0.9,
+      scaleX: currentScaleX * 1.1,
+      scaleY: currentScaleY * 0.9,
       duration: 100,
       yoyo: true,
       repeat: 2,
+      onComplete: () => {
+        nearestPet.setScale(currentScaleX, currentScaleY);
+      },
     });
 
     this.showPetStats(nearestPet, updatedPet || petData);

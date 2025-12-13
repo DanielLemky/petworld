@@ -55,6 +55,42 @@ export class BootScene extends Phaser.Scene {
     this.load.image('turtle_left', '/assets/sprites/turtle_left.png');
     this.load.image('turtle_right', '/assets/sprites/turtle_right.png');
 
+    // Load bunny sprites
+    this.load.image('bunny_left', '/assets/sprites/bunny_left.png');
+    this.load.image('bunny_right', '/assets/sprites/bunny_right.png');
+
+    // Load bear (bear_cub) sprites
+    this.load.image('bear_left', '/assets/sprites/bear_left.png');
+    this.load.image('bear_right', '/assets/sprites/bear_right.png');
+
+    // Load crab sprites
+    this.load.image('crab_left', '/assets/sprites/crab_left.png');
+    this.load.image('crab_right', '/assets/sprites/crab_right.png');
+
+    // Load eagle sprites
+    this.load.image('eagle_left', '/assets/sprites/eagle_left.png');
+    this.load.image('eagle_right', '/assets/sprites/eagle_right.png');
+
+    // Load fox sprites
+    this.load.image('fox_left', '/assets/sprites/fox_left.png');
+    this.load.image('fox_right', '/assets/sprites/fox_right.png');
+
+    // Load polar bear sprites
+    this.load.image('polar_bear_left', '/assets/sprites/polar_bear_left.png');
+    this.load.image('polar_bear_right', '/assets/sprites/polar_bear_right.png');
+
+    // Load seagull sprites
+    this.load.image('seagull_left', '/assets/sprites/seagull_left.png');
+    this.load.image('seagull_right', '/assets/sprites/seagull_right.png');
+
+    // Load seal sprites
+    this.load.image('seal_left', '/assets/sprites/seal_left.png');
+    this.load.image('seal_right', '/assets/sprites/seal_right.png');
+
+    // Load snow bunny sprites
+    this.load.image('snow_bunny_left', '/assets/sprites/snow_bunny_left.png');
+    this.load.image('snow_bunny_right', '/assets/sprites/snow_bunny_right.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();

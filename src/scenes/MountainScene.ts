@@ -271,22 +271,42 @@ export class MountainScene extends Phaser.Scene {
       { x: 25, y: 28 }, { x: 40, y: 28 },
     ];
 
+    // Define custom sprite configurations for Mountain ground pets
+    const mountainSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
+      fox: { right: 'fox_right', scale: 0.012, offset: { x: 200, y: 420 } },
+      bear_cub: { right: 'bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
+    };
+
     spawnPositions.forEach(pos => {
       const petType = groundPetTypes[Math.floor(Math.random() * groundPetTypes.length)];
+      const petTypeLower = petType.toLowerCase();
+      const spriteConfig = mountainSpriteMap[petTypeLower];
+      const isCustomSprite = !!spriteConfig;
+      
+      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petTypeLower}`;
+      
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        `pet_${petType.toLowerCase()}`
+        spriteKey
       ) as Phaser.Physics.Arcade.Sprite;
 
       pet.setCollideWorldBounds(true);
       pet.setData('petType', petType);
+      pet.setData('isCustomSprite', isCustomSprite);
+      pet.setData('facingRight', true);
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      pet.setSize(14, 12);
-      pet.setOffset(1, TILE_SIZE - 14);
+      if (spriteConfig) {
+        pet.setScale(spriteConfig.scale);
+        pet.setSize(400, 200);
+        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
+      } else {
+        pet.setSize(14, 12);
+        pet.setOffset(1, TILE_SIZE - 14);
+      }
     });
 
     this.physics.add.collider(this.pets, this.boulders);
@@ -306,18 +326,21 @@ export class MountainScene extends Phaser.Scene {
       const eagle = this.eagles.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        'pet_eagle'
+        'eagle_right'
       ) as Phaser.Physics.Arcade.Sprite;
 
       eagle.setCollideWorldBounds(true);
       eagle.setData('petType', 'EAGLE');
+      eagle.setData('isCustomSprite', true);
+      eagle.setData('facingRight', true);
       eagle.setData('flyTimer', Math.random() * 1000);
       eagle.setData('flyDirection', { x: 0, y: 0 });
       eagle.setData('baseY', pos.y * TILE_SIZE + TILE_SIZE / 2);
       eagle.setDepth(1000); // Eagles fly above everything
 
-      eagle.setSize(10, 8);
-      eagle.setOffset(3, 4);
+      eagle.setScale(0.012);
+      eagle.setSize(400, 200);
+      eagle.setOffset(160, 490);
 
       // Soaring animation (gentle bob)
       this.tweens.add({
@@ -329,10 +352,11 @@ export class MountainScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
 
-      // Wing flapping effect
+      // Wing flapping effect (use relative scale)
+      const baseScale = 0.012;
       this.tweens.add({
         targets: eagle,
-        scaleX: 0.85,
+        scaleX: baseScale * 0.85,
         duration: 200,
         yoyo: true,
         repeat: -1,
@@ -536,6 +560,29 @@ export class MountainScene extends Phaser.Scene {
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
 
+      // Handle custom sprite direction flipping
+      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
+      if (isCustomSprite && dir.x !== 0) {
+        const petType = (sprite.getData('petType') as string).toLowerCase();
+        const facingRight = sprite.getData('facingRight') as boolean;
+        
+        const spriteMap: Record<string, { left: string; right: string }> = {
+          fox: { left: 'fox_left', right: 'fox_right' },
+          bear_cub: { left: 'bear_left', right: 'bear_right' },
+        };
+        
+        const sprites = spriteMap[petType];
+        if (sprites) {
+          if (dir.x > 0 && !facingRight) {
+            sprite.setTexture(sprites.right);
+            sprite.setData('facingRight', true);
+          } else if (dir.x < 0 && facingRight) {
+            sprite.setTexture(sprites.left);
+            sprite.setData('facingRight', false);
+          }
+        }
+      }
+
       return true;
     });
   }
@@ -567,11 +614,14 @@ export class MountainScene extends Phaser.Scene {
       sprite.setVelocityX(dir.x * flySpeed);
       // Don't set Y velocity - let the tween handle vertical bobbing
 
-      // Flip sprite based on movement direction
-      if (dir.x > 0.1) {
-        sprite.setFlipX(false);
-      } else if (dir.x < -0.1) {
-        sprite.setFlipX(true);
+      // Flip sprite based on movement direction (use texture change for custom sprites)
+      const facingRight = sprite.getData('facingRight') as boolean;
+      if (dir.x > 0.1 && !facingRight) {
+        sprite.setTexture('eagle_right');
+        sprite.setData('facingRight', true);
+      } else if (dir.x < -0.1 && facingRight) {
+        sprite.setTexture('eagle_left');
+        sprite.setData('facingRight', false);
       }
 
       return true;
