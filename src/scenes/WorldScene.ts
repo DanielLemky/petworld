@@ -822,7 +822,15 @@ export class WorldScene extends Phaser.Scene {
     petPositions.forEach((pos, index) => {
       const petType = petTypes[index % petTypes.length].toLowerCase();
       const isPuppy = petType === 'puppy';
-      const spriteKey = isPuppy ? 'puppy_right' : `pet_${petType}`;
+      const isKitty = petType === 'kitty';
+      const isChick = petType === 'chick';
+      const isCustomSprite = isPuppy || isKitty || isChick;
+      
+      let spriteKey: string;
+      if (isPuppy) spriteKey = 'puppy_right';
+      else if (isKitty) spriteKey = 'cat_right';
+      else if (isChick) spriteKey = 'chick_right';
+      else spriteKey = `pet_${petType}`;
 
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -834,15 +842,16 @@ export class WorldScene extends Phaser.Scene {
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setData('petType', petType);
-      pet.setData('isPuppy', isPuppy);
+      pet.setData('isCustomSprite', isCustomSprite);
       pet.setData('facingRight', true);
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (isPuppy) {
-        // Use same scaling as companion puppy
+      if (isCustomSprite) {
         pet.setScale(0.012);
         pet.setSize(400, 200);
-        pet.setOffset(200, 500);
+        if (isPuppy) pet.setOffset(200, 500);
+        else if (isKitty) pet.setOffset(180, 500);
+        else if (isChick) pet.setOffset(170, 450);
       } else {
         // Collision box for programmatic sprites
         pet.setSize(14, 12);
@@ -861,19 +870,20 @@ export class WorldScene extends Phaser.Scene {
       const frog = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        'pet_frog'
+        'frog_right'
       ) as Phaser.Physics.Arcade.Sprite;
 
       frog.setCollideWorldBounds(true);
       frog.setData('wanderTimer', Math.random() * 2000);
       frog.setData('wanderDirection', { x: 0, y: 0 });
       frog.setData('petType', 'frog');
-      frog.setData('isPuppy', false);
+      frog.setData('isCustomSprite', true);
       frog.setData('facingRight', true);
       frog.setDepth(pos.y * TILE_SIZE);
 
-      frog.setSize(14, 12);
-      frog.setOffset(1, TILE_SIZE - 14);
+      frog.setScale(0.012);
+      frog.setSize(400, 200);
+      frog.setOffset(170, 400);
     });
 
     // Pets collide with trees and each other
@@ -1280,16 +1290,28 @@ export class WorldScene extends Phaser.Scene {
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
 
-      // Handle puppy sprite direction flipping
-      const isPuppy = sprite.getData('isPuppy') as boolean;
-      if (isPuppy && dir.x !== 0) {
+      // Handle custom sprite direction flipping
+      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
+      if (isCustomSprite && dir.x !== 0) {
+        const petType = sprite.getData('petType') as string;
         const facingRight = sprite.getData('facingRight') as boolean;
-        if (dir.x > 0 && !facingRight) {
-          sprite.setTexture('puppy_right');
-          sprite.setData('facingRight', true);
-        } else if (dir.x < 0 && facingRight) {
-          sprite.setTexture('puppy_left');
-          sprite.setData('facingRight', false);
+        
+        const spriteMap: Record<string, { left: string; right: string }> = {
+          puppy: { left: 'puppy_left', right: 'puppy_right' },
+          kitty: { left: 'cat_left', right: 'cat_right' },
+          chick: { left: 'chick_left', right: 'chick_right' },
+          frog: { left: 'frog_left', right: 'frog_right' },
+        };
+        
+        const sprites = spriteMap[petType];
+        if (sprites) {
+          if (dir.x > 0 && !facingRight) {
+            sprite.setTexture(sprites.right);
+            sprite.setData('facingRight', true);
+          } else if (dir.x < 0 && facingRight) {
+            sprite.setTexture(sprites.left);
+            sprite.setData('facingRight', false);
+          }
         }
       }
 

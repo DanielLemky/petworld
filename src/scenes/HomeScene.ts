@@ -81,7 +81,7 @@ export class HomeScene extends Phaser.Scene {
     this.createExitZone();
 
     // Start home music
-    SoundManager.playMusic('home');
+    SoundManager.playMusic('world');
   }
 
   update(): void {
@@ -610,12 +610,29 @@ export class HomeScene extends Phaser.Scene {
     }
 
     const petType = petData.type.toLowerCase();
-    const isPuppy = petType === 'puppy';
-    const spriteKey = petType.startsWith('butterfly_') 
-      ? petType 
-      : isPuppy 
-        ? 'puppy_right' 
-        : `pet_${petType}`;
+    
+    // Define which pet types use custom sprites
+    const customSpriteMap: Record<string, { left: string; right: string; offset: { x: number; y: number } }> = {
+      puppy: { left: 'puppy_left', right: 'puppy_right', offset: { x: 200, y: 500 } },
+      kitty: { left: 'cat_left', right: 'cat_right', offset: { x: 180, y: 500 } },
+      chick: { left: 'chick_left', right: 'chick_right', offset: { x: 170, y: 450 } },
+      frog: { left: 'frog_left', right: 'frog_right', offset: { x: 170, y: 400 } },
+      penguin: { left: 'penguin_left', right: 'penguin_right', offset: { x: 160, y: 480 } },
+      starfish: { left: 'starfish_left', right: 'starfish_right', offset: { x: 170, y: 350 } },
+      turtle: { left: 'turtle_left', right: 'turtle_right', offset: { x: 200, y: 280 } },
+    };
+    
+    const customSprite = customSpriteMap[petType];
+    const isCustomSprite = !!customSprite;
+    
+    let spriteKey: string;
+    if (petType.startsWith('butterfly_')) {
+      spriteKey = petType;
+    } else if (customSprite) {
+      spriteKey = customSprite.right;
+    } else {
+      spriteKey = `pet_${petType}`;
+    }
 
     const pet = this.pets.create(spawnX, spawnY, spriteKey) as Phaser.Physics.Arcade.Sprite;
 
@@ -623,15 +640,14 @@ export class HomeScene extends Phaser.Scene {
     pet.setData('wanderTimer', Math.random() * 2000);
     pet.setData('wanderDirection', { x: 0, y: 0 });
     pet.setData('petData', petData);
-    pet.setData('isPuppy', isPuppy);
+    pet.setData('isCustomSprite', isCustomSprite);
     pet.setData('facingRight', true);
     pet.setDepth(spawnY);
 
-    if (isPuppy) {
-      // Use same scaling as companion puppy
+    if (isCustomSprite && customSprite) {
       pet.setScale(0.012);
       pet.setSize(400, 200);
-      pet.setOffset(200, 500);
+      pet.setOffset(customSprite.offset.x, customSprite.offset.y);
     } else {
       pet.setSize(14, 12);
       pet.setOffset(1, TILE_SIZE - 14);
@@ -886,16 +902,32 @@ export class HomeScene extends Phaser.Scene {
         sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
       }
 
-      // Handle puppy sprite direction flipping
-      const isPuppy = sprite.getData('isPuppy') as boolean;
-      if (isPuppy && dir.x !== 0) {
+      // Handle custom sprite direction flipping
+      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
+      if (isCustomSprite && dir.x !== 0) {
+        const petData = sprite.getData('petData') as { type: string };
+        const petType = petData.type.toLowerCase();
         const facingRight = sprite.getData('facingRight') as boolean;
-        if (dir.x > 0 && !facingRight) {
-          sprite.setTexture('puppy_right');
-          sprite.setData('facingRight', true);
-        } else if (dir.x < 0 && facingRight) {
-          sprite.setTexture('puppy_left');
-          sprite.setData('facingRight', false);
+        
+        const spriteMap: Record<string, { left: string; right: string }> = {
+          puppy: { left: 'puppy_left', right: 'puppy_right' },
+          kitty: { left: 'cat_left', right: 'cat_right' },
+          chick: { left: 'chick_left', right: 'chick_right' },
+          frog: { left: 'frog_left', right: 'frog_right' },
+          penguin: { left: 'penguin_left', right: 'penguin_right' },
+          starfish: { left: 'starfish_left', right: 'starfish_right' },
+          turtle: { left: 'turtle_left', right: 'turtle_right' },
+        };
+        
+        const sprites = spriteMap[petType];
+        if (sprites) {
+          if (dir.x > 0 && !facingRight) {
+            sprite.setTexture(sprites.right);
+            sprite.setData('facingRight', true);
+          } else if (dir.x < 0 && facingRight) {
+            sprite.setTexture(sprites.left);
+            sprite.setData('facingRight', false);
+          }
         }
       }
 

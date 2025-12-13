@@ -244,20 +244,32 @@ export class SnowScene extends Phaser.Scene {
 
     spawnPositions.forEach(pos => {
       const petType = SNOW_PET_TYPES[Math.floor(Math.random() * SNOW_PET_TYPES.length)];
+      const petTypeLower = petType.toLowerCase();
+      const isPenguin = petTypeLower === 'penguin';
+      const spriteKey = isPenguin ? 'penguin_right' : `pet_${petTypeLower}`;
+      
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        `pet_${petType.toLowerCase()}`
+        spriteKey
       ) as Phaser.Physics.Arcade.Sprite;
 
       pet.setCollideWorldBounds(true);
       pet.setData('petType', petType);
+      pet.setData('isCustomSprite', isPenguin);
+      pet.setData('facingRight', true);
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      pet.setSize(14, 12);
-      pet.setOffset(1, TILE_SIZE - 14);
+      if (isPenguin) {
+        pet.setScale(0.012);
+        pet.setSize(400, 200);
+        pet.setOffset(160, 480);
+      } else {
+        pet.setSize(14, 12);
+        pet.setOffset(1, TILE_SIZE - 14);
+      }
     });
 
     this.physics.add.collider(this.pets, this.trees);
@@ -477,6 +489,28 @@ export class SnowScene extends Phaser.Scene {
 
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
+
+      // Handle custom sprite direction flipping
+      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
+      if (isCustomSprite && dir.x !== 0) {
+        const petType = (sprite.getData('petType') as string).toLowerCase();
+        const facingRight = sprite.getData('facingRight') as boolean;
+        
+        const spriteMap: Record<string, { left: string; right: string }> = {
+          penguin: { left: 'penguin_left', right: 'penguin_right' },
+        };
+        
+        const sprites = spriteMap[petType];
+        if (sprites) {
+          if (dir.x > 0 && !facingRight) {
+            sprite.setTexture(sprites.right);
+            sprite.setData('facingRight', true);
+          } else if (dir.x < 0 && facingRight) {
+            sprite.setTexture(sprites.left);
+            sprite.setData('facingRight', false);
+          }
+        }
+      }
 
       return true;
     });

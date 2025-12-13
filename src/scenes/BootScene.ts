@@ -31,6 +31,30 @@ export class BootScene extends Phaser.Scene {
     this.load.image('puppy_left_ball', '/assets/sprites/puppy_left_ball.png');
     this.load.image('puppy_right_ball', '/assets/sprites/puppy_right_ball.png');
 
+    // Load cat/kitty sprites
+    this.load.image('cat_left', '/assets/sprites/cat_left.png');
+    this.load.image('cat_right', '/assets/sprites/cat_right.png');
+
+    // Load chick sprites
+    this.load.image('chick_left', '/assets/sprites/chick_left.png');
+    this.load.image('chick_right', '/assets/sprites/chick_right.png');
+
+    // Load frog sprites
+    this.load.image('frog_left', '/assets/sprites/frog_left.png');
+    this.load.image('frog_right', '/assets/sprites/frog_right.png');
+
+    // Load penguin sprites
+    this.load.image('penguin_left', '/assets/sprites/penguin_left.png');
+    this.load.image('penguin_right', '/assets/sprites/penguin_right.png');
+
+    // Load starfish sprites
+    this.load.image('starfish_left', '/assets/sprites/starfish_left.png');
+    this.load.image('starfish_right', '/assets/sprites/starfish_right.png');
+
+    // Load turtle sprites
+    this.load.image('turtle_left', '/assets/sprites/turtle_left.png');
+    this.load.image('turtle_right', '/assets/sprites/turtle_right.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
