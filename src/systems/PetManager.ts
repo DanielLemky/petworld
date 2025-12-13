@@ -1,4 +1,4 @@
-import { PET_TYPES } from '../utils/constants';
+import { PET_TYPES, getCorrectPenForPet } from '../utils/constants';
 
 const STORAGE_KEY = 'petworld_save';
 
@@ -14,6 +14,8 @@ export interface CaughtPet {
   happiness: number;
   hunger: number;
   lastUpdated: number;
+  penId: string | null;                          // Which pen the pet is assigned to
+  penPosition: { x: number; y: number } | null;  // Position within the pen (tile coords)
 }
 
 interface SaveData {
@@ -45,6 +47,8 @@ class PetManagerClass {
       happiness: 30, // Scared from being caught!
       hunger: 40,    // A bit hungry
       lastUpdated: Date.now(),
+      penId: null,        // Not assigned to a pen yet
+      penPosition: null,  // No position in pen yet
     };
 
     this.caughtPets.push(newPet);
@@ -163,6 +167,65 @@ class PetManagerClass {
   clearCompanion(): void {
     this.companionId = null;
     this.save();
+  }
+
+  // Pen management
+
+  // Assign a pet to a pen with a specific position
+  assignPetToPen(petId: string, penId: string, position: { x: number; y: number }): boolean {
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (!pet) return false;
+
+    pet.penId = penId;
+    pet.penPosition = position;
+    this.save();
+    return true;
+  }
+
+  // Remove a pet from its pen (when picking up)
+  removePetFromPen(petId: string): void {
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (pet) {
+      pet.penId = null;
+      pet.penPosition = null;
+      this.save();
+    }
+  }
+
+  // Get all pets assigned to a specific pen
+  getPetsInPen(penId: string): CaughtPet[] {
+    return this.caughtPets.filter(p => p.penId === penId);
+  }
+
+  // Get all pets not assigned to any pen (roaming)
+  getUnassignedPets(): CaughtPet[] {
+    return this.caughtPets.filter(p => p.penId === null);
+  }
+
+  // Check if a pet is in its correct pen
+  isPetInCorrectPen(petId: string): boolean {
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (!pet || !pet.penId) return false;
+
+    const correctPen = getCorrectPenForPet(pet.type);
+    return pet.penId === correctPen;
+  }
+
+  // Get the correct pen id for a pet
+  getCorrectPenForPet(petId: string): string | null {
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (!pet) return null;
+
+    return getCorrectPenForPet(pet.type);
+  }
+
+  // Update pet's position within its pen
+  updatePetPenPosition(petId: string, position: { x: number; y: number }): void {
+    const pet = this.caughtPets.find(p => p.id === petId);
+    if (pet && pet.penId) {
+      pet.penPosition = position;
+      // Don't save on every position update - too frequent
+    }
   }
 
   // Save to localStorage

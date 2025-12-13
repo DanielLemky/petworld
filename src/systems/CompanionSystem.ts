@@ -53,10 +53,15 @@ export class CompanionSystem {
       this.sprite.setOffset(200, 500);
     } else {
       // Use programmatic pet sprite for other pets
+      // Butterflies use different sprite naming (no "pet_" prefix)
+      const spriteKey = petType.startsWith('butterfly_')
+        ? petType
+        : `pet_${petType}`;
+
       this.sprite = this.scene.physics.add.sprite(
         player.x - FOLLOW_DISTANCE,
         player.y,
-        `pet_${petType}`
+        spriteKey
       );
       // Smaller collision box for programmatic sprites
       this.sprite.setSize(10, 6);

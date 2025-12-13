@@ -113,3 +113,70 @@ export const PET_TYPES = {
   FOX: { primary: 0xff7043, secondary: 0xffffff, name: 'Fox' },
   BEAR_CUB: { primary: 0x6d4c41, secondary: 0x4e342e, name: 'Bear Cub' },
 };
+
+// Farm pen types for the home area
+export const PEN_TYPES = {
+  MEADOW: {
+    id: 'meadow',
+    name: 'Meadow Pen',
+    pets: ['BUNNY', 'KITTY', 'PUPPY', 'CHICK'],
+    color: 0x5daa32,
+    groundTile: 'grass',
+  },
+  POND: {
+    id: 'pond',
+    name: 'Pond Pen',
+    pets: ['FROG', 'TURTLE', 'STARFISH', 'CRAB'],
+    color: 0x4a8ac4,
+    groundTile: 'grass',
+  },
+  SNOW: {
+    id: 'snow',
+    name: 'Snow Pen',
+    pets: ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL'],
+    color: 0xe8f4f8,
+    groundTile: 'snow',
+  },
+  BEACH: {
+    id: 'beach',
+    name: 'Beach Pen',
+    pets: ['SEAGULL'],
+    color: 0xe8d4a8,
+    groundTile: 'sand',
+  },
+  MOUNTAIN: {
+    id: 'mountain',
+    name: 'Mountain Pen',
+    pets: ['GOAT', 'EAGLE', 'FOX', 'BEAR_CUB'],
+    color: 0x757575,
+    groundTile: 'rock',
+  },
+  BUTTERFLY_GARDEN: {
+    id: 'butterfly',
+    name: 'Butterfly Garden',
+    pets: ['BUTTERFLY_BLUE', 'BUTTERFLY_PINK', 'BUTTERFLY_YELLOW', 'BUTTERFLY_PURPLE'],
+    color: 0xf472b6,
+    groundTile: 'grass_flower',
+  },
+};
+
+// Get the correct pen for a pet type
+export function getCorrectPenForPet(petType: string): string {
+  const upperType = petType.toUpperCase();
+  for (const penConfig of Object.values(PEN_TYPES)) {
+    if (penConfig.pets.includes(upperType)) {
+      return penConfig.id;
+    }
+  }
+  return 'meadow'; // Default fallback
+}
+
+// Get pen config by id
+export function getPenConfigById(penId: string): typeof PEN_TYPES[keyof typeof PEN_TYPES] | null {
+  for (const penConfig of Object.values(PEN_TYPES)) {
+    if (penConfig.id === penId) {
+      return penConfig;
+    }
+  }
+  return null;
+}

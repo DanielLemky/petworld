@@ -821,21 +821,57 @@ export class WorldScene extends Phaser.Scene {
 
     petPositions.forEach((pos, index) => {
       const petType = petTypes[index % petTypes.length].toLowerCase();
+      const isPuppy = petType === 'puppy';
+      const spriteKey = isPuppy ? 'puppy_right' : `pet_${petType}`;
+
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        `pet_${petType}`
+        spriteKey
       ) as Phaser.Physics.Arcade.Sprite;
 
       pet.setCollideWorldBounds(true);
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setData('petType', petType);
+      pet.setData('isPuppy', isPuppy);
+      pet.setData('facingRight', true);
       pet.setDepth(pos.y * TILE_SIZE);
 
-      // Smaller collision box
-      pet.setSize(10, 6);
-      pet.setOffset(3, TILE_SIZE - 8);
+      if (isPuppy) {
+        // Use same scaling as companion puppy
+        pet.setScale(0.012);
+        pet.setSize(400, 200);
+        pet.setOffset(200, 500);
+      } else {
+        // Smaller collision box for programmatic sprites
+        pet.setSize(10, 6);
+        pet.setOffset(3, TILE_SIZE - 8);
+      }
+    });
+
+    // Add extra frogs near ponds (frogs love water!)
+    const frogPositions = [
+      { x: 48, y: 34 },  // South of main pond
+      { x: 22, y: 60 },  // South of small pond
+      { x: 87, y: 46 },  // South of eastern pond
+    ];
+
+    frogPositions.forEach((pos) => {
+      const frog = this.pets.create(
+        pos.x * TILE_SIZE + TILE_SIZE / 2,
+        pos.y * TILE_SIZE + TILE_SIZE / 2,
+        'pet_frog'
+      ) as Phaser.Physics.Arcade.Sprite;
+
+      frog.setCollideWorldBounds(true);
+      frog.setData('wanderTimer', Math.random() * 2000);
+      frog.setData('wanderDirection', { x: 0, y: 0 });
+      frog.setData('petType', 'frog');
+      frog.setDepth(pos.y * TILE_SIZE);
+
+      frog.setSize(10, 6);
+      frog.setOffset(3, TILE_SIZE - 8);
     });
 
     // Pets collide with trees and each other
@@ -1241,6 +1277,19 @@ export class WorldScene extends Phaser.Scene {
 
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
+
+      // Handle puppy sprite direction flipping
+      const isPuppy = sprite.getData('isPuppy') as boolean;
+      if (isPuppy && dir.x !== 0) {
+        const facingRight = sprite.getData('facingRight') as boolean;
+        if (dir.x > 0 && !facingRight) {
+          sprite.setTexture('puppy_right');
+          sprite.setData('facingRight', true);
+        } else if (dir.x < 0 && facingRight) {
+          sprite.setTexture('puppy_left');
+          sprite.setData('facingRight', false);
+        }
+      }
 
       return true;
     });
