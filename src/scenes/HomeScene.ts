@@ -633,8 +633,8 @@ export class HomeScene extends Phaser.Scene {
       pet.setSize(400, 200);
       pet.setOffset(200, 500);
     } else {
-      pet.setSize(10, 6);
-      pet.setOffset(3, TILE_SIZE - 8);
+      pet.setSize(14, 12);
+      pet.setOffset(1, TILE_SIZE - 14);
     }
 
     // Create mood indicator

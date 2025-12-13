@@ -844,9 +844,9 @@ export class WorldScene extends Phaser.Scene {
         pet.setSize(400, 200);
         pet.setOffset(200, 500);
       } else {
-        // Smaller collision box for programmatic sprites
-        pet.setSize(10, 6);
-        pet.setOffset(3, TILE_SIZE - 8);
+        // Collision box for programmatic sprites
+        pet.setSize(14, 12);
+        pet.setOffset(1, TILE_SIZE - 14);
       }
     });
 
@@ -868,10 +868,12 @@ export class WorldScene extends Phaser.Scene {
       frog.setData('wanderTimer', Math.random() * 2000);
       frog.setData('wanderDirection', { x: 0, y: 0 });
       frog.setData('petType', 'frog');
+      frog.setData('isPuppy', false);
+      frog.setData('facingRight', true);
       frog.setDepth(pos.y * TILE_SIZE);
 
-      frog.setSize(10, 6);
-      frog.setOffset(3, TILE_SIZE - 8);
+      frog.setSize(14, 12);
+      frog.setOffset(1, TILE_SIZE - 14);
     });
 
     // Pets collide with trees and each other

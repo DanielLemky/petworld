@@ -279,8 +279,8 @@ export class BeachScene extends Phaser.Scene {
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      pet.setSize(10, 6);
-      pet.setOffset(3, TILE_SIZE - 8);
+      pet.setSize(14, 12);
+      pet.setOffset(1, TILE_SIZE - 14);
     });
 
     this.physics.add.collider(this.pets, this.trees);
@@ -517,8 +517,8 @@ export class BeachScene extends Phaser.Scene {
 
     const petType = pet.getData('petType') as string;
 
-    this.catchingUI.start(petType, (success) => {
-      if (success && this.targetPet) {
+    this.catchingUI.start(petType, (result) => {
+      if (result === 'success' && this.targetPet) {
         SoundManager.playSuccess();
 
         PetManager.catchPet(petType);
@@ -534,7 +534,7 @@ export class BeachScene extends Phaser.Scene {
             this.targetPet = null;
           },
         });
-      } else {
+      } else if (result === 'failure') {
         SoundManager.playFailure();
 
         if (this.targetPet) {
@@ -549,6 +549,9 @@ export class BeachScene extends Phaser.Scene {
             ease: 'Quad.easeOut',
           });
         }
+        this.targetPet = null;
+      } else {
+        // 'cancelled' or 'no_tool' - pet stays in place
         this.targetPet = null;
       }
 

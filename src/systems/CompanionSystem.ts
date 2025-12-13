@@ -63,9 +63,9 @@ export class CompanionSystem {
         player.y,
         spriteKey
       );
-      // Smaller collision box for programmatic sprites
-      this.sprite.setSize(10, 6);
-      this.sprite.setOffset(3, TILE_SIZE - 8);
+      // Collision box for programmatic sprites
+      this.sprite.setSize(14, 12);
+      this.sprite.setOffset(1, TILE_SIZE - 14);
     }
 
     this.sprite.setCollideWorldBounds(true);
