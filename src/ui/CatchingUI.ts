@@ -197,34 +197,37 @@ export class CatchingUI {
       }
     };
 
-    this.scene.input.keyboard?.on('keydown', handleKeydown);
+    // Delay input setup by 150ms to prevent immediate triggering from start key
+    this.scene.time.delayedCall(150, () => {
+      this.scene.input.keyboard?.on('keydown', handleKeydown);
 
-    // Store reference for cleanup
-    this.container.setData('handleKeydown', handleKeydown);
+      // Store reference for cleanup
+      this.container.setData('handleKeydown', handleKeydown);
 
-    // Set up gamepad polling for catch/cancel
-    this.container.setData('gamepadHandled', false);
-    const gamepadPollEvent = this.scene.time.addEvent({
-      delay: 16, // ~60fps
-      callback: () => {
-        if (!this.isActive || this.container.getData('gamepadHandled')) return;
-        
-        GamepadManager.update();
-        
-        // A button (0) - Catch
-        if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
-          this.container.setData('gamepadHandled', true);
-          doCatch();
-        }
-        // B button (1) - Cancel
-        if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.B)) {
-          this.container.setData('gamepadHandled', true);
-          doCancel();
-        }
-      },
-      loop: true,
+      // Set up gamepad polling for catch/cancel
+      this.container.setData('gamepadHandled', false);
+      const gamepadPollEvent = this.scene.time.addEvent({
+        delay: 16, // ~60fps
+        callback: () => {
+          if (!this.isActive || this.container.getData('gamepadHandled')) return;
+
+          GamepadManager.update();
+
+          // A button (0) - Catch
+          if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+            this.container.setData('gamepadHandled', true);
+            doCatch();
+          }
+          // B button (1) - Cancel
+          if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.B)) {
+            this.container.setData('gamepadHandled', true);
+            doCancel();
+          }
+        },
+        loop: true,
+      });
+      this.container.setData('gamepadPollEvent', gamepadPollEvent);
     });
-    this.container.setData('gamepadPollEvent', gamepadPollEvent);
   }
 
   private checkCatch(): void {
