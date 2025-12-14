@@ -180,6 +180,16 @@ class GamepadManagerClass {
   }
 
   /**
+   * Get the analog value of a trigger/button (0 to 1).
+   * Useful for analog triggers like L2/R2.
+   */
+  getTriggerValue(buttonIndex: number): number {
+    const pad = this.getPad();
+    if (!pad) return 0;
+    return pad.buttons[buttonIndex]?.value ?? 0;
+  }
+
+  /**
    * Get D-pad state as a direction vector.
    */
   getDPad(): StickState {

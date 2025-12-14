@@ -152,15 +152,19 @@ export class WorldScene extends Phaser.Scene {
     if (!this.fetchSystem.canPlay() || this.isCatching || this.isTransitioning) return;
 
     const rightStick = GamepadManager.getRightStick();
-    
-    // If right stick is pushed significantly, throw ball in that direction
     const stickMagnitude = Math.sqrt(rightStick.x * rightStick.x + rightStick.y * rightStick.y);
     
-    if (stickMagnitude > 0.5 && GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
-      // Calculate throw target based on stick direction
-      const throwDistance = 150; // Distance to throw
-      const targetX = this.player.x + rightStick.x * throwDistance;
-      const targetY = this.player.y + rightStick.y * throwDistance;
+    // R2 trigger to throw, right stick to aim
+    // Trigger pressure controls throw distance
+    if (stickMagnitude > 0.3 && GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.RT)) {
+      const triggerValue = GamepadManager.getTriggerValue(GAMEPAD_BUTTONS.RT);
+      const minDistance = 50;
+      const maxDistance = 150;
+      const throwDistance = minDistance + (maxDistance - minDistance) * triggerValue;
+      
+      // Normalize stick direction and apply throw distance
+      const targetX = this.player.x + (rightStick.x / stickMagnitude) * throwDistance;
+      const targetY = this.player.y + (rightStick.y / stickMagnitude) * throwDistance;
       this.fetchSystem.throwBall(targetX, targetY);
     }
   }
