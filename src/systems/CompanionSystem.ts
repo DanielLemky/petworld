@@ -10,7 +10,7 @@ const CLOSE_ENOUGH = TILE_SIZE * 0.6;
 
 export class CompanionSystem {
   private scene: Phaser.Scene;
-  private sprite: Phaser.Physics.Arcade.Sprite | null = null;
+  private sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody | null = null;
   private player: Phaser.Physics.Arcade.Sprite | null = null;
   private positionHistory: { x: number; y: number }[] = [];
   private historyDelay = 5; // frames of delay for following
@@ -28,7 +28,7 @@ export class CompanionSystem {
   }
 
   // Initialize companion if one is set
-  init(player: Phaser.Physics.Arcade.Sprite): void {
+  init(player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody): void {
     this.player = player;
     this.positionHistory = [];
 
@@ -47,7 +47,7 @@ export class CompanionSystem {
         'puppy_right'
       );
       // Scale down the high-res sprite
-      this.sprite.setScale(0.012);
+      this.sprite.setScale(0.018);
       // Adjust collision box for scaled sprite
       this.sprite.setSize(400, 200);
       this.sprite.setOffset(200, 500);
@@ -62,7 +62,7 @@ export class CompanionSystem {
         player.x - FOLLOW_DISTANCE,
         player.y,
         spriteKey
-      );
+      ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       // Collision box for programmatic sprites
       this.sprite.setSize(14, 12);
       this.sprite.setOffset(1, TILE_SIZE - 14);

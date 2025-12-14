@@ -6,6 +6,7 @@ import { SoundManager } from '../systems/SoundManager';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 import { AccountManager } from '../systems/AccountManager';
+import { PlayerAnimator } from '../systems/PlayerAnimator';
 
 // Farm dimensions
 const FARM_WIDTH = 200;
@@ -24,7 +25,7 @@ interface PenData {
 }
 
 export class HomeScene extends Phaser.Scene {
-  private player!: Phaser.Physics.Arcade.Sprite;
+  private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
   private playerDirection: string = 'down';
@@ -38,8 +39,7 @@ export class HomeScene extends Phaser.Scene {
   private takeKey!: Phaser.Input.Keyboard.Key;
   private moodIndicators: Map<string, Phaser.GameObjects.Text> = new Map();
   private companionIndicators: Map<string, Phaser.GameObjects.Text> = new Map();
-  private walkTween: Phaser.Tweens.Tween | null = null;
-  private isWalking: boolean = false;
+  
   private companionText!: Phaser.GameObjects.Text;
 
   // Pen management
@@ -52,6 +52,7 @@ export class HomeScene extends Phaser.Scene {
   private isCarryingPet: boolean = false;
   private carryText!: Phaser.GameObjects.Text;
   private penHighlight: Phaser.GameObjects.Rectangle | null = null;
+  private playerAnimator!: PlayerAnimator;
 
   constructor() {
     super({ key: SCENES.HOME });
@@ -554,13 +555,16 @@ export class HomeScene extends Phaser.Scene {
       82 * TILE_SIZE + TILE_SIZE / 2,
       15 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_down'
-    );
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    this.player.setScale(0.015);
+    // Scale will be set by PlayerAnimator
     this.player.setSize(800, 400);
     this.player.setOffset(400, 2400);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(this.player.y);
+
+    // Initialize player animator
+    this.playerAnimator = new PlayerAnimator(this, this.player);
 
     // Collide with global fences (buildings)
     this.physics.add.collider(this.player, this.globalFences);
@@ -875,41 +879,17 @@ export class HomeScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
+    // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    if (moving && !this.isWalking) {
-      this.startWalkAnimation();
-    } else if (!moving && this.isWalking) {
-      this.stopWalkAnimation();
-    }
+    this.playerAnimator.updateAnimation(moving, velocityX);
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
-      this.player.setTexture(`player_${newDirection}`);
+      // PlayerAnimator handles texture changes automatically
     }
   }
 
-  private startWalkAnimation(): void {
-    this.isWalking = true;
-    if (this.walkTween) this.walkTween.stop();
-    this.walkTween = this.tweens.add({
-      targets: this.player,
-      scaleY: { from: 0.015, to: 0.014 },
-      scaleX: { from: 0.015, to: 0.016 },
-      duration: 100,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-  }
-
-  private stopWalkAnimation(): void {
-    this.isWalking = false;
-    if (this.walkTween) {
-      this.walkTween.stop();
-      this.walkTween = null;
-    }
-    this.player.setScale(0.015);
-  }
+  
 
   private handlePetBehavior(): void {
     const petSpeed = 15;

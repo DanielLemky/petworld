@@ -10,13 +10,15 @@ import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
+import { PlayerAnimator } from '../systems/PlayerAnimator';
 
 export class MountainScene extends Phaser.Scene {
-  private player!: Phaser.Physics.Arcade.Sprite;
+  private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
   private boulders!: Phaser.Physics.Arcade.StaticGroup;
   private pets!: Phaser.Physics.Arcade.Group;
+  private playerAnimator!: PlayerAnimator;
   private eagles!: Phaser.Physics.Arcade.Group;
   private interactKey!: Phaser.Input.Keyboard.Key;
   private infoText!: Phaser.GameObjects.Text;
@@ -31,8 +33,7 @@ export class MountainScene extends Phaser.Scene {
   private windParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private collectibles!: Phaser.Physics.Arcade.Group;
   private inventoryText!: Phaser.GameObjects.Text;
-  private walkTween: Phaser.Tweens.Tween | null = null;
-  private isWalking: boolean = false;
+  
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
 
@@ -48,6 +49,9 @@ export class MountainScene extends Phaser.Scene {
 
     this.createWorld();
     this.createPlayer();
+
+    // Initialize player animator
+    this.playerAnimator = new PlayerAnimator(this, this.player);
 
     // Initialize companion system
     this.companionSystem = new CompanionSystem(this);
@@ -256,10 +260,9 @@ export class MountainScene extends Phaser.Scene {
       5 * TILE_SIZE + TILE_SIZE / 2,
       17 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_right'
-    );
+    ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    // Scale down the high-res sprite
-    this.player.setScale(0.015);
+    // Scale will be set by PlayerAnimator
 
     this.player.setSize(800, 400);
     this.player.setOffset(400, 2400);
@@ -560,42 +563,17 @@ export class MountainScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle walk animation
+    // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    if (moving && !this.isWalking) {
-      this.startWalkAnimation();
-    } else if (!moving && this.isWalking) {
-      this.stopWalkAnimation();
-    }
+    this.playerAnimator.updateAnimation(moving, velocityX);
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
-      this.player.setTexture(`player_${newDirection}`);
+      // PlayerAnimator handles texture changes automatically
     }
   }
 
-  private startWalkAnimation(): void {
-    this.isWalking = true;
-    if (this.walkTween) this.walkTween.stop();
-    this.walkTween = this.tweens.add({
-      targets: this.player,
-      scaleY: { from: 0.015, to: 0.014 },
-      scaleX: { from: 0.015, to: 0.016 },
-      duration: 100,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-  }
-
-  private stopWalkAnimation(): void {
-    this.isWalking = false;
-    if (this.walkTween) {
-      this.walkTween.stop();
-      this.walkTween = null;
-    }
-    this.player.setScale(0.015);
-  }
+  
 
   private handlePetBehavior(): void {
     const petSpeed = 22;
