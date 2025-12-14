@@ -85,33 +85,33 @@ export const SCENES = {
   MOUNTAIN: 'MountainScene',
 };
 
-// Pet types with their colors
+// Pet types with their colors and catching difficulty (1=very easy, 4=hard)
 export const PET_TYPES = {
-  BUNNY: { primary: 0xffd5b4, secondary: 0xffb6c1, name: 'Bunny' },
-  KITTY: { primary: 0xffa500, secondary: 0xffd700, name: 'Kitty' },
-  PUPPY: { primary: 0x8b4513, secondary: 0xdeb887, name: 'Puppy' },
-  CHICK: { primary: 0xffff00, secondary: 0xffa500, name: 'Chick' },
-  FROG: { primary: 0x32cd32, secondary: 0x228b22, name: 'Frog' },
-  // Butterflies
-  BUTTERFLY_BLUE: { primary: 0x60a5fa, secondary: 0x3b82f6, name: 'Blue Butterfly' },
-  BUTTERFLY_PINK: { primary: 0xf472b6, secondary: 0xec4899, name: 'Pink Butterfly' },
-  BUTTERFLY_YELLOW: { primary: 0xfbbf24, secondary: 0xf59e0b, name: 'Yellow Butterfly' },
-  BUTTERFLY_PURPLE: { primary: 0xa78bfa, secondary: 0x8b5cf6, name: 'Purple Butterfly' },
+  BUNNY: { primary: 0xffd5b4, secondary: 0xffb6c1, name: 'Bunny', difficulty: 2 },
+  KITTY: { primary: 0xffa500, secondary: 0xffd700, name: 'Kitty', difficulty: 2 },
+  PUPPY: { primary: 0x8b4513, secondary: 0xdeb887, name: 'Puppy', difficulty: 2 },
+  CHICK: { primary: 0xffff00, secondary: 0xffa500, name: 'Chick', difficulty: 1 },
+  FROG: { primary: 0x32cd32, secondary: 0x228b22, name: 'Frog', difficulty: 2 },
+  // Butterflies (medium - they fly)
+  BUTTERFLY_BLUE: { primary: 0x60a5fa, secondary: 0x3b82f6, name: 'Blue Butterfly', difficulty: 3 },
+  BUTTERFLY_PINK: { primary: 0xf472b6, secondary: 0xec4899, name: 'Pink Butterfly', difficulty: 3 },
+  BUTTERFLY_YELLOW: { primary: 0xfbbf24, secondary: 0xf59e0b, name: 'Yellow Butterfly', difficulty: 3 },
+  BUTTERFLY_PURPLE: { primary: 0xa78bfa, secondary: 0x8b5cf6, name: 'Purple Butterfly', difficulty: 3 },
   // Snow pets
-  PENGUIN: { primary: 0x1a1a2e, secondary: 0xffffff, name: 'Penguin' },
-  POLAR_BEAR: { primary: 0xffffff, secondary: 0xe8e8e8, name: 'Polar Bear' },
-  SNOW_BUNNY: { primary: 0xffffff, secondary: 0xffb6c1, name: 'Snow Bunny' },
-  SEAL: { primary: 0x708090, secondary: 0xa9a9a9, name: 'Seal' },
+  PENGUIN: { primary: 0x1a1a2e, secondary: 0xffffff, name: 'Penguin', difficulty: 2 },
+  POLAR_BEAR: { primary: 0xffffff, secondary: 0xe8e8e8, name: 'Polar Bear', difficulty: 3 },
+  SNOW_BUNNY: { primary: 0xffffff, secondary: 0xffb6c1, name: 'Snow Bunny', difficulty: 2 },
+  SEAL: { primary: 0x708090, secondary: 0xa9a9a9, name: 'Seal', difficulty: 1 },
   // Beach pets
-  CRAB: { primary: 0xff6347, secondary: 0xff4500, name: 'Crab' },
-  SEAGULL: { primary: 0xffffff, secondary: 0x808080, name: 'Seagull' },
-  TURTLE: { primary: 0x2e8b57, secondary: 0x8fbc8f, name: 'Turtle' },
-  STARFISH: { primary: 0xffa07a, secondary: 0xff7f50, name: 'Starfish' },
+  CRAB: { primary: 0xff6347, secondary: 0xff4500, name: 'Crab', difficulty: 2 },
+  SEAGULL: { primary: 0xffffff, secondary: 0x808080, name: 'Seagull', difficulty: 3 },
+  TURTLE: { primary: 0x2e8b57, secondary: 0x8fbc8f, name: 'Turtle', difficulty: 2 },
+  STARFISH: { primary: 0xffa07a, secondary: 0xff7f50, name: 'Starfish', difficulty: 1 },
   // Mountain pets
-  GOAT: { primary: 0xd7ccc8, secondary: 0x8d6e63, name: 'Mountain Goat' },
-  EAGLE: { primary: 0x5d4037, secondary: 0xffd54f, name: 'Eagle' },
-  FOX: { primary: 0xff7043, secondary: 0xffffff, name: 'Fox' },
-  BEAR_CUB: { primary: 0x6d4c41, secondary: 0x4e342e, name: 'Bear Cub' },
+  GOAT: { primary: 0xd7ccc8, secondary: 0x8d6e63, name: 'Mountain Goat', difficulty: 3 },
+  EAGLE: { primary: 0x5d4037, secondary: 0xffd54f, name: 'Eagle', difficulty: 4 },
+  FOX: { primary: 0xff7043, secondary: 0xffffff, name: 'Fox', difficulty: 4 },
+  BEAR_CUB: { primary: 0x6d4c41, secondary: 0x4e342e, name: 'Bear Cub', difficulty: 4 },
 };
 
 // Farm pen types for the home area

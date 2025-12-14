@@ -19,12 +19,23 @@ export class CatchingUI {
   private indicatorTween!: Phaser.Tweens.Tween;
   private onComplete!: (result: CatchResult) => void;
 
+  // Difficulty settings: level -> { zoneWidth, speed }
+  // Level 1 = Very Easy, Level 4 = Hard
+  private readonly DIFFICULTY_SETTINGS: Record<number, { zoneWidth: number; speed: number }> = {
+    1: { zoneWidth: 70, speed: 1000 },  // Very Easy - slow, large zone
+    2: { zoneWidth: 55, speed: 900 },   // Easy - comfortable for kids
+    3: { zoneWidth: 38, speed: 650 },   // Medium - challenging
+    4: { zoneWidth: 28, speed: 500 },   // Hard - fast, small zone
+  };
+
   // Game settings
   private readonly barWidth = 200;
   private readonly barHeight = 20;
-  private readonly catchZoneWidth = 50; // Generous for kids
   private readonly indicatorWidth = 8;
-  private readonly speed = 800; // ms for one direction
+
+  // These are set per-catch based on pet difficulty
+  private catchZoneWidth = 50;
+  private speed = 800;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -43,6 +54,17 @@ export class CatchingUI {
     this.isActive = true;
     this.onComplete = callback;
 
+    // Get pet info and difficulty
+    const petKey = petType.toUpperCase() as keyof typeof PET_TYPES;
+    const petInfo = PET_TYPES[petKey];
+    const petName = petInfo?.name || 'Pet';
+
+    // Apply difficulty settings for this pet
+    const difficulty = petInfo?.difficulty || 2;
+    const settings = this.DIFFICULTY_SETTINGS[difficulty] || this.DIFFICULTY_SETTINGS[2];
+    this.catchZoneWidth = settings.zoneWidth;
+    this.speed = settings.speed;
+
     const centerX = this.scene.cameras.main.width / 2;
     const centerY = this.scene.cameras.main.height / 2;
 
@@ -55,10 +77,6 @@ export class CatchingUI {
     const overlay = this.scene.add.rectangle(0, 0, 400, 250, 0x000000, 0.7);
     overlay.setStrokeStyle(3, PALETTE.UI_BORDER);
     this.container.add(overlay);
-
-    // Pet info
-    const petKey = petType.toUpperCase() as keyof typeof PET_TYPES;
-    const petName = PET_TYPES[petKey]?.name || 'Pet';
 
     this.petNameText = this.scene.add.text(0, -90, `Wild ${petName} appeared!`, {
       fontSize: '16px',

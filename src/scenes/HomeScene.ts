@@ -657,6 +657,9 @@ export class HomeScene extends Phaser.Scene {
 
     // Apply sprite configuration from centralized config
     applyPetSpriteConfig(pet, petType);
+    
+    // Store original scale for animations (prevents cumulative scaling issues)
+    pet.setData('originalScale', pet.scale);
 
     // Create mood indicator
     const moodIndicator = this.add.text(pet.x, pet.y - 12, '', { fontSize: '10px' });
@@ -1275,17 +1278,17 @@ export class HomeScene extends Phaser.Scene {
       onComplete: () => foodEmoji.destroy(),
     });
 
-    const currentScaleX = nearestPet.scaleX;
-    const currentScaleY = nearestPet.scaleY;
+    // Use stored original scale to prevent cumulative scaling from rapid feeds
+    const originalScale = nearestPet.getData('originalScale') || nearestPet.scale;
     this.tweens.add({
       targets: nearestPet,
-      scaleX: currentScaleX * 1.1,
-      scaleY: currentScaleY * 0.9,
+      scaleX: originalScale * 1.1,
+      scaleY: originalScale * 0.9,
       duration: 100,
       yoyo: true,
       repeat: 2,
       onComplete: () => {
-        nearestPet.setScale(currentScaleX, currentScaleY);
+        nearestPet.setScale(originalScale);
       },
     });
 
