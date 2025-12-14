@@ -3,7 +3,7 @@ export const GAME_HEIGHT = 600;
 export const TILE_SIZE = 16;
 export const PLAYER_WIDTH = 16;
 export const PLAYER_HEIGHT = 32;
-export const PLAYER_SPEED = 100;
+export const PLAYER_SPEED = 150;
 
 // Stardew Valley inspired color palette
 export const PALETTE = {
