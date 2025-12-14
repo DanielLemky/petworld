@@ -1,4 +1,6 @@
-const INVENTORY_STORAGE_KEY = 'petworld_inventory';
+import { AccountManager } from './AccountManager';
+
+const BASE_INVENTORY_STORAGE_KEY = 'petworld_inventory';
 
 // Tool types
 export type ToolType = 'NET' | 'FISHING_ROD' | 'TRAP' | 'TREATS';
@@ -70,6 +72,20 @@ class InventoryManagerClass {
   private tools: Set<ToolType> = new Set();
 
   constructor() {
+    // Don't auto-load - wait for account selection
+  }
+
+  // Get the storage key for the current account
+  private getStorageKey(): string {
+    if (!AccountManager.hasActiveAccount()) {
+      return BASE_INVENTORY_STORAGE_KEY; // Fallback (shouldn't happen in normal flow)
+    }
+    return AccountManager.getStorageKey(BASE_INVENTORY_STORAGE_KEY);
+  }
+
+  // Reload data for current account (call after account selection)
+  reload(): void {
+    this.tools.clear();
     this.load();
   }
 
@@ -123,7 +139,7 @@ class InventoryManagerClass {
         tools: Array.from(this.tools),
         savedAt: Date.now(),
       };
-      localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(saveData));
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(saveData));
       return true;
     } catch (error) {
       console.error('Failed to save inventory:', error);
@@ -134,7 +150,7 @@ class InventoryManagerClass {
   // Load from localStorage
   load(): boolean {
     try {
-      const saved = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      const saved = localStorage.getItem(this.getStorageKey());
       if (!saved) {
         return false;
       }
@@ -151,7 +167,7 @@ class InventoryManagerClass {
 
   // Clear inventory (for testing/reset)
   clearInventory(): void {
-    localStorage.removeItem(INVENTORY_STORAGE_KEY);
+    localStorage.removeItem(this.getStorageKey());
     this.tools.clear();
   }
 }

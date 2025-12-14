@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, SCENES } from './utils/constants';
+import { GAME_WIDTH, GAME_HEIGHT } from './utils/constants';
 import { BootScene } from './scenes/BootScene';
+import { AccountSelectScene } from './scenes/AccountSelectScene';
+import { MenuScene } from './scenes/MenuScene';
 import { WorldScene } from './scenes/WorldScene';
 import { HomeScene } from './scenes/HomeScene';
 import { SnowScene } from './scenes/SnowScene';
@@ -24,7 +26,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, WorldScene, HomeScene, SnowScene, BeachScene, MountainScene],
+  scene: [BootScene, AccountSelectScene, MenuScene, WorldScene, HomeScene, SnowScene, BeachScene, MountainScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

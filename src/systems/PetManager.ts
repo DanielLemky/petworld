@@ -1,6 +1,7 @@
 import { PET_TYPES, getCorrectPenForPet } from '../utils/constants';
+import { AccountManager } from './AccountManager';
 
-const STORAGE_KEY = 'petworld_save';
+const BASE_STORAGE_KEY = 'petworld_save';
 
 // Decay rates (per minute in real time for faster gameplay)
 const HUNGER_DECAY_PER_MINUTE = 2;
@@ -31,7 +32,22 @@ class PetManagerClass {
   private companionId: string | null = null;
 
   constructor() {
-    // Auto-load on initialization
+    // Don't auto-load - wait for account selection
+  }
+
+  // Get the storage key for the current account
+  private getStorageKey(): string {
+    if (!AccountManager.hasActiveAccount()) {
+      return BASE_STORAGE_KEY; // Fallback (shouldn't happen in normal flow)
+    }
+    return AccountManager.getStorageKey(BASE_STORAGE_KEY);
+  }
+
+  // Reload data for current account (call after account selection)
+  reload(): void {
+    this.caughtPets = [];
+    this.nextId = 1;
+    this.companionId = null;
     this.load();
   }
 
@@ -237,7 +253,7 @@ class PetManagerClass {
         savedAt: Date.now(),
         companionId: this.companionId,
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(saveData));
       console.log(`Game saved! ${this.caughtPets.length} pets.`);
       return true;
     } catch (error) {
@@ -249,7 +265,7 @@ class PetManagerClass {
   // Load from localStorage
   load(): boolean {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(this.getStorageKey());
       if (!saved) {
         console.log('No save data found, starting fresh.');
         return false;
@@ -270,7 +286,7 @@ class PetManagerClass {
 
   // Clear save data (for testing or reset)
   clearSave(): void {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(this.getStorageKey());
     this.caughtPets = [];
     this.nextId = 1;
     this.companionId = null;
@@ -279,7 +295,7 @@ class PetManagerClass {
 
   // Check if save exists
   hasSaveData(): boolean {
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    return localStorage.getItem(this.getStorageKey()) !== null;
   }
 
   // For manual export/import

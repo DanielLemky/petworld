@@ -163,7 +163,6 @@ export class CatchingUI {
   }
 
   private startIndicatorMovement(): void {
-    const leftBound = -this.barWidth / 2 + this.indicatorWidth / 2 + 4;
     const rightBound = this.barWidth / 2 - this.indicatorWidth / 2 - 4;
 
     this.indicatorTween = this.scene.tweens.add({

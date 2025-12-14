@@ -77,6 +77,7 @@ export const PALETTE = {
 
 export const SCENES = {
   BOOT: 'BootScene',
+  ACCOUNT_SELECT: 'AccountSelectScene',
   MENU: 'MenuScene',
   WORLD: 'WorldScene',
   HOME: 'HomeScene',

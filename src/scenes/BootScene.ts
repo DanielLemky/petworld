@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_WIDTH, PLAYER_HEIGHT, PALETTE, PET_TYPES } from '../utils/constants';
+import { SCENES, TILE_SIZE, PALETTE, PET_TYPES } from '../utils/constants';
 import { SoundManager } from '../systems/SoundManager';
 import { getAllSpriteKeys } from '../systems/PetSpriteConfig';
 
@@ -49,137 +49,8 @@ export class BootScene extends Phaser.Scene {
     // Audio will actually start after user clicks/presses a key (browser requirement)
     SoundManager.init();
 
-    // Start the game immediately
-    this.scene.start(SCENES.WORLD);
-  }
-
-  private createPlayerSprites(): void {
-    // Create player facing down (front view - default)
-    this.createPlayerDirection('player_down', 'front');
-    this.createPlayerDirection('player_up', 'back');
-    this.createPlayerDirection('player_left', 'left');
-    this.createPlayerDirection('player_right', 'right');
-
-    // Default player texture
-    this.createPlayerDirection('player', 'front');
-  }
-
-  private createPlayerDirection(key: string, direction: string): void {
-    const g = this.make.graphics({ x: 0, y: 0 });
-    const w = PLAYER_WIDTH;
-    const h = PLAYER_HEIGHT;
-
-    // Shadow
-    g.fillStyle(PALETTE.SHADOW, 0.3);
-    g.fillEllipse(w / 2, h - 2, 12, 4);
-
-    if (direction === 'front' || direction === 'back') {
-      // Body (shirt)
-      g.fillStyle(PALETTE.BLUE_SHIRT, 1);
-      g.fillRect(3, 14, 10, 14);
-
-      // Body shading
-      g.fillStyle(0x3a7bc4, 1);
-      g.fillRect(3, 14, 2, 14);
-
-      // Arms
-      g.fillStyle(PALETTE.SKIN_MID, 1);
-      g.fillRect(1, 16, 2, 6);
-      g.fillRect(13, 16, 2, 6);
-
-      // Legs
-      g.fillStyle(PALETTE.DIRT_MID, 1);
-      g.fillRect(4, 28, 3, 4);
-      g.fillRect(9, 28, 3, 4);
-
-      if (direction === 'front') {
-        // Head
-        g.fillStyle(PALETTE.SKIN_LIGHT, 1);
-        g.fillRect(3, 4, 10, 11);
-
-        // Head shading
-        g.fillStyle(PALETTE.SKIN_MID, 1);
-        g.fillRect(3, 4, 2, 11);
-
-        // Hair
-        g.fillStyle(PALETTE.BROWN_HAIR, 1);
-        g.fillRect(2, 2, 12, 4);
-        g.fillRect(2, 4, 2, 4);
-        g.fillRect(12, 4, 2, 4);
-
-        // Eyes
-        g.fillStyle(0x000000, 1);
-        g.fillRect(5, 8, 2, 3);
-        g.fillRect(9, 8, 2, 3);
-
-        // Eye shine
-        g.fillStyle(0xffffff, 1);
-        g.fillRect(5, 8, 1, 1);
-        g.fillRect(9, 8, 1, 1);
-
-        // Mouth
-        g.fillStyle(0x000000, 1);
-        g.fillRect(7, 12, 2, 1);
-
-        // Blush
-        g.fillStyle(0xffaaaa, 0.5);
-        g.fillRect(3, 10, 2, 2);
-        g.fillRect(11, 10, 2, 2);
-      } else {
-        // Back of head
-        g.fillStyle(PALETTE.BROWN_HAIR, 1);
-        g.fillRect(2, 2, 12, 13);
-
-        // Hair detail
-        g.fillStyle(0x5a3418, 1);
-        g.fillRect(4, 4, 2, 8);
-        g.fillRect(10, 4, 2, 8);
-      }
-    } else {
-      // Side view (left or right)
-      const flip = direction === 'right';
-
-      // Body
-      g.fillStyle(PALETTE.BLUE_SHIRT, 1);
-      g.fillRect(4, 14, 8, 14);
-
-      // Arm (visible one)
-      g.fillStyle(PALETTE.SKIN_MID, 1);
-      if (flip) {
-        g.fillRect(11, 16, 3, 6);
-      } else {
-        g.fillRect(2, 16, 3, 6);
-      }
-
-      // Legs
-      g.fillStyle(PALETTE.DIRT_MID, 1);
-      g.fillRect(5, 28, 3, 4);
-      g.fillRect(9, 28, 2, 4);
-
-      // Head
-      g.fillStyle(PALETTE.SKIN_LIGHT, 1);
-      g.fillRect(4, 4, 8, 11);
-
-      // Hair
-      g.fillStyle(PALETTE.BROWN_HAIR, 1);
-      g.fillRect(3, 2, 10, 5);
-      if (flip) {
-        g.fillRect(3, 4, 3, 6);
-      } else {
-        g.fillRect(10, 4, 3, 6);
-      }
-
-      // Eye (one visible)
-      g.fillStyle(0x000000, 1);
-      if (flip) {
-        g.fillRect(9, 8, 2, 3);
-      } else {
-        g.fillRect(5, 8, 2, 3);
-      }
-    }
-
-    g.generateTexture(key, w, h);
-    g.destroy();
+    // Start at account selection screen
+    this.scene.start(SCENES.ACCOUNT_SELECT);
   }
 
   private createPetSprites(): void {

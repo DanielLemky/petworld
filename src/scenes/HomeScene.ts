@@ -5,6 +5,7 @@ import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
+import { AccountManager } from '../systems/AccountManager';
 
 // Farm dimensions
 const FARM_WIDTH = 200;
@@ -117,6 +118,10 @@ export class HomeScene extends Phaser.Scene {
     // Y/Triangle button (3) - Go to World
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
       this.goToWorld();
+    }
+    // Start button - Open menu
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
+      this.openMenu();
     }
   }
 
@@ -769,6 +774,25 @@ export class HomeScene extends Phaser.Scene {
     locationText.setOrigin(1, 0);
     locationText.setScrollFactor(0);
     locationText.setDepth(1000);
+
+    // Account name display
+    const account = AccountManager.getActiveAccount();
+    if (account) {
+      const accountText = this.add.text(
+        this.cameras.main.width - 16,
+        38,
+        account.name,
+        {
+          fontSize: '10px',
+          color: '#aaaaaa',
+          backgroundColor: '#2d2d44dd',
+          padding: { x: 6, y: 3 },
+        }
+      );
+      accountText.setOrigin(1, 0);
+      accountText.setScrollFactor(0);
+      accountText.setDepth(1000);
+    }
   }
 
   private setupInput(): void {
@@ -787,12 +811,19 @@ export class HomeScene extends Phaser.Scene {
       this.feedKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
       this.takeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
       const worldKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
+      const menuKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
       this.interactKey.on('down', () => this.handleInteraction());
       this.feedKey.on('down', () => this.handleFeeding());
       this.takeKey.on('down', () => this.handleTakeWithMe());
       worldKey.on('down', () => this.goToWorld());
+      menuKey.on('down', () => this.openMenu());
     }
+  }
+
+  private openMenu(): void {
+    this.scene.pause();
+    this.scene.launch(SCENES.MENU, { previousScene: SCENES.HOME });
   }
 
   private handlePlayerMovement(): void {

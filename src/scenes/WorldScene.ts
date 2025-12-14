@@ -9,6 +9,7 @@ import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
+import { AccountManager } from '../systems/AccountManager';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -148,6 +149,11 @@ export class WorldScene extends Phaser.Scene {
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
       this.goHome();
     }
+
+    // Start button - Open menu
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
+      this.openMenu();
+    }
   }
 
   private handleFetchWithGamepad(): void {
@@ -207,6 +213,25 @@ export class WorldScene extends Phaser.Scene {
     locationText.setOrigin(1, 0);
     locationText.setScrollFactor(0);
     locationText.setDepth(1000);
+
+    // Account name display
+    const account = AccountManager.getActiveAccount();
+    if (account) {
+      const accountText = this.add.text(
+        this.cameras.main.width - 16,
+        38,
+        account.name,
+        {
+          fontSize: '10px',
+          color: '#aaaaaa',
+          backgroundColor: '#2d2d44dd',
+          padding: { x: 6, y: 3 },
+        }
+      );
+      accountText.setOrigin(1, 0);
+      accountText.setScrollFactor(0);
+      accountText.setDepth(1000);
+    }
 
     // Inventory display
     this.inventoryText = this.add.text(16, 60, this.getInventoryText(), {
@@ -1145,6 +1170,14 @@ export class WorldScene extends Phaser.Scene {
           this.goHome();
         }
       });
+
+      // ESC key - Open menu
+      const menuKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+      menuKey.on('down', () => {
+        if (!this.isCatching) {
+          this.openMenu();
+        }
+      });
     }
 
     // Mouse click handler for fetch
@@ -1169,6 +1202,12 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start(SCENES.HOME);
     });
+  }
+
+  private openMenu(): void {
+    if (this.isCatching || this.isTransitioning) return;
+    this.scene.pause();
+    this.scene.launch(SCENES.MENU, { previousScene: SCENES.WORLD });
   }
 
   private goToSnow(): void {
