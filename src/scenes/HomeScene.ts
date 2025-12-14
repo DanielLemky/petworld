@@ -445,28 +445,33 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createPenFences(fences: Phaser.Physics.Arcade.StaticGroup, startX: number, startY: number, width: number, height: number): void {
-    // Gate position (bottom center, 2 tiles wide)
-    const gateStartX = startX + Math.floor(width / 2) - 1;
-    const gateEndX = gateStartX + 2;
+    // Gate positions (all gates are 2 tiles wide/tall and centered)
+    const horizontalGateStartX = startX + Math.floor(width / 2) - 1;
+    const horizontalGateEndX = horizontalGateStartX + 2;
+    const verticalGateStartY = startY + Math.floor(height / 2) - 1;
+    const verticalGateEndY = verticalGateStartY + 2;
 
-    // Top fence
+    // Top fence (with gate)
     for (let x = startX; x < startX + width; x++) {
+      if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY);
     }
 
     // Bottom fence (with gate)
     for (let x = startX; x < startX + width; x++) {
-      if (x >= gateStartX && x < gateEndX) continue; // Skip gate
+      if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY + height - 1);
     }
 
-    // Left fence
+    // Left fence (with gate)
     for (let y = startY + 1; y < startY + height - 1; y++) {
+      if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX, y);
     }
 
-    // Right fence
+    // Right fence (with gate)
     for (let y = startY + 1; y < startY + height - 1; y++) {
+      if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX + width - 1, y);
     }
   }
@@ -487,63 +492,131 @@ export class HomeScene extends Phaser.Scene {
     collider.refreshBody();
   }
 
+  private isNearGate(x: number, y: number, startX: number, startY: number, width: number, height: number): boolean {
+    const centerX = startX + Math.floor(width / 2);
+    const centerY = startY + Math.floor(height / 2);
+    const gateBuffer = 3; // Keep decorations at least 3 tiles away from gates
+
+    // Check distance from top gate (center X, startY)
+    if (Math.abs(x - centerX) <= gateBuffer && Math.abs(y - startY) <= gateBuffer) return true;
+
+    // Check distance from bottom gate (center X, startY + height - 1)
+    if (Math.abs(x - centerX) <= gateBuffer && Math.abs(y - (startY + height - 1)) <= gateBuffer) return true;
+
+    // Check distance from left gate (startX, center Y)
+    if (Math.abs(x - startX) <= gateBuffer && Math.abs(y - centerY) <= gateBuffer) return true;
+
+    // Check distance from right gate (startX + width - 1, center Y)
+    if (Math.abs(x - (startX + width - 1)) <= gateBuffer && Math.abs(y - centerY) <= gateBuffer) return true;
+
+    return false;
+  }
+
   private createPenDecorations(penId: string, startX: number, startY: number, width: number, height: number): void {
     switch (penId) {
       case 'meadow':
-        // Add trees (scaled positions for 3x larger pens)
-        this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + width - 10) * TILE_SIZE, (startY + 15) * TILE_SIZE, 'tree').setDepth((startY + 15) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + 20) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
-        // Add flowers (more for larger pen)
+        // Add trees (scaled positions for 3x larger pens, avoiding gates)
+        if (!this.isNearGate(startX + 8, startY + 10, startX, startY, width, height)) {
+          this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + width - 10, startY + 15, startX, startY, width, height)) {
+          this.add.image((startX + width - 10) * TILE_SIZE, (startY + 15) * TILE_SIZE, 'tree').setDepth((startY + 15) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + 20, startY + 30, startX, startY, width, height)) {
+          this.add.image((startX + 20) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        // Add flowers (more for larger pen, avoiding gates)
         for (let i = 0; i < 15; i++) {
-          const fx = startX + 4 + Math.random() * (width - 8);
-          const fy = startY + 4 + Math.random() * (height - 8);
-          const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
-          this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
+          let fx, fy, attempts = 0;
+          do {
+            fx = startX + 4 + Math.random() * (width - 8);
+            fy = startY + 4 + Math.random() * (height - 8);
+            attempts++;
+          } while (this.isNearGate(fx, fy, startX, startY, width, height) && attempts < 20);
+
+          if (attempts < 20) {
+            const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
+            this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
+          }
         }
         break;
 
       case 'snow':
-        // Add pine trees (scaled positions for 3x larger pens)
-        this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'pine_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + width - 10) * TILE_SIZE, (startY + 12) * TILE_SIZE, 'pine_tree').setDepth((startY + 12) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + 25) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'pine_tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
-        // Add snowman
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 10) * TILE_SIZE, 'snowman').setDepth((startY + height - 10) * TILE_SIZE);
+        // Add pine trees (scaled positions for 3x larger pens, avoiding gates)
+        if (!this.isNearGate(startX + 8, startY + 10, startX, startY, width, height)) {
+          this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'pine_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + width - 10, startY + 12, startX, startY, width, height)) {
+          this.add.image((startX + width - 10) * TILE_SIZE, (startY + 12) * TILE_SIZE, 'pine_tree').setDepth((startY + 12) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + 25, startY + 30, startX, startY, width, height)) {
+          this.add.image((startX + 25) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'pine_tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        // Add snowman (avoiding gates)
+        if (!this.isNearGate(startX + width / 2, startY + height - 10, startX, startY, width, height)) {
+          this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 10) * TILE_SIZE, 'snowman').setDepth((startY + height - 10) * TILE_SIZE);
+        }
         break;
 
       case 'pond':
         // Water is already in the ground tiles
-        // Add some trees around the pond
-        this.add.image((startX + 8) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'tree').setDepth((startY + 8) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + width - 8) * TILE_SIZE, (startY + height - 8) * TILE_SIZE, 'tree').setDepth((startY + height - 8) * TILE_SIZE + TILE_SIZE * 3);
+        // Add some trees around the pond (avoiding gates)
+        if (!this.isNearGate(startX + 8, startY + 8, startX, startY, width, height)) {
+          this.add.image((startX + 8) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'tree').setDepth((startY + 8) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + width - 8, startY + height - 8, startX, startY, width, height)) {
+          this.add.image((startX + width - 8) * TILE_SIZE, (startY + height - 8) * TILE_SIZE, 'tree').setDepth((startY + height - 8) * TILE_SIZE + TILE_SIZE * 3);
+        }
         break;
 
       case 'beach':
-        // Add palm trees (scaled positions for 3x larger pens)
-        this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'palm_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'palm_tree').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE * 3);
-        // Add beach umbrellas
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 12) * TILE_SIZE);
-        this.add.image((startX + 20) * TILE_SIZE, (startY + height - 15) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 15) * TILE_SIZE);
+        // Add palm trees (scaled positions for 3x larger pens, avoiding gates)
+        if (!this.isNearGate(startX + 10, startY + 10, startX, startY, width, height)) {
+          this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'palm_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        if (!this.isNearGate(startX + 30, startY + 25, startX, startY, width, height)) {
+          this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'palm_tree').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE * 3);
+        }
+        // Add beach umbrellas (avoiding gates)
+        if (!this.isNearGate(startX + width / 2, startY + height - 12, startX, startY, width, height)) {
+          this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 12) * TILE_SIZE);
+        }
+        if (!this.isNearGate(startX + 20, startY + height - 15, startX, startY, width, height)) {
+          this.add.image((startX + 20) * TILE_SIZE, (startY + height - 15) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 15) * TILE_SIZE);
+        }
         break;
 
       case 'mountain':
-        // Add boulders (scaled positions for 3x larger pens)
-        this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'boulder').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE);
-        this.add.image((startX + width - 12) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'boulder').setDepth((startY + height - 12) * TILE_SIZE + TILE_SIZE);
-        this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'boulder').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE);
-        // Add cave
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'cave').setDepth((startY + 8) * TILE_SIZE);
+        // Add boulders (scaled positions for 3x larger pens, avoiding gates)
+        if (!this.isNearGate(startX + 10, startY + 10, startX, startY, width, height)) {
+          this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'boulder').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE);
+        }
+        if (!this.isNearGate(startX + width - 12, startY + height - 12, startX, startY, width, height)) {
+          this.add.image((startX + width - 12) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'boulder').setDepth((startY + height - 12) * TILE_SIZE + TILE_SIZE);
+        }
+        if (!this.isNearGate(startX + 30, startY + 25, startX, startY, width, height)) {
+          this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'boulder').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE);
+        }
+        // Add cave (avoiding gates)
+        if (!this.isNearGate(startX + width / 2, startY + 8, startX, startY, width, height)) {
+          this.add.image((startX + width / 2) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'cave').setDepth((startY + 8) * TILE_SIZE);
+        }
         break;
 
       case 'butterfly':
-        // Add lots of flowers (more for larger pen)
+        // Add lots of flowers (more for larger pen, avoiding gates)
         for (let i = 0; i < 35; i++) {
-          const fx = startX + 4 + Math.random() * (width - 8);
-          const fy = startY + 4 + Math.random() * (height - 8);
-          const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
-          this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
+          let fx, fy, attempts = 0;
+          do {
+            fx = startX + 4 + Math.random() * (width - 8);
+            fy = startY + 4 + Math.random() * (height - 8);
+            attempts++;
+          } while (this.isNearGate(fx, fy, startX, startY, width, height) && attempts < 20);
+
+          if (attempts < 20) {
+            const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
+            this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
+          }
         }
         break;
     }
