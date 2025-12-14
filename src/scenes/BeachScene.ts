@@ -7,6 +7,7 @@ import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/Inventory
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
+import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 
 const BEACH_PET_TYPES = ['CRAB', 'SEAGULL', 'TURTLE', 'STARFISH'];
 
@@ -273,21 +274,10 @@ export class BeachScene extends Phaser.Scene {
       { x: 20, y: 28 }, { x: 26, y: 20 }, { x: 14, y: 25 },
     ];
 
-    // Define custom sprite configurations for Beach pets
-    const beachSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
-      starfish: { right: 'starfish_right', scale: 0.012, offset: { x: 170, y: 350 } },
-      turtle: { right: 'turtle_right', scale: 0.012, offset: { x: 200, y: 280 } },
-      crab: { right: 'crab_right', scale: 0.012, offset: { x: 200, y: 350 } },
-      seagull: { right: 'seagull_right', scale: 0.012, offset: { x: 170, y: 420 } },
-    };
-
     spawnPositions.forEach(pos => {
       const petType = BEACH_PET_TYPES[Math.floor(Math.random() * BEACH_PET_TYPES.length)];
       const petTypeLower = petType.toLowerCase();
-      const spriteConfig = beachSpriteMap[petTypeLower];
-      const isCustomSprite = !!spriteConfig;
-      
-      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petTypeLower}`;
+      const spriteKey = getSpriteKey(petTypeLower, true);
       
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -297,20 +287,12 @@ export class BeachScene extends Phaser.Scene {
 
       pet.setCollideWorldBounds(true);
       pet.setData('petType', petType);
-      pet.setData('isCustomSprite', isCustomSprite);
-      pet.setData('facingRight', true);
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (spriteConfig) {
-        pet.setScale(spriteConfig.scale);
-        pet.setSize(400, 200);
-        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
-      } else {
-        pet.setSize(14, 12);
-        pet.setOffset(1, TILE_SIZE - 14);
-      }
+      // Apply sprite configuration from centralized config
+      applyPetSpriteConfig(pet, petTypeLower);
     });
 
     this.physics.add.collider(this.pets, this.trees);
@@ -552,30 +534,9 @@ export class BeachScene extends Phaser.Scene {
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
 
-      // Handle custom sprite direction flipping
-      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
-      if (isCustomSprite && dir.x !== 0) {
-        const petType = (sprite.getData('petType') as string).toLowerCase();
-        const facingRight = sprite.getData('facingRight') as boolean;
-        
-        const spriteMap: Record<string, { left: string; right: string }> = {
-          starfish: { left: 'starfish_left', right: 'starfish_right' },
-          turtle: { left: 'turtle_left', right: 'turtle_right' },
-          crab: { left: 'crab_left', right: 'crab_right' },
-          seagull: { left: 'seagull_left', right: 'seagull_right' },
-        };
-        
-        const sprites = spriteMap[petType];
-        if (sprites) {
-          if (dir.x > 0 && !facingRight) {
-            sprite.setTexture(sprites.right);
-            sprite.setData('facingRight', true);
-          } else if (dir.x < 0 && facingRight) {
-            sprite.setTexture(sprites.left);
-            sprite.setData('facingRight', false);
-          }
-        }
-      }
+      // Handle sprite direction flipping using centralized config
+      const petType = (sprite.getData('petType') as string).toLowerCase();
+      updatePetSpriteDirection(sprite, petType, dir.x);
 
       return true;
     });

@@ -7,6 +7,7 @@ import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/Inventory
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
+import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 
 const SNOW_PET_TYPES = ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL'];
 
@@ -280,21 +281,10 @@ export class SnowScene extends Phaser.Scene {
       { x: 8, y: 25 }, { x: 32, y: 25 },
     ];
 
-    // Define custom sprite configurations for Snow pets
-    const snowSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
-      penguin: { right: 'penguin_right', scale: 0.012, offset: { x: 160, y: 480 } },
-      polar_bear: { right: 'polar_bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
-      seal: { right: 'seal_right', scale: 0.012, offset: { x: 170, y: 260 } },
-      snow_bunny: { right: 'snow_bunny_right', scale: 0.022, offset: { x: 80, y: 230 } },
-    };
-
     spawnPositions.forEach(pos => {
       const petType = SNOW_PET_TYPES[Math.floor(Math.random() * SNOW_PET_TYPES.length)];
       const petTypeLower = petType.toLowerCase();
-      const spriteConfig = snowSpriteMap[petTypeLower];
-      const isCustomSprite = !!spriteConfig;
-      
-      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petTypeLower}`;
+      const spriteKey = getSpriteKey(petTypeLower, true);
       
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -304,20 +294,12 @@ export class SnowScene extends Phaser.Scene {
 
       pet.setCollideWorldBounds(true);
       pet.setData('petType', petType);
-      pet.setData('isCustomSprite', isCustomSprite);
-      pet.setData('facingRight', true);
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (spriteConfig) {
-        pet.setScale(spriteConfig.scale);
-        pet.setSize(400, 200);
-        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
-      } else {
-        pet.setSize(14, 12);
-        pet.setOffset(1, TILE_SIZE - 14);
-      }
+      // Apply sprite configuration from centralized config
+      applyPetSpriteConfig(pet, petTypeLower);
     });
 
     this.physics.add.collider(this.pets, this.trees);
@@ -561,30 +543,9 @@ export class SnowScene extends Phaser.Scene {
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
 
-      // Handle custom sprite direction flipping
-      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
-      if (isCustomSprite && dir.x !== 0) {
-        const petType = (sprite.getData('petType') as string).toLowerCase();
-        const facingRight = sprite.getData('facingRight') as boolean;
-        
-        const spriteMap: Record<string, { left: string; right: string }> = {
-          penguin: { left: 'penguin_left', right: 'penguin_right' },
-          polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right' },
-          seal: { left: 'seal_left', right: 'seal_right' },
-          snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right' },
-        };
-        
-        const sprites = spriteMap[petType];
-        if (sprites) {
-          if (dir.x > 0 && !facingRight) {
-            sprite.setTexture(sprites.right);
-            sprite.setData('facingRight', true);
-          } else if (dir.x < 0 && facingRight) {
-            sprite.setTexture(sprites.left);
-            sprite.setData('facingRight', false);
-          }
-        }
-      }
+      // Handle sprite direction flipping using centralized config
+      const petType = (sprite.getData('petType') as string).toLowerCase();
+      updatePetSpriteDirection(sprite, petType, dir.x);
 
       return true;
     });

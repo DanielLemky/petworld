@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SCENES, TILE_SIZE, PLAYER_WIDTH, PLAYER_HEIGHT, PALETTE, PET_TYPES } from '../utils/constants';
 import { SoundManager } from '../systems/SoundManager';
+import { getAllSpriteKeys } from '../systems/PetSpriteConfig';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -25,71 +26,14 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player_right', '/assets/sprites/player_right.png');
     this.load.image('player', '/assets/sprites/player_down.png');
 
-    // Load puppy companion sprites
-    this.load.image('puppy_left', '/assets/sprites/puppy_left.png');
-    this.load.image('puppy_right', '/assets/sprites/puppy_right.png');
+    // Load all pet sprites from centralized config
+    getAllSpriteKeys().forEach(key => {
+      this.load.image(key, `/assets/sprites/${key}.png`);
+    });
+
+    // Load special puppy ball sprites (for fetch game)
     this.load.image('puppy_left_ball', '/assets/sprites/puppy_left_ball.png');
     this.load.image('puppy_right_ball', '/assets/sprites/puppy_right_ball.png');
-
-    // Load cat/kitty sprites
-    this.load.image('cat_left', '/assets/sprites/cat_left.png');
-    this.load.image('cat_right', '/assets/sprites/cat_right.png');
-
-    // Load chick sprites
-    this.load.image('chick_left', '/assets/sprites/chick_left.png');
-    this.load.image('chick_right', '/assets/sprites/chick_right.png');
-
-    // Load frog sprites
-    this.load.image('frog_left', '/assets/sprites/frog_left.png');
-    this.load.image('frog_right', '/assets/sprites/frog_right.png');
-
-    // Load penguin sprites
-    this.load.image('penguin_left', '/assets/sprites/penguin_left.png');
-    this.load.image('penguin_right', '/assets/sprites/penguin_right.png');
-
-    // Load starfish sprites
-    this.load.image('starfish_left', '/assets/sprites/starfish_left.png');
-    this.load.image('starfish_right', '/assets/sprites/starfish_right.png');
-
-    // Load turtle sprites
-    this.load.image('turtle_left', '/assets/sprites/turtle_left.png');
-    this.load.image('turtle_right', '/assets/sprites/turtle_right.png');
-
-    // Load bunny sprites
-    this.load.image('bunny_left', '/assets/sprites/bunny_left.png');
-    this.load.image('bunny_right', '/assets/sprites/bunny_right.png');
-
-    // Load bear (bear_cub) sprites
-    this.load.image('bear_left', '/assets/sprites/bear_left.png');
-    this.load.image('bear_right', '/assets/sprites/bear_right.png');
-
-    // Load crab sprites
-    this.load.image('crab_left', '/assets/sprites/crab_left.png');
-    this.load.image('crab_right', '/assets/sprites/crab_right.png');
-
-    // Load eagle sprites
-    this.load.image('eagle_left', '/assets/sprites/eagle_left.png');
-    this.load.image('eagle_right', '/assets/sprites/eagle_right.png');
-
-    // Load fox sprites
-    this.load.image('fox_left', '/assets/sprites/fox_left.png');
-    this.load.image('fox_right', '/assets/sprites/fox_right.png');
-
-    // Load polar bear sprites
-    this.load.image('polar_bear_left', '/assets/sprites/polar_bear_left.png');
-    this.load.image('polar_bear_right', '/assets/sprites/polar_bear_right.png');
-
-    // Load seagull sprites
-    this.load.image('seagull_left', '/assets/sprites/seagull_left.png');
-    this.load.image('seagull_right', '/assets/sprites/seagull_right.png');
-
-    // Load seal sprites
-    this.load.image('seal_left', '/assets/sprites/seal_left.png');
-    this.load.image('seal_right', '/assets/sprites/seal_right.png');
-
-    // Load snow bunny sprites
-    this.load.image('snow_bunny_left', '/assets/sprites/snow_bunny_left.png');
-    this.load.image('snow_bunny_right', '/assets/sprites/snow_bunny_right.png');
 
     // Generate other sprites programmatically
     this.createPetSprites();

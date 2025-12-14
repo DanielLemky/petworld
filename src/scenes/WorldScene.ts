@@ -7,6 +7,7 @@ import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/Inventory
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
+import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -862,20 +863,9 @@ export class WorldScene extends Phaser.Scene {
       { x: 45, y: 22 }, { x: 92, y: 45 },
     ];
 
-    // Define custom sprite configurations for World pets
-    const worldSpriteMap: Record<string, { right: string; scale: number; offset: { x: number; y: number } }> = {
-      puppy: { right: 'puppy_right', scale: 0.012, offset: { x: 200, y: 500 } },
-      kitty: { right: 'cat_right', scale: 0.012, offset: { x: 180, y: 500 } },
-      chick: { right: 'chick_right', scale: 0.012, offset: { x: 170, y: 450 } },
-      bunny: { right: 'bunny_right', scale: 0.012, offset: { x: 160, y: 470 } },
-    };
-
     petPositions.forEach((pos, index) => {
       const petType = petTypes[index % petTypes.length].toLowerCase();
-      const spriteConfig = worldSpriteMap[petType];
-      const isCustomSprite = !!spriteConfig;
-      
-      const spriteKey = spriteConfig ? spriteConfig.right : `pet_${petType}`;
+      const spriteKey = getSpriteKey(petType, true);
 
       const pet = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
@@ -887,19 +877,10 @@ export class WorldScene extends Phaser.Scene {
       pet.setData('wanderTimer', Math.random() * 2000);
       pet.setData('wanderDirection', { x: 0, y: 0 });
       pet.setData('petType', petType);
-      pet.setData('isCustomSprite', isCustomSprite);
-      pet.setData('facingRight', true);
       pet.setDepth(pos.y * TILE_SIZE);
 
-      if (spriteConfig) {
-        pet.setScale(spriteConfig.scale);
-        pet.setSize(400, 200);
-        pet.setOffset(spriteConfig.offset.x, spriteConfig.offset.y);
-      } else {
-        // Collision box for programmatic sprites
-        pet.setSize(14, 12);
-        pet.setOffset(1, TILE_SIZE - 14);
-      }
+      // Apply sprite configuration from centralized config
+      applyPetSpriteConfig(pet, petType);
     });
 
     // Add extra frogs near ponds (frogs love water!)
@@ -913,20 +894,17 @@ export class WorldScene extends Phaser.Scene {
       const frog = this.pets.create(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
-        'frog_right'
+        getSpriteKey('frog', true)
       ) as Phaser.Physics.Arcade.Sprite;
 
       frog.setCollideWorldBounds(true);
       frog.setData('wanderTimer', Math.random() * 2000);
       frog.setData('wanderDirection', { x: 0, y: 0 });
       frog.setData('petType', 'frog');
-      frog.setData('isCustomSprite', true);
-      frog.setData('facingRight', true);
       frog.setDepth(pos.y * TILE_SIZE);
 
-      frog.setScale(0.012);
-      frog.setSize(400, 200);
-      frog.setOffset(170, 400);
+      // Apply sprite configuration from centralized config
+      applyPetSpriteConfig(frog, 'frog');
     });
 
     // Pets collide with trees and each other
@@ -1357,31 +1335,9 @@ export class WorldScene extends Phaser.Scene {
       const dir = sprite.getData('wanderDirection') as { x: number; y: number };
       sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
 
-      // Handle custom sprite direction flipping
-      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
-      if (isCustomSprite && dir.x !== 0) {
-        const petType = sprite.getData('petType') as string;
-        const facingRight = sprite.getData('facingRight') as boolean;
-        
-        const spriteMap: Record<string, { left: string; right: string }> = {
-          puppy: { left: 'puppy_left', right: 'puppy_right' },
-          kitty: { left: 'cat_left', right: 'cat_right' },
-          chick: { left: 'chick_left', right: 'chick_right' },
-          frog: { left: 'frog_left', right: 'frog_right' },
-          bunny: { left: 'bunny_left', right: 'bunny_right' },
-        };
-        
-        const sprites = spriteMap[petType];
-        if (sprites) {
-          if (dir.x > 0 && !facingRight) {
-            sprite.setTexture(sprites.right);
-            sprite.setData('facingRight', true);
-          } else if (dir.x < 0 && facingRight) {
-            sprite.setTexture(sprites.left);
-            sprite.setData('facingRight', false);
-          }
-        }
-      }
+      // Handle sprite direction flipping using centralized config
+      const petType = sprite.getData('petType') as string;
+      updatePetSpriteDirection(sprite, petType, dir.x);
 
       return true;
     });

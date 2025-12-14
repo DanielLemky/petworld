@@ -4,6 +4,7 @@ import { PetManager } from '../systems/PetManager';
 import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
+import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 
 // Farm dimensions
 const FARM_WIDTH = 100;
@@ -632,38 +633,7 @@ export class HomeScene extends Phaser.Scene {
     }
 
     const petType = petData.type.toLowerCase();
-    
-    // Define which pet types use custom sprites
-    const customSpriteMap: Record<string, { left: string; right: string; scale: number; offset: { x: number; y: number } }> = {
-      puppy: { left: 'puppy_left', right: 'puppy_right', scale: 0.012, offset: { x: 200, y: 500 } },
-      kitty: { left: 'cat_left', right: 'cat_right', scale: 0.012, offset: { x: 180, y: 500 } },
-      chick: { left: 'chick_left', right: 'chick_right', scale: 0.012, offset: { x: 170, y: 450 } },
-      frog: { left: 'frog_left', right: 'frog_right', scale: 0.012, offset: { x: 170, y: 400 } },
-      bunny: { left: 'bunny_left', right: 'bunny_right', scale: 0.012, offset: { x: 160, y: 470 } },
-      penguin: { left: 'penguin_left', right: 'penguin_right', scale: 0.012, offset: { x: 160, y: 480 } },
-      polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
-      seal: { left: 'seal_left', right: 'seal_right', scale: 0.012, offset: { x: 170, y: 260 } },
-      snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right', scale: 0.022, offset: { x: 80, y: 230 } },
-      starfish: { left: 'starfish_left', right: 'starfish_right', scale: 0.012, offset: { x: 170, y: 350 } },
-      turtle: { left: 'turtle_left', right: 'turtle_right', scale: 0.012, offset: { x: 200, y: 280 } },
-      crab: { left: 'crab_left', right: 'crab_right', scale: 0.012, offset: { x: 200, y: 350 } },
-      seagull: { left: 'seagull_left', right: 'seagull_right', scale: 0.012, offset: { x: 170, y: 420 } },
-      fox: { left: 'fox_left', right: 'fox_right', scale: 0.012, offset: { x: 200, y: 420 } },
-      bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
-      eagle: { left: 'eagle_left', right: 'eagle_right', scale: 0.012, offset: { x: 160, y: 490 } },
-    };
-    
-    const customSprite = customSpriteMap[petType];
-    const isCustomSprite = !!customSprite;
-    
-    let spriteKey: string;
-    if (petType.startsWith('butterfly_')) {
-      spriteKey = petType;
-    } else if (customSprite) {
-      spriteKey = customSprite.right;
-    } else {
-      spriteKey = `pet_${petType}`;
-    }
+    const spriteKey = getSpriteKey(petType, true);
 
     const pet = this.pets.create(spawnX, spawnY, spriteKey) as Phaser.Physics.Arcade.Sprite;
 
@@ -671,18 +641,10 @@ export class HomeScene extends Phaser.Scene {
     pet.setData('wanderTimer', Math.random() * 2000);
     pet.setData('wanderDirection', { x: 0, y: 0 });
     pet.setData('petData', petData);
-    pet.setData('isCustomSprite', isCustomSprite);
-    pet.setData('facingRight', true);
     pet.setDepth(spawnY);
 
-    if (isCustomSprite && customSprite) {
-      pet.setScale(customSprite.scale);
-      pet.setSize(400, 200);
-      pet.setOffset(customSprite.offset.x, customSprite.offset.y);
-    } else {
-      pet.setSize(14, 12);
-      pet.setOffset(1, TILE_SIZE - 14);
-    }
+    // Apply sprite configuration from centralized config
+    applyPetSpriteConfig(pet, petType);
 
     // Create mood indicator
     const moodIndicator = this.add.text(pet.x, pet.y - 12, '', { fontSize: '10px' });
@@ -956,43 +918,10 @@ export class HomeScene extends Phaser.Scene {
         sprite.setVelocity(dir.x * petSpeed, dir.y * petSpeed);
       }
 
-      // Handle custom sprite direction flipping
-      const isCustomSprite = sprite.getData('isCustomSprite') as boolean;
-      if (isCustomSprite && dir.x !== 0) {
-        const petData = sprite.getData('petData') as { type: string };
-        const petType = petData.type.toLowerCase();
-        const facingRight = sprite.getData('facingRight') as boolean;
-        
-        const spriteMap: Record<string, { left: string; right: string }> = {
-          puppy: { left: 'puppy_left', right: 'puppy_right' },
-          kitty: { left: 'cat_left', right: 'cat_right' },
-          chick: { left: 'chick_left', right: 'chick_right' },
-          frog: { left: 'frog_left', right: 'frog_right' },
-          bunny: { left: 'bunny_left', right: 'bunny_right' },
-          penguin: { left: 'penguin_left', right: 'penguin_right' },
-          polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right' },
-          seal: { left: 'seal_left', right: 'seal_right' },
-          snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right' },
-          starfish: { left: 'starfish_left', right: 'starfish_right' },
-          turtle: { left: 'turtle_left', right: 'turtle_right' },
-          crab: { left: 'crab_left', right: 'crab_right' },
-          seagull: { left: 'seagull_left', right: 'seagull_right' },
-          fox: { left: 'fox_left', right: 'fox_right' },
-          bear_cub: { left: 'bear_left', right: 'bear_right' },
-          eagle: { left: 'eagle_left', right: 'eagle_right' },
-        };
-        
-        const sprites = spriteMap[petType];
-        if (sprites) {
-          if (dir.x > 0 && !facingRight) {
-            sprite.setTexture(sprites.right);
-            sprite.setData('facingRight', true);
-          } else if (dir.x < 0 && facingRight) {
-            sprite.setTexture(sprites.left);
-            sprite.setData('facingRight', false);
-          }
-        }
-      }
+      // Handle sprite direction flipping using centralized config
+      const petDataForType = sprite.getData('petData') as { type: string };
+      const petType = petDataForType.type.toLowerCase();
+      updatePetSpriteDirection(sprite, petType, dir.x);
 
       return true;
     });
