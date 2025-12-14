@@ -413,7 +413,7 @@ export class CatchingUI {
     hint.setOrigin(0.5);
     container.add(hint);
 
-    const dismiss = this.scene.add.text(0, 45, 'Press any key to continue', {
+    const dismiss = this.scene.add.text(0, 45, 'Press any key or A/B button to continue', {
       fontSize: '10px',
       color: '#666666',
     });
@@ -429,9 +429,34 @@ export class CatchingUI {
       ease: 'Back.easeOut',
     });
 
-    // Dismiss on any key
+    // Set up gamepad polling for dismiss
+    container.setData('gamepadHandled', false);
+    const gamepadPollEvent = this.scene.time.addEvent({
+      delay: 16, // ~60fps
+      callback: () => {
+        if (container.getData('gamepadHandled')) return;
+        
+        GamepadManager.update();
+        
+        // A button (0) or B button (1) - Dismiss
+        if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A) || 
+            GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.B)) {
+          container.setData('gamepadHandled', true);
+          dismissHandler();
+        }
+      },
+      loop: true,
+    });
+    container.setData('gamepadPollEvent', gamepadPollEvent);
+
+    // Dismiss on any key or gamepad button
     const dismissHandler = () => {
       this.scene.input.keyboard?.off('keydown', dismissHandler);
+      
+      // Remove gamepad poll event
+      const pollEvent = container.getData('gamepadPollEvent') as Phaser.Time.TimerEvent;
+      pollEvent?.remove();
+      
       this.scene.tweens.add({
         targets: container,
         scale: 0,
