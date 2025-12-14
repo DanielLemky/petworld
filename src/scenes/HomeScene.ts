@@ -3,6 +3,7 @@ import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT, PALETTE, getCorrectPenF
 import { PetManager } from '../systems/PetManager';
 import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
+import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 
 // Farm dimensions
 const FARM_WIDTH = 100;
@@ -85,12 +86,33 @@ export class HomeScene extends Phaser.Scene {
   }
 
   update(): void {
+    // Update gamepad state
+    GamepadManager.update();
+
+    // Handle gamepad button actions
+    this.handleGamepadButtons();
+
     this.handlePlayerMovement();
     this.handlePetBehavior();
     this.updateDepthSorting();
     this.updateMoodIndicators();
     this.updateCarriedPet();
     this.checkExitZone();
+  }
+
+  private handleGamepadButtons(): void {
+    // A button (0) - Interact
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+      this.handleInteraction();
+    }
+    // X button (2) - Feed
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.X)) {
+      this.handleFeeding();
+    }
+    // RB button (5) - Take companion
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.RB)) {
+      this.handleTakeWithMe();
+    }
   }
 
   private createFarm(): void {
@@ -773,6 +795,9 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    // Initialize gamepad manager
+    GamepadManager.setScene(this);
+
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasd = {
@@ -796,25 +821,45 @@ export class HomeScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    if (this.cursors?.left.isDown || this.wasd?.A.isDown) {
+    // Get gamepad input
+    const leftStick = GamepadManager.getLeftStick();
+    const dpad = GamepadManager.getDPad();
+
+    // Check horizontal movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.left.isDown || this.wasd?.A.isDown || leftStick.x < -0.2 || dpad.x < 0) {
       velocityX = -PLAYER_SPEED;
       newDirection = 'left';
-    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown) {
+    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown || leftStick.x > 0.2 || dpad.x > 0) {
       velocityX = PLAYER_SPEED;
       newDirection = 'right';
     }
 
-    if (this.cursors?.up.isDown || this.wasd?.W.isDown) {
+    // Check vertical movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.up.isDown || this.wasd?.W.isDown || leftStick.y < -0.2 || dpad.y < 0) {
       velocityY = -PLAYER_SPEED;
       if (velocityX === 0) newDirection = 'up';
-    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown) {
+    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown || leftStick.y > 0.2 || dpad.y > 0) {
       velocityY = PLAYER_SPEED;
       if (velocityX === 0) newDirection = 'down';
     }
 
-    if (velocityX !== 0 && velocityY !== 0) {
-      velocityX *= 0.707;
-      velocityY *= 0.707;
+    // For analog stick, use the actual stick values for smoother movement
+    if (Math.abs(leftStick.x) > 0.2 || Math.abs(leftStick.y) > 0.2) {
+      velocityX = leftStick.x * PLAYER_SPEED;
+      velocityY = leftStick.y * PLAYER_SPEED;
+      
+      // Determine direction based on dominant axis
+      if (Math.abs(leftStick.x) > Math.abs(leftStick.y)) {
+        newDirection = leftStick.x < 0 ? 'left' : 'right';
+      } else {
+        newDirection = leftStick.y < 0 ? 'up' : 'down';
+      }
+    } else {
+      // Normalize diagonal movement for keyboard/d-pad
+      if (velocityX !== 0 && velocityY !== 0) {
+        velocityX *= 0.707;
+        velocityY *= 0.707;
+      }
     }
 
     this.player.setVelocity(velocityX, velocityY);

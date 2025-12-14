@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PALETTE, PET_TYPES } from '../utils/constants';
 import { InventoryManager, TOOL_INFO } from '../systems/InventoryManager';
+import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 
 export type CatchResult = 'success' | 'failure' | 'cancelled' | 'no_tool';
 
@@ -179,6 +180,30 @@ export class CatchingUI {
     this.container.setData('escKey', escKey);
     this.container.setData('handleCatch', handleCatch);
     this.container.setData('handleCancel', handleCancel);
+
+    // Set up gamepad polling for catch/cancel
+    this.container.setData('gamepadHandled', false);
+    const gamepadPollEvent = this.scene.time.addEvent({
+      delay: 16, // ~60fps
+      callback: () => {
+        if (!this.isActive || this.container.getData('gamepadHandled')) return;
+        
+        GamepadManager.update();
+        
+        // A button (0) - Catch
+        if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+          this.container.setData('gamepadHandled', true);
+          handleCatch();
+        }
+        // B button (1) - Cancel
+        if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.B)) {
+          this.container.setData('gamepadHandled', true);
+          handleCancel();
+        }
+      },
+      loop: true,
+    });
+    this.container.setData('gamepadPollEvent', gamepadPollEvent);
   }
 
   private checkCatch(): void {
@@ -319,6 +344,10 @@ export class CatchingUI {
     // Use off() to remove only our handlers, not all listeners
     spaceKey?.off('down', handleCatch);
     escKey?.off('down', handleCancel);
+
+    // Remove gamepad poll event
+    const gamepadPollEvent = this.container.getData('gamepadPollEvent') as Phaser.Time.TimerEvent;
+    gamepadPollEvent?.remove();
 
     // Destroy container and all children
     this.container.destroy();

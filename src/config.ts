@@ -14,6 +14,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   parent: 'game-container',
   backgroundColor: '#1a1a2e',
   pixelArt: true,
+  input: {
+    gamepad: true,
+  },
   physics: {
     default: 'arcade',
     arcade: {

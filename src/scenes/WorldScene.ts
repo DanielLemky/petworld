@@ -6,6 +6,7 @@ import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
+import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -103,9 +104,15 @@ export class WorldScene extends Phaser.Scene {
     SoundManager.playMusic('world');
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
+    // Update gamepad state for button detection
+    GamepadManager.update();
+
     // Don't update gameplay while catching
     if (this.isCatching) return;
+
+    // Check gamepad buttons
+    this.handleGamepadButtons();
 
     // Check if player is in water (but not on the bridge)
     // Use feet position (bottom of sprite) for accurate detection
@@ -124,6 +131,38 @@ export class WorldScene extends Phaser.Scene {
 
     // Handle water effects
     this.handleWaterEffects(delta, wasInWater);
+
+    // Handle right stick for fetch aiming
+    this.handleFetchWithGamepad();
+  }
+
+  private handleGamepadButtons(): void {
+    // A button (0) - Interact
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+      this.handleInteraction();
+    }
+
+    // Y button (3) - Go Home
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
+      this.goHome();
+    }
+  }
+
+  private handleFetchWithGamepad(): void {
+    if (!this.fetchSystem.canPlay() || this.isCatching || this.isTransitioning) return;
+
+    const rightStick = GamepadManager.getRightStick();
+    
+    // If right stick is pushed significantly, throw ball in that direction
+    const stickMagnitude = Math.sqrt(rightStick.x * rightStick.x + rightStick.y * rightStick.y);
+    
+    if (stickMagnitude > 0.5 && GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+      // Calculate throw target based on stick direction
+      const throwDistance = 150; // Distance to throw
+      const targetX = this.player.x + rightStick.x * throwDistance;
+      const targetY = this.player.y + rightStick.y * throwDistance;
+      this.fetchSystem.throwBall(targetX, targetY);
+    }
   }
 
   private createUI(): void {
@@ -1097,6 +1136,13 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    // Initialize gamepad manager
+    if (!GamepadManager.isInitialized()) {
+      GamepadManager.init(this);
+    } else {
+      GamepadManager.setScene(this);
+    }
+
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasd = {
@@ -1189,28 +1235,45 @@ export class WorldScene extends Phaser.Scene {
     // Speed is reduced in water
     const speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
 
-    // Check horizontal movement
-    if (this.cursors?.left.isDown || this.wasd?.A.isDown) {
+    // Get gamepad input
+    const leftStick = GamepadManager.getLeftStick();
+    const dpad = GamepadManager.getDPad();
+
+    // Check horizontal movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.left.isDown || this.wasd?.A.isDown || leftStick.x < -0.2 || dpad.x < 0) {
       velocityX = -speed;
       newDirection = 'left';
-    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown) {
+    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown || leftStick.x > 0.2 || dpad.x > 0) {
       velocityX = speed;
       newDirection = 'right';
     }
 
-    // Check vertical movement
-    if (this.cursors?.up.isDown || this.wasd?.W.isDown) {
+    // Check vertical movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.up.isDown || this.wasd?.W.isDown || leftStick.y < -0.2 || dpad.y < 0) {
       velocityY = -speed;
       if (velocityX === 0) newDirection = 'up';
-    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown) {
+    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown || leftStick.y > 0.2 || dpad.y > 0) {
       velocityY = speed;
       if (velocityX === 0) newDirection = 'down';
     }
 
-    // Normalize diagonal movement
-    if (velocityX !== 0 && velocityY !== 0) {
-      velocityX *= 0.707;
-      velocityY *= 0.707;
+    // For analog stick, use the actual stick values for smoother movement
+    if (Math.abs(leftStick.x) > 0.2 || Math.abs(leftStick.y) > 0.2) {
+      velocityX = leftStick.x * speed;
+      velocityY = leftStick.y * speed;
+      
+      // Determine direction based on dominant axis
+      if (Math.abs(leftStick.x) > Math.abs(leftStick.y)) {
+        newDirection = leftStick.x < 0 ? 'left' : 'right';
+      } else {
+        newDirection = leftStick.y < 0 ? 'up' : 'down';
+      }
+    } else {
+      // Normalize diagonal movement for keyboard/d-pad
+      if (velocityX !== 0 && velocityY !== 0) {
+        velocityX *= 0.707;
+        velocityY *= 0.707;
+      }
     }
 
     this.player.setVelocity(velocityX, velocityY);

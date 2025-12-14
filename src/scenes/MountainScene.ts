@@ -6,6 +6,7 @@ import { SoundManager } from '../systems/SoundManager';
 import { InventoryManager, TOOL_INFO, type ToolType } from '../systems/InventoryManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
+import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 
 const MOUNTAIN_PET_TYPES = ['GOAT', 'EAGLE', 'FOX', 'BEAR_CUB'];
 
@@ -74,9 +75,16 @@ export class MountainScene extends Phaser.Scene {
   }
 
   update(): void {
+    // Update gamepad state
+    GamepadManager.update();
+
     if (this.isCatching) return;
 
+    // Handle gamepad buttons
+    this.handleGamepadButtons();
+
     this.handlePlayerMovement();
+    this.handleFetchWithGamepad();
     this.handlePetBehavior();
     this.handleEagleBehavior();
     this.updateDepthSorting();
@@ -366,6 +374,9 @@ export class MountainScene extends Phaser.Scene {
   }
 
   private setupInput(): void {
+    // Initialize gamepad manager
+    GamepadManager.setScene(this);
+
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasd = {
@@ -386,6 +397,27 @@ export class MountainScene extends Phaser.Scene {
         this.fetchSystem.throwBall(worldPoint.x, worldPoint.y);
       }
     });
+  }
+
+  private handleGamepadButtons(): void {
+    // A button (0) - Interact
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+      this.tryInteract();
+    }
+  }
+
+  private handleFetchWithGamepad(): void {
+    if (!this.fetchSystem.canPlay() || this.isCatching || this.isTransitioning) return;
+
+    const rightStick = GamepadManager.getRightStick();
+    const stickMagnitude = Math.sqrt(rightStick.x * rightStick.x + rightStick.y * rightStick.y);
+    
+    if (stickMagnitude > 0.5 && GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
+      const throwDistance = 150;
+      const targetX = this.player.x + rightStick.x * throwDistance;
+      const targetY = this.player.y + rightStick.y * throwDistance;
+      this.fetchSystem.throwBall(targetX, targetY);
+    }
   }
 
   private createUI(): void {
@@ -470,25 +502,45 @@ export class MountainScene extends Phaser.Scene {
 
     const speed = PLAYER_SPEED;
 
-    if (this.cursors?.left.isDown || this.wasd?.A.isDown) {
+    // Get gamepad input
+    const leftStick = GamepadManager.getLeftStick();
+    const dpad = GamepadManager.getDPad();
+
+    // Check horizontal movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.left.isDown || this.wasd?.A.isDown || leftStick.x < -0.2 || dpad.x < 0) {
       velocityX = -speed;
       newDirection = 'left';
-    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown) {
+    } else if (this.cursors?.right.isDown || this.wasd?.D.isDown || leftStick.x > 0.2 || dpad.x > 0) {
       velocityX = speed;
       newDirection = 'right';
     }
 
-    if (this.cursors?.up.isDown || this.wasd?.W.isDown) {
+    // Check vertical movement (keyboard, gamepad stick, or d-pad)
+    if (this.cursors?.up.isDown || this.wasd?.W.isDown || leftStick.y < -0.2 || dpad.y < 0) {
       velocityY = -speed;
       if (velocityX === 0) newDirection = 'up';
-    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown) {
+    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown || leftStick.y > 0.2 || dpad.y > 0) {
       velocityY = speed;
       if (velocityX === 0) newDirection = 'down';
     }
 
-    if (velocityX !== 0 && velocityY !== 0) {
-      velocityX *= 0.707;
-      velocityY *= 0.707;
+    // For analog stick, use the actual stick values for smoother movement
+    if (Math.abs(leftStick.x) > 0.2 || Math.abs(leftStick.y) > 0.2) {
+      velocityX = leftStick.x * speed;
+      velocityY = leftStick.y * speed;
+      
+      // Determine direction based on dominant axis
+      if (Math.abs(leftStick.x) > Math.abs(leftStick.y)) {
+        newDirection = leftStick.x < 0 ? 'left' : 'right';
+      } else {
+        newDirection = leftStick.y < 0 ? 'up' : 'down';
+      }
+    } else {
+      // Normalize diagonal movement for keyboard/d-pad
+      if (velocityX !== 0 && velocityY !== 0) {
+        velocityX *= 0.707;
+        velocityY *= 0.707;
+      }
     }
 
     this.player.setVelocity(velocityX, velocityY);
