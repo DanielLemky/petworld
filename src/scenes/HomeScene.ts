@@ -7,12 +7,12 @@ import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 
 // Farm dimensions
-const FARM_WIDTH = 100;
-const FARM_HEIGHT = 80;
+const FARM_WIDTH = 200;
+const FARM_HEIGHT = 180;
 
 // Pen dimensions and positions
-const PEN_WIDTH = 22;
-const PEN_HEIGHT = 16;
+const PEN_WIDTH = 66;
+const PEN_HEIGHT = 48;
 
 interface PenData {
   id: string;
@@ -114,6 +114,10 @@ export class HomeScene extends Phaser.Scene {
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.RB)) {
       this.handleTakeWithMe();
     }
+    // Y/Triangle button (3) - Go to World
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
+      this.goToWorld();
+    }
   }
 
   private createFarm(): void {
@@ -143,24 +147,24 @@ export class HomeScene extends Phaser.Scene {
     this.createFarmhouse(10, 5);
     this.createBarn(55, 5);
 
-    // Create the 6 pens
+    // Create the 6 pens (3x larger, spread across bigger farm)
     // Row 1: Meadow and Snow
-    this.createPen('meadow', 5, 18, PEN_WIDTH, PEN_HEIGHT);
-    this.createPen('snow', 35, 18, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('meadow', 5, 20, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('snow', 100, 20, PEN_WIDTH, PEN_HEIGHT);
 
     // Row 2: Pond and Mountain
-    this.createPen('pond', 5, 38, PEN_WIDTH, PEN_HEIGHT);
-    this.createPen('mountain', 35, 38, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('pond', 5, 75, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('mountain', 100, 75, PEN_WIDTH, PEN_HEIGHT);
 
     // Row 3: Beach and Butterfly Garden
-    this.createPen('beach', 5, 58, PEN_WIDTH, PEN_HEIGHT);
-    this.createPen('butterfly', 35, 58, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('beach', 5, 130, PEN_WIDTH, PEN_HEIGHT);
+    this.createPen('butterfly', 100, 130, PEN_WIDTH, PEN_HEIGHT);
   }
 
   private createPaths(): void {
-    // Main vertical path from top to exit
+    // Main vertical path from top to exit (center of farm at x=80-84)
     for (let y = 3; y < FARM_HEIGHT; y++) {
-      for (let x = 28; x < 32; x++) {
+      for (let x = 80; x < 84; x++) {
         const path = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -170,55 +174,55 @@ export class HomeScene extends Phaser.Scene {
       }
     }
 
-    // Horizontal paths to pens - Row 1
-    for (let x = 5; x < 28; x++) {
+    // Horizontal paths to pens - Row 1 (y=19, just before pens at y=20)
+    for (let x = 5; x < 80; x++) {
       const path = this.add.image(
         x * TILE_SIZE + TILE_SIZE / 2,
-        17 * TILE_SIZE + TILE_SIZE / 2,
+        19 * TILE_SIZE + TILE_SIZE / 2,
         'path'
       );
       path.setDepth(-5);
     }
-    for (let x = 32; x < 57; x++) {
+    for (let x = 84; x < 166; x++) {
       const path = this.add.image(
         x * TILE_SIZE + TILE_SIZE / 2,
-        17 * TILE_SIZE + TILE_SIZE / 2,
-        'path'
-      );
-      path.setDepth(-5);
-    }
-
-    // Horizontal paths to pens - Row 2
-    for (let x = 5; x < 28; x++) {
-      const path = this.add.image(
-        x * TILE_SIZE + TILE_SIZE / 2,
-        37 * TILE_SIZE + TILE_SIZE / 2,
-        'path'
-      );
-      path.setDepth(-5);
-    }
-    for (let x = 32; x < 57; x++) {
-      const path = this.add.image(
-        x * TILE_SIZE + TILE_SIZE / 2,
-        37 * TILE_SIZE + TILE_SIZE / 2,
+        19 * TILE_SIZE + TILE_SIZE / 2,
         'path'
       );
       path.setDepth(-5);
     }
 
-    // Horizontal paths to pens - Row 3
-    for (let x = 5; x < 28; x++) {
+    // Horizontal paths to pens - Row 2 (y=74, just before pens at y=75)
+    for (let x = 5; x < 80; x++) {
       const path = this.add.image(
         x * TILE_SIZE + TILE_SIZE / 2,
-        57 * TILE_SIZE + TILE_SIZE / 2,
+        74 * TILE_SIZE + TILE_SIZE / 2,
         'path'
       );
       path.setDepth(-5);
     }
-    for (let x = 32; x < 57; x++) {
+    for (let x = 84; x < 166; x++) {
       const path = this.add.image(
         x * TILE_SIZE + TILE_SIZE / 2,
-        57 * TILE_SIZE + TILE_SIZE / 2,
+        74 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+
+    // Horizontal paths to pens - Row 3 (y=129, just before pens at y=130)
+    for (let x = 5; x < 80; x++) {
+      const path = this.add.image(
+        x * TILE_SIZE + TILE_SIZE / 2,
+        129 * TILE_SIZE + TILE_SIZE / 2,
+        'path'
+      );
+      path.setDepth(-5);
+    }
+    for (let x = 84; x < 166; x++) {
+      const path = this.add.image(
+        x * TILE_SIZE + TILE_SIZE / 2,
+        129 * TILE_SIZE + TILE_SIZE / 2,
         'path'
       );
       path.setDepth(-5);
@@ -403,19 +407,19 @@ export class HomeScene extends Phaser.Scene {
         } else if (penId === 'snow') {
           tileKey = Math.random() > 0.8 ? 'snow_sparkle' : 'snow';
         } else if (penId === 'pond') {
-          // Water in the center
+          // Water in the center (larger pond for 3x pen)
           const centerX = startX + width / 2;
           const centerY = startY + height / 2;
           const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-          if (distFromCenter < 4) {
+          if (distFromCenter < 12) {
             tileKey = 'water';
           } else {
             tileKey = Math.random() > 0.8 ? 'grass_flower' : 'grass';
           }
         } else if (penId === 'beach') {
           tileKey = Math.random() > 0.85 ? 'sand_shells' : 'sand';
-          // Add some shallow water at edge
-          if (x > startX + width - 4) {
+          // Add some shallow water at edge (wider for 3x pen)
+          if (x > startX + width - 12) {
             tileKey = Math.random() > 0.5 ? 'shallow_water' : 'sand';
           }
         } else if (penId === 'mountain') {
@@ -480,51 +484,58 @@ export class HomeScene extends Phaser.Scene {
   private createPenDecorations(penId: string, startX: number, startY: number, width: number, height: number): void {
     switch (penId) {
       case 'meadow':
-        // Add trees
-        this.add.image((startX + 3) * TILE_SIZE, (startY + 4) * TILE_SIZE, 'tree').setDepth((startY + 4) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + width - 4) * TILE_SIZE, (startY + 6) * TILE_SIZE, 'tree').setDepth((startY + 6) * TILE_SIZE + TILE_SIZE * 3);
-        // Add flowers
-        for (let i = 0; i < 5; i++) {
-          const fx = startX + 2 + Math.random() * (width - 4);
-          const fy = startY + 2 + Math.random() * (height - 4);
+        // Add trees (scaled positions for 3x larger pens)
+        this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + width - 10) * TILE_SIZE, (startY + 15) * TILE_SIZE, 'tree').setDepth((startY + 15) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + 20) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
+        // Add flowers (more for larger pen)
+        for (let i = 0; i < 15; i++) {
+          const fx = startX + 4 + Math.random() * (width - 8);
+          const fy = startY + 4 + Math.random() * (height - 8);
           const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
           this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
         }
         break;
 
       case 'snow':
-        // Add pine trees
-        this.add.image((startX + 3) * TILE_SIZE, (startY + 4) * TILE_SIZE, 'pine_tree').setDepth((startY + 4) * TILE_SIZE + TILE_SIZE * 3);
-        this.add.image((startX + width - 4) * TILE_SIZE, (startY + 5) * TILE_SIZE, 'pine_tree').setDepth((startY + 5) * TILE_SIZE + TILE_SIZE * 3);
+        // Add pine trees (scaled positions for 3x larger pens)
+        this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'pine_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + width - 10) * TILE_SIZE, (startY + 12) * TILE_SIZE, 'pine_tree').setDepth((startY + 12) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + 25) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'pine_tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
         // Add snowman
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 4) * TILE_SIZE, 'snowman').setDepth((startY + height - 4) * TILE_SIZE);
+        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 10) * TILE_SIZE, 'snowman').setDepth((startY + height - 10) * TILE_SIZE);
         break;
 
       case 'pond':
         // Water is already in the ground tiles
-        // Add some visual elements around the pond
+        // Add some trees around the pond
+        this.add.image((startX + 8) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'tree').setDepth((startY + 8) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + width - 8) * TILE_SIZE, (startY + height - 8) * TILE_SIZE, 'tree').setDepth((startY + height - 8) * TILE_SIZE + TILE_SIZE * 3);
         break;
 
       case 'beach':
-        // Add palm tree
-        this.add.image((startX + 4) * TILE_SIZE, (startY + 4) * TILE_SIZE, 'palm_tree').setDepth((startY + 4) * TILE_SIZE + TILE_SIZE * 3);
-        // Add beach umbrella
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 4) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 4) * TILE_SIZE);
+        // Add palm trees (scaled positions for 3x larger pens)
+        this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'palm_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+        this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'palm_tree').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE * 3);
+        // Add beach umbrellas
+        this.add.image((startX + width / 2) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 12) * TILE_SIZE);
+        this.add.image((startX + 20) * TILE_SIZE, (startY + height - 15) * TILE_SIZE, 'beach_umbrella').setDepth((startY + height - 15) * TILE_SIZE);
         break;
 
       case 'mountain':
-        // Add boulders
-        this.add.image((startX + 4) * TILE_SIZE, (startY + 4) * TILE_SIZE, 'boulder').setDepth((startY + 4) * TILE_SIZE + TILE_SIZE);
-        this.add.image((startX + width - 5) * TILE_SIZE, (startY + height - 5) * TILE_SIZE, 'boulder').setDepth((startY + height - 5) * TILE_SIZE + TILE_SIZE);
+        // Add boulders (scaled positions for 3x larger pens)
+        this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'boulder').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE);
+        this.add.image((startX + width - 12) * TILE_SIZE, (startY + height - 12) * TILE_SIZE, 'boulder').setDepth((startY + height - 12) * TILE_SIZE + TILE_SIZE);
+        this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'boulder').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE);
         // Add cave
-        this.add.image((startX + width / 2) * TILE_SIZE, (startY + 3) * TILE_SIZE, 'cave').setDepth((startY + 3) * TILE_SIZE);
+        this.add.image((startX + width / 2) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'cave').setDepth((startY + 8) * TILE_SIZE);
         break;
 
       case 'butterfly':
-        // Add lots of flowers
-        for (let i = 0; i < 12; i++) {
-          const fx = startX + 2 + Math.random() * (width - 4);
-          const fy = startY + 2 + Math.random() * (height - 4);
+        // Add lots of flowers (more for larger pen)
+        for (let i = 0; i < 35; i++) {
+          const fx = startX + 4 + Math.random() * (width - 8);
+          const fy = startY + 4 + Math.random() * (height - 8);
           const flowerTypes = ['flower_red', 'flower_yellow', 'flower_blue', 'flower_pink'];
           this.add.image(fx * TILE_SIZE, fy * TILE_SIZE, flowerTypes[Math.floor(Math.random() * 4)]).setDepth(fy * TILE_SIZE);
         }
@@ -535,7 +546,7 @@ export class HomeScene extends Phaser.Scene {
   private createPlayer(): void {
     // Start player near the center of the farm
     this.player = this.physics.add.sprite(
-      30 * TILE_SIZE + TILE_SIZE / 2,
+      82 * TILE_SIZE + TILE_SIZE / 2,
       15 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_down'
     );
@@ -563,7 +574,7 @@ export class HomeScene extends Phaser.Scene {
     if (caughtPets.length === 0) {
       // Show message if no pets
       const noPetsText = this.add.text(
-        30 * TILE_SIZE,
+        82 * TILE_SIZE,
         20 * TILE_SIZE,
         'No pets yet!\nGo explore and catch some!',
         {
@@ -594,13 +605,14 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private getRandomRoamingPosition(): { x: number; y: number } {
-    // Roaming zones spread across the farm (avoiding buildings and pens)
+    // Roaming zones spread across the larger farm (avoiding buildings and pens)
     const roamingZones = [
-      { x: 5, y: 3, w: 20, h: 12 },   // Top-left (near farmhouse)
-      { x: 70, y: 3, w: 25, h: 12 },  // Top-right
-      { x: 60, y: 20, w: 35, h: 15 }, // Middle-right
-      { x: 60, y: 40, w: 35, h: 15 }, // Lower-middle-right
-      { x: 60, y: 60, w: 35, h: 15 }, // Bottom-right
+      { x: 5, y: 3, w: 20, h: 14 },     // Top-left (near farmhouse)
+      { x: 75, y: 3, w: 30, h: 14 },    // Top-center (between buildings)
+      { x: 170, y: 20, w: 25, h: 45 },  // Right of first row pens
+      { x: 170, y: 75, w: 25, h: 45 },  // Right of second row pens
+      { x: 170, y: 130, w: 25, h: 45 }, // Right of third row pens
+      { x: 75, y: 70, w: 20, h: 55 },   // Center between pen rows
     ];
     const zone = roamingZones[Math.floor(Math.random() * roamingZones.length)];
     return {
@@ -667,10 +679,10 @@ export class HomeScene extends Phaser.Scene {
 
   private createExitZone(): void {
     // Exit zone at the bottom center
-    this.exitZone = this.add.zone(30 * TILE_SIZE, (FARM_HEIGHT - 1) * TILE_SIZE, 4 * TILE_SIZE, TILE_SIZE);
+    this.exitZone = this.add.zone(82 * TILE_SIZE, (FARM_HEIGHT - 1) * TILE_SIZE, 4 * TILE_SIZE, TILE_SIZE);
 
     // Visual indicator
-    const exitText = this.add.text(30 * TILE_SIZE, (FARM_HEIGHT - 2) * TILE_SIZE, 'To World', {
+    const exitText = this.add.text(82 * TILE_SIZE, (FARM_HEIGHT - 2) * TILE_SIZE, 'To World', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44aa',
@@ -679,7 +691,7 @@ export class HomeScene extends Phaser.Scene {
     exitText.setOrigin(0.5);
     exitText.setDepth(100);
 
-    const arrow = this.add.text(30 * TILE_SIZE, (FARM_HEIGHT - 1.5) * TILE_SIZE, '▼', {
+    const arrow = this.add.text(82 * TILE_SIZE, (FARM_HEIGHT - 1.5) * TILE_SIZE, '▼', {
       fontSize: '12px',
       color: '#4ade80',
     });
@@ -697,7 +709,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createUI(): void {
-    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up/pet | F feed | T companion', {
+    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up | F feed | T companion | M world', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44dd',
@@ -771,10 +783,12 @@ export class HomeScene extends Phaser.Scene {
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.feedKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
       this.takeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+      const worldKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
 
       this.interactKey.on('down', () => this.handleInteraction());
       this.feedKey.on('down', () => this.handleFeeding());
       this.takeKey.on('down', () => this.handleTakeWithMe());
+      worldKey.on('down', () => this.goToWorld());
     }
   }
 

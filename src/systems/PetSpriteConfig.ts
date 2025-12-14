@@ -11,10 +11,10 @@ export interface PetSpriteInfo {
 // Maps pet type (lowercase) to sprite configuration
 export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   // World pets
-  bunny: { left: 'bunny_left', right: 'bunny_right', scale: 0.012, offset: { x: 160, y: 470 } },
+  bunny: { left: 'bunny_left', right: 'bunny_right', scale: 0.014, offset: { x: 160, y: 470 } },
   kitty: { left: 'cat_left', right: 'cat_right', scale: 0.012, offset: { x: 180, y: 500 } },
   puppy: { left: 'puppy_left', right: 'puppy_right', scale: 0.012, offset: { x: 200, y: 500 } },
-  chick: { left: 'chick_left', right: 'chick_right', scale: 0.012, offset: { x: 170, y: 450 } },
+  chick: { left: 'chick_left', right: 'chick_right', scale: 0.008, offset: { x: 170, y: 450 } },
   frog: { left: 'frog_left', right: 'frog_right', scale: 0.012, offset: { x: 170, y: 400 } },
   
   // Butterflies (all variants use same sprite)
@@ -25,21 +25,21 @@ export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   
   // Snow pets
   penguin: { left: 'penguin_left', right: 'penguin_right', scale: 0.012, offset: { x: 160, y: 480 } },
-  polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
-  snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right', scale: 0.022, offset: { x: 80, y: 230 } },
-  seal: { left: 'seal_left', right: 'seal_right', scale: 0.012, offset: { x: 170, y: 260 } },
+  polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right', scale: 0.024, offset: { x: 170, y: 330 } },
+  snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right', scale: 0.028, offset: { x: 80, y: 230 } },
+  seal: { left: 'seal_left', right: 'seal_right', scale: 0.02, offset: { x: 170, y: 260 } },
   
   // Beach pets
   crab: { left: 'crab_left', right: 'crab_right', scale: 0.012, offset: { x: 200, y: 350 } },
   seagull: { left: 'seagull_left', right: 'seagull_right', scale: 0.012, offset: { x: 170, y: 420 } },
-  turtle: { left: 'turtle_left', right: 'turtle_right', scale: 0.012, offset: { x: 200, y: 280 } },
+  turtle: { left: 'turtle_left', right: 'turtle_right', scale: 0.018, offset: { x: 200, y: 280 } },
   starfish: { left: 'starfish_left', right: 'starfish_right', scale: 0.012, offset: { x: 170, y: 350 } },
   
   // Mountain pets
-  goat: { left: 'mountain_goat_left', right: 'mountain_goat_right', scale: 0.012, offset: { x: 180, y: 470 } },
+  goat: { left: 'mountain_goat_left', right: 'mountain_goat_right', scale: 0.018, offset: { x: 180, y: 470 } },
   eagle: { left: 'eagle_left', right: 'eagle_right', scale: 0.012, offset: { x: 160, y: 490 } },
-  fox: { left: 'fox_left', right: 'fox_right', scale: 0.012, offset: { x: 200, y: 420 } },
-  bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.012, offset: { x: 170, y: 330 } },
+  fox: { left: 'fox_left', right: 'fox_right', scale: 0.016, offset: { x: 200, y: 420 } },
+  bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.024, offset: { x: 170, y: 330 } },
 };
 
 // Fallback blob sprite for any pets without custom sprites
