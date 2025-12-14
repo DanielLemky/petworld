@@ -1208,6 +1208,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.scene.pause();
     this.scene.launch(SCENES.MENU, { previousScene: SCENES.WORLD });
+    this.scene.bringToTop(SCENES.MENU);
   }
 
   private goToSnow(): void {

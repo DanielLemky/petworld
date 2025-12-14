@@ -824,6 +824,7 @@ export class HomeScene extends Phaser.Scene {
   private openMenu(): void {
     this.scene.pause();
     this.scene.launch(SCENES.MENU, { previousScene: SCENES.HOME });
+    this.scene.bringToTop(SCENES.MENU);
   }
 
   private handlePlayerMovement(): void {

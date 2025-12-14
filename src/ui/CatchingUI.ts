@@ -176,27 +176,31 @@ export class CatchingUI {
   }
 
   private setupInput(): void {
-    const spaceKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    const escKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-
-    const handleCatch = () => {
-      if (!this.isActive) return;
+    // Internal functions that do the actual work
+    const doCatch = () => {
+      this.scene.input.keyboard?.off('keydown', handleKeydown);
       this.checkCatch();
     };
 
-    const handleCancel = () => {
-      if (!this.isActive) return;
+    const doCancel = () => {
+      this.scene.input.keyboard?.off('keydown', handleKeydown);
       this.finish('cancelled');
     };
 
-    spaceKey?.once('down', handleCatch);
-    escKey?.once('down', handleCancel);
+    // Event-based keyboard handler (doesn't create key objects)
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (!this.isActive) return;
+      if (event.code === 'Space') {
+        doCatch();
+      } else if (event.code === 'Escape') {
+        doCancel();
+      }
+    };
 
-    // Store references for cleanup
-    this.container.setData('spaceKey', spaceKey);
-    this.container.setData('escKey', escKey);
-    this.container.setData('handleCatch', handleCatch);
-    this.container.setData('handleCancel', handleCancel);
+    this.scene.input.keyboard?.on('keydown', handleKeydown);
+
+    // Store reference for cleanup
+    this.container.setData('handleKeydown', handleKeydown);
 
     // Set up gamepad polling for catch/cancel
     this.container.setData('gamepadHandled', false);
@@ -210,12 +214,12 @@ export class CatchingUI {
         // A button (0) - Catch
         if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
           this.container.setData('gamepadHandled', true);
-          handleCatch();
+          doCatch();
         }
         // B button (1) - Cancel
         if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.B)) {
           this.container.setData('gamepadHandled', true);
-          handleCancel();
+          doCancel();
         }
       },
       loop: true,
@@ -352,15 +356,9 @@ export class CatchingUI {
   }
 
   private cleanup(): void {
-    // Remove only our specific input listeners (not all listeners!)
-    const spaceKey = this.container.getData('spaceKey') as Phaser.Input.Keyboard.Key;
-    const escKey = this.container.getData('escKey') as Phaser.Input.Keyboard.Key;
-    const handleCatch = this.container.getData('handleCatch') as () => void;
-    const handleCancel = this.container.getData('handleCancel') as () => void;
-
-    // Use off() to remove only our handlers, not all listeners
-    spaceKey?.off('down', handleCatch);
-    escKey?.off('down', handleCancel);
+    // Remove our keyboard event listener
+    const handleKeydown = this.container.getData('handleKeydown') as (event: KeyboardEvent) => void;
+    this.scene.input.keyboard?.off('keydown', handleKeydown);
 
     // Remove gamepad poll event
     const gamepadPollEvent = this.container.getData('gamepadPollEvent') as Phaser.Time.TimerEvent;

@@ -350,6 +350,7 @@ export class BeachScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.scene.pause();
     this.scene.launch(SCENES.MENU, { previousScene: SCENES.BEACH });
+    this.scene.bringToTop(SCENES.MENU);
   }
 
   private handleFetchWithGamepad(): void {

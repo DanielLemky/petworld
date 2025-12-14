@@ -17,17 +17,22 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Reset camera to defaults to ensure menu displays correctly when launched over other scenes
+    this.cameras.main.setZoom(1);
+    this.cameras.main.setScroll(0, 0);
+
     const { width, height } = this.cameras.main;
 
     // Semi-transparent background overlay
-    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
+      .setDepth(5000);
 
     // Menu title
     this.add.text(width / 2, height / 2 - 120, 'Menu', {
       fontSize: '36px',
       color: '#ffffff',
       fontStyle: 'bold',
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(5000);
 
     // Show current player name
     const account = AccountManager.getActiveAccount();
@@ -35,7 +40,7 @@ export class MenuScene extends Phaser.Scene {
       this.add.text(width / 2, height / 2 - 80, `Player: ${account.name}`, {
         fontSize: '18px',
         color: '#aaaaaa',
-      }).setOrigin(0.5);
+      }).setOrigin(0.5).setDepth(5000);
     }
 
     // Create menu buttons
@@ -81,6 +86,7 @@ export class MenuScene extends Phaser.Scene {
     const buttonHeight = 45;
 
     const container = this.add.container(x, y);
+    container.setDepth(5000);
 
     // Background
     const bg = this.add.rectangle(0, 0, buttonWidth, buttonHeight, PALETTE.UI_BORDER)
