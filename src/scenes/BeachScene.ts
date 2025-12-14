@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT, PALETTE } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -8,6 +8,7 @@ import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
+import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 
 const BEACH_PET_TYPES = ['CRAB', 'SEAGULL', 'TURTLE', 'STARFISH'];
 
@@ -588,8 +589,10 @@ export class BeachScene extends Phaser.Scene {
       if (result === 'success' && this.targetPet) {
         SoundManager.playSuccess();
 
-        PetManager.catchPet(petType);
+        const caughtPet = PetManager.catchPet(petType);
         this.petCountText.setText(this.getPetCountText());
+
+        showCatchMessage(this, `${caughtPet.name} joined your team!`, '#4ade80');
 
         this.tweens.add({
           targets: this.targetPet,
@@ -604,21 +607,15 @@ export class BeachScene extends Phaser.Scene {
       } else if (result === 'failure') {
         SoundManager.playFailure();
 
-        if (this.targetPet) {
-          const escapeX = this.targetPet.x + (Math.random() - 0.5) * 100;
-          const escapeY = this.targetPet.y + (Math.random() - 0.5) * 100;
+        showCatchMessage(this, 'It got away!', '#ef4444');
 
-          this.tweens.add({
-            targets: this.targetPet,
-            x: escapeX,
-            y: escapeY,
-            duration: 300,
-            ease: 'Quad.easeOut',
-          });
+        if (this.targetPet) {
+          fleePetFromPlayer(this, this.targetPet, this.player.x, this.player.y);
         }
         this.targetPet = null;
       } else {
         // 'cancelled' or 'no_tool' - pet stays in place
+        showCatchMessage(this, 'You backed away...', '#888888');
         this.targetPet = null;
       }
 

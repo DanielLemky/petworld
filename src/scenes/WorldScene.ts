@@ -8,6 +8,7 @@ import { CompanionSystem } from '../systems/CompanionSystem';
 import { FetchSystem } from '../systems/FetchSystem';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
+import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -1465,7 +1466,7 @@ export class WorldScene extends Phaser.Scene {
       const caughtPet = PetManager.catchPet(petType);
 
       // Show success message
-      this.showCatchMessage(`${caughtPet.name} joined your team!`, '#4ade80');
+      showCatchMessage(this, `${caughtPet.name} joined your team!`, '#4ade80');
 
       // Remove pet from world with animation
       this.tweens.add({
@@ -1487,77 +1488,19 @@ export class WorldScene extends Phaser.Scene {
       // Play failure sound
       SoundManager.playFailure();
 
-      // Pet runs away
-      this.showCatchMessage('It got away!', '#ef4444');
+      // Show failure message and make pet flee
+      showCatchMessage(this, 'It got away!', '#ef4444');
 
       if (this.targetPet) {
-        // Make pet flee
-        const fleeDirection = {
-          x: this.targetPet.x - this.player.x,
-          y: this.targetPet.y - this.player.y,
-        };
-        const length = Math.sqrt(fleeDirection.x ** 2 + fleeDirection.y ** 2);
-        if (length > 0) {
-          fleeDirection.x /= length;
-          fleeDirection.y /= length;
-        }
-
-        this.targetPet.setVelocity(fleeDirection.x * 80, fleeDirection.y * 80);
-
-        // Reset after fleeing
-        this.time.delayedCall(1500, () => {
-          if (this.targetPet) {
-            this.targetPet.setVelocity(0, 0);
-          }
-        });
+        fleePetFromPlayer(this, this.targetPet, this.player.x, this.player.y);
       }
     } else {
       // Cancelled - just show a message
-      this.showCatchMessage('You backed away...', '#888888');
+      showCatchMessage(this, 'You backed away...', '#888888');
     }
 
     this.isCatching = false;
     this.targetPet = null;
-  }
-
-  private showCatchMessage(text: string, color: string): void {
-    const message = this.add.text(
-      this.cameras.main.width / 2,
-      this.cameras.main.height - 60,
-      text,
-      {
-        fontSize: '14px',
-        color: color,
-        backgroundColor: '#2d2d44ee',
-        padding: { x: 12, y: 6 },
-      }
-    );
-    message.setOrigin(0.5);
-    message.setScrollFactor(0);
-    message.setDepth(2000);
-
-    // Animate in
-    message.setAlpha(0);
-    message.setY(message.y + 20);
-
-    this.tweens.add({
-      targets: message,
-      alpha: 1,
-      y: message.y - 20,
-      duration: 200,
-      ease: 'Back.easeOut',
-    });
-
-    // Fade out and destroy
-    this.tweens.add({
-      targets: message,
-      alpha: 0,
-      y: message.y - 40,
-      duration: 400,
-      delay: 1500,
-      ease: 'Quad.easeIn',
-      onComplete: () => message.destroy(),
-    });
   }
 
   private handleWaterEffects(delta: number, wasInWater: boolean): void {
