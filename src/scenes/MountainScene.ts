@@ -67,7 +67,7 @@ export class MountainScene extends Phaser.Scene {
     this.setupInput();
 
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(1.8);
+    this.cameras.main.setZoom(1.0);
 
     this.createUI();
     this.createWindEffect();

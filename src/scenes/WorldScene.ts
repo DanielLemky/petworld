@@ -96,9 +96,9 @@ export class WorldScene extends Phaser.Scene {
     // Set up input
     this.setupInput();
 
-    // Set up camera with higher zoom for 16px art
+    // Set up camera for 16px art
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(1.8);
+    this.cameras.main.setZoom(1.0);
 
     // Create UI
     this.createUI();
