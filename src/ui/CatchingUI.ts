@@ -124,7 +124,7 @@ export class CatchingUI {
 
     // Moving indicator
     this.indicator = this.scene.add.rectangle(
-      0, 20,  // Start at center for fair catching
+      -this.barWidth / 2 + this.indicatorWidth / 2 + 4, 20,
       this.indicatorWidth, this.barHeight + 4,
       0xffffff, 1
     );
