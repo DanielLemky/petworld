@@ -515,15 +515,18 @@ export class HomeScene extends Phaser.Scene {
   private createPenDecorations(penId: string, startX: number, startY: number, width: number, height: number): void {
     switch (penId) {
       case 'meadow':
-        // Add trees (scaled positions for 3x larger pens, avoiding gates)
+        // Add trees (scaled positions for 3x larger pens, avoiding gates, 2x tree scale)
+        const treeWidth = TILE_SIZE * 4;
+        const treeHeight = TILE_SIZE * 6;
+
         if (!this.isNearGate(startX + 8, startY + 10, startX, startY, width, height)) {
-          this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 8) * TILE_SIZE + treeWidth/2, (startY + 10) * TILE_SIZE + treeHeight/2, 'tree').setDepth((startY + 10) * TILE_SIZE + treeHeight);
         }
         if (!this.isNearGate(startX + width - 10, startY + 15, startX, startY, width, height)) {
-          this.add.image((startX + width - 10) * TILE_SIZE, (startY + 15) * TILE_SIZE, 'tree').setDepth((startY + 15) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + width - 10) * TILE_SIZE + treeWidth/2, (startY + 15) * TILE_SIZE + treeHeight/2, 'tree').setDepth((startY + 15) * TILE_SIZE + treeHeight);
         }
         if (!this.isNearGate(startX + 20, startY + 30, startX, startY, width, height)) {
-          this.add.image((startX + 20) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 20) * TILE_SIZE + treeWidth/2, (startY + 30) * TILE_SIZE + treeHeight/2, 'tree').setDepth((startY + 30) * TILE_SIZE + treeHeight);
         }
         // Add flowers (more for larger pen, avoiding gates)
         for (let i = 0; i < 15; i++) {
@@ -542,15 +545,18 @@ export class HomeScene extends Phaser.Scene {
         break;
 
       case 'snow':
-        // Add pine trees (scaled positions for 3x larger pens, avoiding gates)
+        // Add pine trees (scaled positions for 3x larger pens, avoiding gates, 2x tree scale)
+        const pineTreeWidth = TILE_SIZE * 4;
+        const pineTreeHeight = TILE_SIZE * 6;
+
         if (!this.isNearGate(startX + 8, startY + 10, startX, startY, width, height)) {
-          this.add.image((startX + 8) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'pine_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 8) * TILE_SIZE + pineTreeWidth/2, (startY + 10) * TILE_SIZE + pineTreeHeight/2, 'pine_tree').setDepth((startY + 10) * TILE_SIZE + pineTreeHeight);
         }
         if (!this.isNearGate(startX + width - 10, startY + 12, startX, startY, width, height)) {
-          this.add.image((startX + width - 10) * TILE_SIZE, (startY + 12) * TILE_SIZE, 'pine_tree').setDepth((startY + 12) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + width - 10) * TILE_SIZE + pineTreeWidth/2, (startY + 12) * TILE_SIZE + pineTreeHeight/2, 'pine_tree').setDepth((startY + 12) * TILE_SIZE + pineTreeHeight);
         }
         if (!this.isNearGate(startX + 25, startY + 30, startX, startY, width, height)) {
-          this.add.image((startX + 25) * TILE_SIZE, (startY + 30) * TILE_SIZE, 'pine_tree').setDepth((startY + 30) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 25) * TILE_SIZE + pineTreeWidth/2, (startY + 30) * TILE_SIZE + pineTreeHeight/2, 'pine_tree').setDepth((startY + 30) * TILE_SIZE + pineTreeHeight);
         }
         // Add snowman (avoiding gates)
         if (!this.isNearGate(startX + width / 2, startY + height - 10, startX, startY, width, height)) {
@@ -560,22 +566,28 @@ export class HomeScene extends Phaser.Scene {
 
       case 'pond':
         // Water is already in the ground tiles
-        // Add some trees around the pond (avoiding gates)
+        // Add some trees around the pond (avoiding gates, 2x tree scale)
+        const pondTreeWidth = TILE_SIZE * 4;
+        const pondTreeHeight = TILE_SIZE * 6;
+
         if (!this.isNearGate(startX + 8, startY + 8, startX, startY, width, height)) {
-          this.add.image((startX + 8) * TILE_SIZE, (startY + 8) * TILE_SIZE, 'tree').setDepth((startY + 8) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 8) * TILE_SIZE + pondTreeWidth/2, (startY + 8) * TILE_SIZE + pondTreeHeight/2, 'tree').setDepth((startY + 8) * TILE_SIZE + pondTreeHeight);
         }
         if (!this.isNearGate(startX + width - 8, startY + height - 8, startX, startY, width, height)) {
-          this.add.image((startX + width - 8) * TILE_SIZE, (startY + height - 8) * TILE_SIZE, 'tree').setDepth((startY + height - 8) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + width - 8) * TILE_SIZE + pondTreeWidth/2, (startY + height - 8) * TILE_SIZE + pondTreeHeight/2, 'tree').setDepth((startY + height - 8) * TILE_SIZE + pondTreeHeight);
         }
         break;
 
       case 'beach':
-        // Add palm trees (scaled positions for 3x larger pens, avoiding gates)
+        // Add palm trees (scaled positions for 3x larger pens, avoiding gates, 2x tree scale)
+        const palmTreeWidth = TILE_SIZE * 4;
+        const palmTreeHeight = TILE_SIZE * 6;
+
         if (!this.isNearGate(startX + 10, startY + 10, startX, startY, width, height)) {
-          this.add.image((startX + 10) * TILE_SIZE, (startY + 10) * TILE_SIZE, 'palm_tree').setDepth((startY + 10) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 10) * TILE_SIZE + palmTreeWidth/2, (startY + 10) * TILE_SIZE + palmTreeHeight/2, 'palm_tree').setDepth((startY + 10) * TILE_SIZE + palmTreeHeight);
         }
         if (!this.isNearGate(startX + 30, startY + 25, startX, startY, width, height)) {
-          this.add.image((startX + 30) * TILE_SIZE, (startY + 25) * TILE_SIZE, 'palm_tree').setDepth((startY + 25) * TILE_SIZE + TILE_SIZE * 3);
+          this.add.image((startX + 30) * TILE_SIZE + palmTreeWidth/2, (startY + 25) * TILE_SIZE + palmTreeHeight/2, 'palm_tree').setDepth((startY + 25) * TILE_SIZE + palmTreeHeight);
         }
         // Add beach umbrellas (avoiding gates)
         if (!this.isNearGate(startX + width / 2, startY + height - 12, startX, startY, width, height)) {

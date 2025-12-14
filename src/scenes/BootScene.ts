@@ -232,53 +232,53 @@ export class BootScene extends Phaser.Scene {
 
   private createTreeSprite(): void {
     const g = this.make.graphics({ x: 0, y: 0 });
-    const treeWidth = TILE_SIZE * 2;
-    const treeHeight = TILE_SIZE * 3;
+    const treeWidth = TILE_SIZE * 4;   // 64px (2x scale)
+    const treeHeight = TILE_SIZE * 6;  // 96px (2x scale)
 
-    // Shadow on ground
+    // Shadow on ground (scaled 2x)
     g.fillStyle(PALETTE.SHADOW, 0.3);
-    g.fillEllipse(treeWidth / 2, treeHeight - 4, 20, 8);
+    g.fillEllipse(treeWidth / 2, treeHeight - 8, 40, 16);
 
-    // Trunk
+    // Trunk (scaled 2x)
     g.fillStyle(PALETTE.WOOD_MID, 1);
-    g.fillRect(12, 28, 8, 20);
+    g.fillRect(24, 56, 16, 40);
 
-    // Trunk shading (left side darker)
+    // Trunk shading (left side darker, scaled 2x)
     g.fillStyle(PALETTE.WOOD_DARK, 1);
-    g.fillRect(12, 28, 3, 20);
+    g.fillRect(24, 56, 6, 40);
 
-    // Trunk highlight (right side lighter)
+    // Trunk highlight (right side lighter, scaled 2x)
     g.fillStyle(PALETTE.WOOD_LIGHT, 1);
-    g.fillRect(17, 30, 2, 16);
+    g.fillRect(34, 60, 4, 32);
 
-    // Foliage layers (bottom to top for depth)
+    // Foliage layers (bottom to top for depth, scaled 2x)
     // Bottom layer
     g.fillStyle(PALETTE.GRASS_DARK, 1);
-    g.fillRect(4, 20, 24, 12);
+    g.fillRect(8, 40, 48, 24);
 
     // Middle layer
     g.fillStyle(PALETTE.GRASS_MID, 1);
-    g.fillRect(6, 12, 20, 12);
+    g.fillRect(12, 24, 40, 24);
 
     // Top layer
     g.fillStyle(PALETTE.GRASS_LIGHT, 1);
-    g.fillRect(8, 4, 16, 12);
+    g.fillRect(16, 8, 32, 24);
 
     // Top point
     g.fillStyle(PALETTE.GRASS_MID, 1);
-    g.fillRect(12, 0, 8, 6);
+    g.fillRect(24, 0, 16, 12);
 
-    // Foliage highlights
+    // Foliage highlights (scaled 2x)
     g.fillStyle(0x90d870, 1);
-    g.fillRect(10, 6, 3, 3);
-    g.fillRect(18, 10, 4, 3);
-    g.fillRect(8, 18, 3, 4);
+    g.fillRect(20, 12, 6, 6);
+    g.fillRect(36, 20, 8, 6);
+    g.fillRect(16, 36, 6, 8);
 
-    // Foliage shadows
+    // Foliage shadows (scaled 2x)
     g.fillStyle(0x2d7a14, 1);
-    g.fillRect(6, 14, 4, 4);
-    g.fillRect(20, 22, 6, 4);
-    g.fillRect(14, 8, 3, 3);
+    g.fillRect(12, 28, 8, 8);
+    g.fillRect(40, 44, 12, 8);
+    g.fillRect(28, 16, 6, 6);
 
     g.generateTexture('tree', treeWidth, treeHeight);
     g.destroy();

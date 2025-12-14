@@ -197,20 +197,23 @@ export class SnowScene extends Phaser.Scene {
     ];
 
     treePositions.forEach(pos => {
+      const treeWidth = TILE_SIZE * 4;   // 2x scale
+      const treeHeight = TILE_SIZE * 6;  // 2x scale
+
       const tree = this.add.image(
-        pos.x * TILE_SIZE + TILE_SIZE,
-        pos.y * TILE_SIZE + TILE_SIZE * 1.5,
+        pos.x * TILE_SIZE + treeWidth / 2,
+        pos.y * TILE_SIZE + treeHeight / 2,
         'pine_tree'
       );
-      tree.setDepth(pos.y * TILE_SIZE + TILE_SIZE * 3);
+      tree.setDepth(pos.y * TILE_SIZE + treeHeight);
 
       const collider = this.trees.create(
-        pos.x * TILE_SIZE + TILE_SIZE,
-        pos.y * TILE_SIZE + TILE_SIZE * 2.2,
+        pos.x * TILE_SIZE + treeWidth / 2,
+        pos.y * TILE_SIZE + treeHeight * 0.8,  // Position collider at base of larger tree
         'snow'
       ) as Phaser.Physics.Arcade.Sprite;
       collider.setVisible(false);
-      collider.setSize(20, 10);
+      collider.setSize(treeWidth * 0.6, treeHeight * 0.2);  // Scale collider proportionally
       collider.refreshBody();
     });
 

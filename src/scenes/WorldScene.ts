@@ -347,8 +347,8 @@ export class WorldScene extends Phaser.Scene {
     ];
 
     treePositions.forEach(pos => {
-      const treeWidth = TILE_SIZE * 2;
-      const treeHeight = TILE_SIZE * 3;
+      const treeWidth = TILE_SIZE * 4;   // 2x scale
+      const treeHeight = TILE_SIZE * 6;  // 2x scale
 
       const tree = this.trees.create(
         pos.x * TILE_SIZE + treeWidth / 2,
@@ -356,9 +356,9 @@ export class WorldScene extends Phaser.Scene {
         'tree'
       ) as Phaser.Physics.Arcade.Sprite;
 
-      // Collision box at base of tree only
-      tree.setSize(treeWidth - 8, TILE_SIZE);
-      tree.setOffset(4, treeHeight - TILE_SIZE);
+      // Collision box at base of tree only (scaled proportionally)
+      tree.setSize(treeWidth * 0.75, TILE_SIZE * 1.5);  // Wider base for larger trees
+      tree.setOffset(treeWidth * 0.125, treeHeight - TILE_SIZE * 1.5);
       tree.setDepth(pos.y * TILE_SIZE + treeHeight);
     });
 
