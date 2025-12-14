@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { PetManager } from './PetManager';
 import { TILE_SIZE } from '../utils/constants';
 import type { FetchSystem } from './FetchSystem';
+import { applyPetSpriteConfig, getPetSpriteConfig } from './PetSpriteConfig';
 
 // Companion follows player with smooth movement
 const FOLLOW_DISTANCE = TILE_SIZE * 1.2;
@@ -40,17 +41,12 @@ export class CompanionSystem {
 
     // Create the companion sprite
     if (this.isPuppy) {
-      // Use loaded puppy sprite with scaling
+      // Use loaded puppy sprite
       this.sprite = this.scene.physics.add.sprite(
         player.x - FOLLOW_DISTANCE,
         player.y,
         'puppy_right'
       );
-      // Scale down the high-res sprite
-      this.sprite.setScale(0.018);
-      // Adjust collision box for scaled sprite
-      this.sprite.setSize(400, 200);
-      this.sprite.setOffset(200, 500);
     } else {
       // Use programmatic pet sprite for other pets
       // Butterflies use different sprite naming (no "pet_" prefix)
@@ -63,9 +59,35 @@ export class CompanionSystem {
         player.y,
         spriteKey
       ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      // Collision box for programmatic sprites
-      this.sprite.setSize(14, 12);
-      this.sprite.setOffset(1, TILE_SIZE - 14);
+    }
+
+    // Apply centralized scaling configuration to ALL companions
+    applyPetSpriteConfig(this.sprite, petType);
+
+    // Set collision boxes representing physical size in world
+    if (this.isPuppy) {
+      // Puppy: Larger collision box for bigger companion
+      this.sprite.setSize(400, 200);
+      this.sprite.setOffset(200, 500);
+    } else {
+      // Other companions: Smaller collision box proportional to size
+      const config = getPetSpriteConfig(petType);
+      const scale = config.scale;
+
+      // Scale collision box based on pet size category
+      if (scale >= 0.03) {
+        // Large companions (polar bears, etc.)
+        this.sprite.setSize(200, 150);
+        this.sprite.setOffset(100, 300);
+      } else if (scale >= 0.02) {
+        // Medium companions
+        this.sprite.setSize(150, 120);
+        this.sprite.setOffset(75, 240);
+      } else {
+        // Small companions (most pets)
+        this.sprite.setSize(120, 100);
+        this.sprite.setOffset(60, 200);
+      }
     }
 
     this.sprite.setCollideWorldBounds(true);
