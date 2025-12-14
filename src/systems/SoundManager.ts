@@ -21,21 +21,80 @@ class SoundManagerClass {
   private audioFilesLoaded: boolean = false;
 
   private pendingTrack: MusicTrack = null;
+  private gamepadPollInterval: number | null = null;
+  private initOnInteraction: (() => void) | null = null;
+  private boundOnGamepadConnected: (() => void) | null = null;
 
   init(): void {
     if (this.audioContext) return;
 
     // Set up listeners for user interaction to initialize audio
-    const initOnInteraction = () => {
+    this.initOnInteraction = () => {
       this.actuallyInit();
-      document.removeEventListener('click', initOnInteraction);
-      document.removeEventListener('keydown', initOnInteraction);
-      document.removeEventListener('touchstart', initOnInteraction);
+      this.cleanupInteractionListeners();
     };
 
-    document.addEventListener('click', initOnInteraction);
-    document.addEventListener('keydown', initOnInteraction);
-    document.addEventListener('touchstart', initOnInteraction);
+    document.addEventListener('click', this.initOnInteraction);
+    document.addEventListener('keydown', this.initOnInteraction);
+    document.addEventListener('touchstart', this.initOnInteraction);
+
+    // Listen for gamepad connection
+    this.boundOnGamepadConnected = this.onGamepadConnected.bind(this);
+    window.addEventListener('gamepadconnected', this.boundOnGamepadConnected);
+
+    // Check if a gamepad is already connected
+    const gamepads = navigator.getGamepads();
+    for (const gamepad of gamepads) {
+      if (gamepad) {
+        this.onGamepadConnected();
+        break;
+      }
+    }
+  }
+
+  private cleanupInteractionListeners(): void {
+    if (this.initOnInteraction) {
+      document.removeEventListener('click', this.initOnInteraction);
+      document.removeEventListener('keydown', this.initOnInteraction);
+      document.removeEventListener('touchstart', this.initOnInteraction);
+      this.initOnInteraction = null;
+    }
+    
+    if (this.boundOnGamepadConnected) {
+      window.removeEventListener('gamepadconnected', this.boundOnGamepadConnected);
+      this.boundOnGamepadConnected = null;
+    }
+    
+    if (this.gamepadPollInterval) {
+      clearInterval(this.gamepadPollInterval);
+      this.gamepadPollInterval = null;
+    }
+  }
+
+  private onGamepadConnected(): void {
+    // Start polling for button presses
+    if (this.gamepadPollInterval) return; // Already polling
+    
+    this.gamepadPollInterval = window.setInterval(() => {
+      if (this.audioContext) {
+        // Already initialized, stop polling
+        this.cleanupInteractionListeners();
+        return;
+      }
+      
+      // Check all connected gamepads for any button press
+      const gamepads = navigator.getGamepads();
+      for (const gamepad of gamepads) {
+        if (!gamepad) continue;
+        for (const button of gamepad.buttons) {
+          if (button.pressed) {
+            this.actuallyInit();
+            this.cleanupInteractionListeners();
+            return;
+          }
+        }
+      }
+    }, 100); // Poll every 100ms
   }
 
   private actuallyInit(): void {
