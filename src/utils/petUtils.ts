@@ -14,7 +14,7 @@ export function fleePetFromPlayer(
   pet: Phaser.Physics.Arcade.Sprite,
   playerX: number,
   playerY: number,
-  fleeDistance: number = 150,
+  fleeDistance: number = 300,
   duration: number = 400
 ): void {
   // Calculate direction away from player
