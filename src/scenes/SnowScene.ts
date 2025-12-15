@@ -328,7 +328,11 @@ this.player = this.physics.add.sprite(
 
   private setupInput(): void {
     // Initialize gamepad manager
-    GamepadManager.setScene(this);
+    if (!GamepadManager.isInitialized()) {
+      GamepadManager.init(this);
+    } else {
+      GamepadManager.setScene(this);
+    }
 
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();

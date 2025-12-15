@@ -50,7 +50,11 @@ export class MenuScene extends Phaser.Scene {
     this.setupInput();
 
     // Initialize gamepad
-    GamepadManager.setScene(this);
+    if (!GamepadManager.isInitialized()) {
+      GamepadManager.init(this);
+    } else {
+      GamepadManager.setScene(this);
+    }
   }
 
   update(): void {

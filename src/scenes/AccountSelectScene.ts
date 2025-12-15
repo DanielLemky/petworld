@@ -53,7 +53,11 @@ export class AccountSelectScene extends Phaser.Scene {
     this.setupKeyboardInput();
 
     // Initialize gamepad
-    GamepadManager.setScene(this);
+    if (!GamepadManager.isInitialized()) {
+      GamepadManager.init(this);
+    } else {
+      GamepadManager.setScene(this);
+    }
   }
 
   update(): void {

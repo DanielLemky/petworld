@@ -310,7 +310,11 @@ export class BeachScene extends Phaser.Scene {
 
   private setupInput(): void {
     // Initialize gamepad manager
-    GamepadManager.setScene(this);
+    if (!GamepadManager.isInitialized()) {
+      GamepadManager.init(this);
+    } else {
+      GamepadManager.setScene(this);
+    }
 
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
