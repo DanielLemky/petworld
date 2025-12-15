@@ -76,6 +76,12 @@ class GamepadManagerClass {
    * Update the scene reference (call this when switching scenes).
    */
   setScene(scene: Phaser.Scene): void {
+    // Reset button state arrays to prevent stale state from previous scene
+    for (let i = 0; i < 16; i++) {
+      this.previousButtonStates[i] = false;
+      this.currentButtonStates[i] = false;
+    }
+
     this.scene = scene;
   }
 

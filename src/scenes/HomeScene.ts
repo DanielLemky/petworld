@@ -956,10 +956,10 @@ export class HomeScene extends Phaser.Scene {
       if (velocityX === 0) newDirection = 'down';
     }
 
-    // For analog stick, use the actual stick values for smoother movement
+    // For analog stick, use the actual stick values for smoother movement (with run multiplier)
     if (Math.abs(leftStick.x) > 0.2 || Math.abs(leftStick.y) > 0.2) {
-      velocityX = leftStick.x * PLAYER_SPEED;
-      velocityY = leftStick.y * PLAYER_SPEED;
+      velocityX = leftStick.x * speed;
+      velocityY = leftStick.y * speed;
       
       // Determine direction based on dominant axis
       if (Math.abs(leftStick.x) > Math.abs(leftStick.y)) {
