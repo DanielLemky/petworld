@@ -41,12 +41,12 @@ export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   fox: { left: 'fox_left', right: 'fox_right', scale: 0.024, offset: { x: 200, y: 420 } },
   bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.036, offset: { x: 170, y: 330 } },
   
-  // Jungle pets (using blob placeholder until sprites are created)
-  parrot: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
-  monkey: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
-  toucan: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
-  sloth: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
-  jaguar: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
+  // Jungle pets
+  parrot: { left: 'parrot_left', right: 'parrot_right', scale: 0.018, offset: { x: 170, y: 400 } },
+  monkey: { left: 'monkey_left', right: 'monkey_right', scale: 0.032, offset: { x: 170, y: 350 } },
+  toucan: { left: 'toucan_left', right: 'toucan_right', scale: 0.021, offset: { x: 170, y: 380 } },
+  sloth: { left: 'sloth_left', right: 'sloth_right', scale: 0.024, offset: { x: 170, y: 320 } },
+  jaguar: { left: 'jaguar_left', right: 'jaguar_right', scale: 0.04, offset: { x: 180, y: 350 } },
 };
 
 // Fallback blob sprite for any pets without custom sprites
