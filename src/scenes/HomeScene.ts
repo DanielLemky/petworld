@@ -113,8 +113,8 @@ export class HomeScene extends Phaser.Scene {
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.X)) {
       this.handleFeeding();
     }
-    // RB button (5) - Take companion
-    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.RB)) {
+    // LB button (4) - Take companion
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.LB)) {
       this.handleTakeWithMe();
     }
     // Y/Triangle button (3) - Go to World
@@ -807,7 +807,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createUI(): void {
-    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up | F feed | T companion | M world', {
+    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up | F feed | T/L1 companion | SHIFT/R1 run | M world', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44dd',
