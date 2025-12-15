@@ -159,10 +159,10 @@ export class MountainScene extends Phaser.Scene {
       peak.setAlpha(0.7);
     }
 
-    // Stair locations (gaps in cliffs)
-    const stairsCliff1 = [40, 120, 180]; // x positions for cliff at y=50
-    const stairsCliff2 = [60, 140, 200]; // x positions for cliff at y=110
-    const stairWidth = 10;
+    // Stair locations (gaps in cliffs) - 12 stairs per cliff
+    const stairsCliff1 = [15, 33, 51, 69, 87, 105, 123, 141, 159, 177, 195, 213]; // x positions for cliff at y=50
+    const stairsCliff2 = [24, 42, 60, 78, 96, 114, 132, 150, 168, 186, 204, 220]; // x positions for cliff at y=110
+    const stairWidth = 8;
 
     // Boulders as obstacles (~45 boulders avoiding stairs and cliffs)
     this.boulders = this.physics.add.staticGroup();
@@ -181,13 +181,13 @@ export class MountainScene extends Phaser.Scene {
           (x < 15 && y >= 115 && y <= 140) ||
           // Avoid cave area (now on upper level)
           (x >= 95 && x <= 115 && y >= 20 && y <= 35) ||
-          // Avoid cliff zones (y=48-52 and y=108-112)
-          (y >= 48 && y <= 52) ||
-          (y >= 108 && y <= 112) ||
-          // Avoid stair areas on cliff 1
-          (y >= 45 && y <= 55 && stairsCliff1.some(sx => x >= sx - 2 && x <= sx + stairWidth + 2)) ||
-          // Avoid stair areas on cliff 2
-          (y >= 105 && y <= 115 && stairsCliff2.some(sx => x >= sx - 2 && x <= sx + stairWidth + 2))
+          // Avoid cliff zones (y=48-58 and y=108-118 for 6-tile high cliffs)
+          (y >= 48 && y <= 58) ||
+          (y >= 108 && y <= 118) ||
+          // Avoid stair areas on cliff 1 (expanded for taller cliffs)
+          (y >= 45 && y <= 60 && stairsCliff1.some(sx => x >= sx - 2 && x <= sx + stairWidth + 2)) ||
+          // Avoid stair areas on cliff 2 (expanded for taller cliffs)
+          (y >= 105 && y <= 120 && stairsCliff2.some(sx => x >= sx - 2 && x <= sx + stairWidth + 2))
         )
       );
 
@@ -276,11 +276,11 @@ export class MountainScene extends Phaser.Scene {
     // Create cliff collision group
     this.cliffs = this.physics.add.staticGroup();
 
-    // Stair locations (gaps in cliffs)
-    const stairsCliff1 = [40, 120, 180]; // x positions for cliff at y=50
-    const stairsCliff2 = [60, 140, 200]; // x positions for cliff at y=110
-    const stairWidth = 10;
-    const cliffHeight = 3; // Visual cliff height in tiles
+    // Stair locations (gaps in cliffs) - 12 stairs per cliff
+    const stairsCliff1 = [15, 33, 51, 69, 87, 105, 123, 141, 159, 177, 195, 213]; // x positions for cliff at y=50
+    const stairsCliff2 = [24, 42, 60, 78, 96, 114, 132, 150, 168, 186, 204, 220]; // x positions for cliff at y=110
+    const stairWidth = 8;
+    const cliffHeight = 6; // Visual cliff height in tiles
 
     // Cliff 1: Between Level 2 (high) and Level 1 (mid) at y=50
     for (let x = 0; x < worldWidth; x++) {
@@ -362,29 +362,50 @@ export class MountainScene extends Phaser.Scene {
   }
 
   private createMountainPaths(): void {
-    // Paths connecting to stairs between levels
-    const pathTiles = [
-      // Level 2 (High) paths - connecting to stairs at x=40, 120, 180
-      ...Array.from({ length: 80 }, (_, i) => ({ x: 20 + i, y: 35 })), // Horizontal on Level 2
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 45, y: 35 + i })), // Down to stair at x=40
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 125, y: 35 + i })), // Down to stair at x=120
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 185, y: 35 + i })), // Down to stair at x=180
+    // Stair locations (12 stairs per cliff)
+    const stairsCliff1 = [15, 33, 51, 69, 87, 105, 123, 141, 159, 177, 195, 213];
+    const stairsCliff2 = [24, 42, 60, 78, 96, 114, 132, 150, 168, 186, 204, 220];
 
-      // Level 1 (Mid) paths - connecting stairs
-      ...Array.from({ length: 170 }, (_, i) => ({ x: 20 + i, y: 80 })), // Main horizontal on Level 1
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 45, y: 55 + i })), // From stair to path
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 125, y: 55 + i })), // From stair to path
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 185, y: 55 + i })), // From stair to path
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 65, y: 85 + i })), // Down to stair at x=60
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 145, y: 85 + i })), // Down to stair at x=140
-      ...Array.from({ length: 25 }, (_, i) => ({ x: 205, y: 85 + i })), // Down to stair at x=200
+    const pathTiles: { x: number; y: number }[] = [];
 
-      // Level 0 (Low) paths - to exit
-      ...Array.from({ length: 180 }, (_, i) => ({ x: 20 + i, y: 130 })), // Main horizontal on Level 0
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 65, y: 115 + i })), // From stair to path
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 145, y: 115 + i })), // From stair to path
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 205, y: 115 + i })), // From stair to path
-    ];
+    // Level 2 (High) - main horizontal path
+    for (let i = 0; i < 200; i++) {
+      pathTiles.push({ x: 10 + i, y: 35 });
+    }
+    // Vertical paths from Level 2 to Cliff 1 stairs
+    stairsCliff1.forEach(stairX => {
+      for (let i = 0; i < 18; i++) {
+        pathTiles.push({ x: stairX + 4, y: 35 + i });
+      }
+    });
+
+    // Level 1 (Mid) - main horizontal path
+    for (let i = 0; i < 200; i++) {
+      pathTiles.push({ x: 10 + i, y: 80 });
+    }
+    // Vertical paths from Cliff 1 stairs to Level 1
+    stairsCliff1.forEach(stairX => {
+      for (let i = 0; i < 22; i++) {
+        pathTiles.push({ x: stairX + 4, y: 58 + i });
+      }
+    });
+    // Vertical paths from Level 1 to Cliff 2 stairs
+    stairsCliff2.forEach(stairX => {
+      for (let i = 0; i < 28; i++) {
+        pathTiles.push({ x: stairX + 4, y: 85 + i });
+      }
+    });
+
+    // Level 0 (Low) - main horizontal path
+    for (let i = 0; i < 200; i++) {
+      pathTiles.push({ x: 10 + i, y: 140 });
+    }
+    // Vertical paths from Cliff 2 stairs to Level 0
+    stairsCliff2.forEach(stairX => {
+      for (let i = 0; i < 22; i++) {
+        pathTiles.push({ x: stairX + 4, y: 118 + i });
+      }
+    });
 
     pathTiles.forEach(pos => {
       const path = this.add.image(
