@@ -146,8 +146,8 @@ export class SnowScene extends Phaser.Scene {
   }
 
   private createWorld(): void {
-    const worldWidth = 40;
-    const worldHeight = 30;
+    const worldWidth = 200;
+    const worldHeight = 150;
 
     this.physics.world.setBounds(0, 0, worldWidth * TILE_SIZE, worldHeight * TILE_SIZE);
 
@@ -164,11 +164,11 @@ export class SnowScene extends Phaser.Scene {
       }
     }
 
-    // Frozen pond
-    const pondX = 20;
-    const pondY = 12;
-    const pondWidth = 8;
-    const pondHeight = 6;
+    // Frozen pond (scaled 5x)
+    const pondX = 100;
+    const pondY = 60;
+    const pondWidth = 40;
+    const pondHeight = 30;
 
     for (let y = pondY; y < pondY + pondHeight; y++) {
       for (let x = pondX; x < pondX + pondWidth; x++) {
@@ -188,18 +188,36 @@ export class SnowScene extends Phaser.Scene {
       pondHeight * TILE_SIZE
     );
 
-    // Pine trees
+    // Pine trees (~60 trees distributed across the map)
     this.trees = this.physics.add.staticGroup();
-    const treePositions = [
-      { x: 5, y: 5 }, { x: 12, y: 3 }, { x: 30, y: 6 },
-      { x: 8, y: 15 }, { x: 35, y: 12 }, { x: 3, y: 22 },
-      { x: 15, y: 20 }, { x: 32, y: 22 }, { x: 25, y: 4 },
-      { x: 6, y: 10 }, { x: 33, y: 18 }, { x: 18, y: 25 },
-    ];
+    const treePositions: { x: number; y: number }[] = [];
+
+    // Generate tree positions avoiding pond area and exit zone
+    const random = new Phaser.Math.RandomDataGenerator(['snow-trees']);
+    for (let i = 0; i < 60; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = random.integerInRange(5, worldWidth - 8);
+        y = random.integerInRange(5, worldHeight - 10);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          // Avoid pond area (with margin)
+          (x >= pondX - 6 && x <= pondX + pondWidth + 2 && y >= pondY - 8 && y <= pondY + pondHeight + 2) ||
+          // Avoid exit zone area
+          (x < 15 && y >= 60 && y <= 90)
+        )
+      );
+      if (attempts < 50) {
+        treePositions.push({ x, y });
+      }
+    }
 
     treePositions.forEach(pos => {
-      const treeWidth = TILE_SIZE * 4;   // 2x scale
-      const treeHeight = TILE_SIZE * 6;  // 2x scale
+      const treeWidth = TILE_SIZE * 4;
+      const treeHeight = TILE_SIZE * 6;
 
       const tree = this.add.image(
         pos.x * TILE_SIZE + treeWidth / 2,
@@ -210,33 +228,55 @@ export class SnowScene extends Phaser.Scene {
 
       const collider = this.trees.create(
         pos.x * TILE_SIZE + treeWidth / 2,
-        pos.y * TILE_SIZE + treeHeight * 0.8,  // Position collider at base of larger tree
+        pos.y * TILE_SIZE + treeHeight * 0.8,
         'snow'
       ) as Phaser.Physics.Arcade.Sprite;
       collider.setVisible(false);
-      collider.setSize(treeWidth * 0.6, treeHeight * 0.2);  // Scale collider proportionally
+      collider.setSize(treeWidth * 0.6, treeHeight * 0.2);
       collider.refreshBody();
     });
 
-    // Snowmen decorations
-    const snowmanPositions = [
-      { x: 10, y: 8 }, { x: 28, y: 15 }, { x: 22, y: 24 },
-    ];
+    // Snowmen decorations (~15 snowmen)
+    const snowmanPositions: { x: number; y: number }[] = [];
+    const snowmanRandom = new Phaser.Math.RandomDataGenerator(['snow-snowmen']);
+    for (let i = 0; i < 15; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = snowmanRandom.integerInRange(10, worldWidth - 5);
+        y = snowmanRandom.integerInRange(10, worldHeight - 5);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          // Avoid pond
+          (x >= pondX - 2 && x <= pondX + pondWidth + 2 && y >= pondY - 2 && y <= pondY + pondHeight + 2) ||
+          // Avoid exit zone
+          (x < 15 && y >= 60 && y <= 90)
+        )
+      );
+      if (attempts < 50) {
+        snowmanPositions.push({ x, y });
+      }
+    }
 
-    snowmanPositions.forEach(pos => {
+    snowmanPositions.forEach((pos, index) => {
       const snowman = this.add.image(
         pos.x * TILE_SIZE + TILE_SIZE / 2,
         pos.y * TILE_SIZE + TILE_SIZE / 2,
         'snowman'
       );
+      // First 4 snowmen are giant (10x), rest are 4x
+      const isGiant = index < 4;
+      snowman.setScale(isGiant ? 10 : 4);
       snowman.setDepth(pos.y * TILE_SIZE);
     });
 
-    // Exit zone (path back to main world)
-    this.exitZone = this.add.zone(2 * TILE_SIZE, 15 * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 3);
+    // Exit zone (path back to main world) - scaled position
+    this.exitZone = this.add.zone(5 * TILE_SIZE, 75 * TILE_SIZE, TILE_SIZE * 4, TILE_SIZE * 6);
 
     // Exit sign
-    const exitText = this.add.text(2 * TILE_SIZE, 13.5 * TILE_SIZE, 'To World', {
+    const exitText = this.add.text(5 * TILE_SIZE, 72 * TILE_SIZE, 'To World', {
       fontSize: '8px',
       color: '#ffffff',
       backgroundColor: '#2d2d44aa',
@@ -245,7 +285,7 @@ export class SnowScene extends Phaser.Scene {
     exitText.setOrigin(0.5);
     exitText.setDepth(100);
 
-    const arrow = this.add.text(2 * TILE_SIZE, 14 * TILE_SIZE, '◀', {
+    const arrow = this.add.text(5 * TILE_SIZE, 73 * TILE_SIZE, '◀', {
       fontSize: '10px',
       color: '#4ade80',
     });
@@ -261,9 +301,9 @@ export class SnowScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    // Create path tiles leading to exit
-    for (let y = 13; y < 18; y++) {
-      for (let x = 0; x < 3; x++) {
+    // Create path tiles leading to exit (wider path)
+    for (let y = 65; y < 85; y++) {
+      for (let x = 0; x < 10; x++) {
         const path = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -275,9 +315,10 @@ export class SnowScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
-this.player = this.physics.add.sprite(
-      5 * TILE_SIZE + TILE_SIZE / 2,
-      17 * TILE_SIZE + PLAYER_HEIGHT / 2,
+    // Spawn near exit zone on scaled map
+    this.player = this.physics.add.sprite(
+      15 * TILE_SIZE + TILE_SIZE / 2,
+      75 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_right'
     ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
@@ -294,12 +335,33 @@ this.player = this.physics.add.sprite(
   private createPets(): void {
     this.pets = this.physics.add.group();
 
-    // Spawn snow pets
-    const spawnPositions = [
-      { x: 15, y: 8 }, { x: 25, y: 10 }, { x: 30, y: 20 },
-      { x: 10, y: 18 }, { x: 35, y: 8 }, { x: 20, y: 22 },
-      { x: 8, y: 25 }, { x: 32, y: 25 },
-    ];
+    // Spawn snow pets (~30 pets distributed across larger map)
+    const spawnPositions: { x: number; y: number }[] = [];
+    const worldWidth = 200;
+    const worldHeight = 150;
+    const pondX = 100, pondY = 60, pondWidth = 40, pondHeight = 30;
+
+    const petRandom = new Phaser.Math.RandomDataGenerator(['snow-pets']);
+    for (let i = 0; i < 30; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = petRandom.integerInRange(15, worldWidth - 10);
+        y = petRandom.integerInRange(10, worldHeight - 10);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          // Avoid pond area
+          (x >= pondX - 2 && x <= pondX + pondWidth + 2 && y >= pondY - 2 && y <= pondY + pondHeight + 2) ||
+          // Avoid exit zone
+          (x < 15 && y >= 60 && y <= 90)
+        )
+      );
+      if (attempts < 50) {
+        spawnPositions.push({ x, y });
+      }
+    }
 
     spawnPositions.forEach(pos => {
       const petType = SNOW_PET_TYPES[Math.floor(Math.random() * SNOW_PET_TYPES.length)];
@@ -689,9 +751,9 @@ this.player = this.physics.add.sprite(
   private createCollectibles(): void {
     this.collectibles = this.physics.add.group();
 
-    // TRAP spawns in snow lands - good for catching snow bunnies
+    // TRAP spawns in snow lands - good for catching snow bunnies (scaled position)
     if (!InventoryManager.hasTool('TRAP')) {
-      this.createCollectibleItem(28, 20, 'TRAP');
+      this.createCollectibleItem(140, 100, 'TRAP');
     }
 
     this.physics.add.overlap(this.player, this.collectibles, (_, collectible) => {
