@@ -85,6 +85,7 @@ export const SCENES = {
   SNOW: 'SnowScene',
   BEACH: 'BeachScene',
   MOUNTAIN: 'MountainScene',
+  JUNGLE: 'JungleScene',
 };
 
 // Pet types with their colors and catching difficulty (1=very easy, 4=hard)
@@ -114,6 +115,12 @@ export const PET_TYPES = {
   EAGLE: { primary: 0x5d4037, secondary: 0xffd54f, name: 'Eagle', difficulty: 4 },
   FOX: { primary: 0xff7043, secondary: 0xffffff, name: 'Fox', difficulty: 4 },
   BEAR_CUB: { primary: 0x6d4c41, secondary: 0x4e342e, name: 'Bear Cub', difficulty: 4 },
+  // Jungle pets
+  PARROT: { primary: 0x00c853, secondary: 0xff5252, name: 'Parrot', difficulty: 3 },
+  MONKEY: { primary: 0x8d6e63, secondary: 0xd7ccc8, name: 'Monkey', difficulty: 3 },
+  TOUCAN: { primary: 0x1a1a1a, secondary: 0xffab00, name: 'Toucan', difficulty: 2 },
+  SLOTH: { primary: 0x795548, secondary: 0xa1887f, name: 'Sloth', difficulty: 4 },
+  JAGUAR: { primary: 0xffb300, secondary: 0x1a1a1a, name: 'Jaguar', difficulty: 4 },
 };
 
 // Farm pen types for the home area
@@ -159,6 +166,13 @@ export const PEN_TYPES = {
     pets: ['BUTTERFLY_BLUE', 'BUTTERFLY_PINK', 'BUTTERFLY_YELLOW', 'BUTTERFLY_PURPLE'],
     color: 0xf472b6,
     groundTile: 'grass_flower',
+  },
+  JUNGLE: {
+    id: 'jungle',
+    name: 'Jungle Pen',
+    pets: ['PARROT', 'MONKEY', 'TOUCAN', 'SLOTH', 'JAGUAR'],
+    color: 0x2e5a32,
+    groundTile: 'jungle_floor',
   },
 };
 

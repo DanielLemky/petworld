@@ -1,7 +1,7 @@
 // Simple sound manager using Web Audio API
 // Supports both audio files and programmatically generated sounds
 
-type MusicTrack = 'world' | 'snow' | 'beach' | 'mountain' | 'home' | null;
+type MusicTrack = 'world' | 'snow' | 'beach' | 'mountain' | 'home' | 'jungle' | null;
 
 class SoundManagerClass {
   private audioContext: AudioContext | null = null;
@@ -140,6 +140,7 @@ class SoundManagerClass {
       { track: 'snow', file: '/assets/audio/song-2.wav' },
       { track: 'beach', file: '/assets/audio/song-3.wav' },
       { track: 'mountain', file: '/assets/audio/song-4.wav' },
+      { track: 'jungle', file: '/assets/audio/jungle.wav' },
     ];
 
     for (const { track, file } of audioFiles) {
@@ -401,7 +402,7 @@ class SoundManagerClass {
   ];
 
   // Start playing background music
-  playMusic(track: 'world' | 'snow' | 'beach' | 'mountain' | 'home'): void {
+  playMusic(track: 'world' | 'snow' | 'beach' | 'mountain' | 'home' | 'jungle'): void {
     // Store track to play once audio is initialized (after user interaction)
     this.pendingTrack = track;
 

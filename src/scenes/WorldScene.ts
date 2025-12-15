@@ -32,6 +32,7 @@ export class WorldScene extends Phaser.Scene {
   private snowZone!: Phaser.GameObjects.Zone;
   private beachZone!: Phaser.GameObjects.Zone;
   private mountainZone!: Phaser.GameObjects.Zone;
+  private jungleZone!: Phaser.GameObjects.Zone;
   private isTransitioning: boolean = false;
   private waterBounds!: Phaser.Geom.Rectangle;
   private bridgeBounds!: Phaser.Geom.Rectangle;
@@ -87,6 +88,9 @@ export class WorldScene extends Phaser.Scene {
 
     // Add overlap detection for mountain zone entry
     this.physics.add.overlap(this.player, this.mountainZone, () => this.goToMountain());
+
+    // Add overlap detection for jungle zone entry
+    this.physics.add.overlap(this.player, this.jungleZone, () => this.goToJungle());
 
     // Create some pets wandering around
     this.createPets();
@@ -376,6 +380,9 @@ export class WorldScene extends Phaser.Scene {
 
     // Create path to mountain on the left
     this.createMountainZone();
+
+    // Create path to jungle at the top
+    this.createJungleZone();
   }
 
   private createSnowZone(): void {
@@ -518,6 +525,55 @@ export class WorldScene extends Phaser.Scene {
     this.tweens.add({
       targets: arrow,
       x: arrow.x - 4,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  private createJungleZone(): void {
+    // Jungle path at the top edge (centered)
+    const jungleX = 60;
+    const jungleY = 3;
+
+    // Create jungle floor tiles leading to exit
+    for (let y = 0; y < jungleY + 4; y++) {
+      for (let x = jungleX - 3; x < jungleX + 4; x++) {
+        const jungleTile = this.add.image(
+          x * TILE_SIZE + TILE_SIZE / 2,
+          y * TILE_SIZE + TILE_SIZE / 2,
+          Math.random() > 0.7 ? 'jungle_floor_moss' : 'jungle_floor'
+        );
+        jungleTile.setDepth(-8);
+      }
+    }
+
+    // Transition zone
+    this.jungleZone = this.add.zone(jungleX * TILE_SIZE, 0, TILE_SIZE * 6, TILE_SIZE * 2);
+    this.physics.add.existing(this.jungleZone, true);
+
+    // Sign
+    const signText = this.add.text(jungleX * TILE_SIZE, (jungleY + 2) * TILE_SIZE, 'JUNGLE', {
+      fontSize: '8px',
+      color: '#32cd32',
+      backgroundColor: '#2d2d44dd',
+      padding: { x: 4, y: 2 },
+    });
+    signText.setOrigin(0.5);
+    signText.setDepth(100);
+
+    // Arrow indicator pointing up
+    const arrow = this.add.text(jungleX * TILE_SIZE, (jungleY + 1) * TILE_SIZE, '\u25B2', {
+      fontSize: '10px',
+      color: '#32cd32',
+    });
+    arrow.setOrigin(0.5);
+    arrow.setDepth(100);
+
+    this.tweens.add({
+      targets: arrow,
+      y: arrow.y - 4,
       duration: 500,
       yoyo: true,
       repeat: -1,
@@ -1251,6 +1307,19 @@ export class WorldScene extends Phaser.Scene {
 
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start(SCENES.MOUNTAIN);
+    });
+  }
+
+  private goToJungle(): void {
+    if (this.isCatching || this.isTransitioning) return;
+    this.isTransitioning = true;
+
+    SoundManager.playClick();
+
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start(SCENES.JUNGLE);
     });
   }
 

@@ -136,6 +136,7 @@ export class BootScene extends Phaser.Scene {
     this.createBeachPetSprites();
     this.createMountainSprites();
     this.createMountainPetSprites();
+    this.createJungleSprites();
     this.createToolSprites();
     this.createBallSprite();
   }
@@ -1629,5 +1630,274 @@ export class BootScene extends Phaser.Scene {
 
     g.generateTexture('ball', size, size);
     g.destroy();
+  }
+
+  private createJungleSprites(): void {
+    const size = TILE_SIZE;
+
+    // Jungle floor tile (dark green/brown)
+    const g1 = this.make.graphics({ x: 0, y: 0 });
+    g1.fillStyle(0x2e5a32, 1);
+    g1.fillRect(0, 0, size, size);
+
+    // Lighter patches
+    g1.fillStyle(0x3d6b3f, 1);
+    g1.fillRect(2, 3, 3, 2);
+    g1.fillRect(10, 8, 4, 2);
+    g1.fillRect(5, 12, 3, 2);
+
+    // Darker patches
+    g1.fillStyle(0x1e4a22, 1);
+    g1.fillRect(8, 2, 2, 2);
+    g1.fillRect(1, 9, 3, 2);
+    g1.fillRect(12, 13, 3, 2);
+
+    // Small dirt spots
+    g1.fillStyle(0x4e3524, 1);
+    g1.fillRect(6, 6, 2, 1);
+    g1.fillRect(13, 4, 1, 2);
+
+    g1.generateTexture('jungle_floor', size, size);
+    g1.destroy();
+
+    // Jungle floor with moss variant
+    const g2 = this.make.graphics({ x: 0, y: 0 });
+    g2.fillStyle(0x2e5a32, 1);
+    g2.fillRect(0, 0, size, size);
+
+    g2.fillStyle(0x3d6b3f, 1);
+    g2.fillRect(3, 5, 2, 2);
+    g2.fillRect(11, 10, 3, 2);
+
+    // Moss patches
+    g2.fillStyle(0x6b8e23, 1);
+    g2.fillRect(5, 2, 3, 2);
+    g2.fillRect(1, 11, 2, 2);
+    g2.fillRect(10, 5, 2, 2);
+
+    // Darker areas
+    g2.fillStyle(0x1e4a22, 1);
+    g2.fillRect(8, 8, 2, 2);
+
+    g2.generateTexture('jungle_floor_moss', size, size);
+    g2.destroy();
+
+    // Jungle river water
+    const g3 = this.make.graphics({ x: 0, y: 0 });
+    g3.fillStyle(0x3a7ca5, 1);
+    g3.fillRect(0, 0, size, size);
+
+    // Lighter ripples
+    g3.fillStyle(0x5b9bd5, 1);
+    g3.fillRect(2, 2, 5, 1);
+    g3.fillRect(9, 6, 4, 1);
+    g3.fillRect(1, 11, 6, 1);
+
+    // Darker depth
+    g3.fillStyle(0x2a6c95, 1);
+    g3.fillRect(7, 3, 3, 1);
+    g3.fillRect(3, 9, 4, 1);
+    g3.fillRect(10, 14, 5, 1);
+
+    // Sparkle
+    g3.fillStyle(0xffffff, 0.5);
+    g3.fillRect(4, 5, 1, 1);
+    g3.fillRect(11, 10, 1, 1);
+
+    g3.generateTexture('jungle_river', size, size);
+    g3.destroy();
+
+    // Jungle tree (tropical tree with broad leaves and bananas)
+    const g4 = this.make.graphics({ x: 0, y: 0 });
+    const treeWidth = TILE_SIZE * 4;
+    const treeHeight = TILE_SIZE * 6;
+
+    // Shadow
+    g4.fillStyle(PALETTE.SHADOW, 0.3);
+    g4.fillEllipse(treeWidth / 2, treeHeight - 6, 44, 14);
+
+    // Trunk (thick tropical trunk)
+    g4.fillStyle(0x5d4037, 1);
+    g4.fillRect(26, 40, 12, 54);
+
+    // Trunk shading (left side darker)
+    g4.fillStyle(0x4e342e, 1);
+    g4.fillRect(26, 40, 4, 54);
+
+    // Trunk highlight (right side)
+    g4.fillStyle(0x6d4c41, 1);
+    g4.fillRect(34, 44, 3, 46);
+
+    // Trunk ring textures
+    g4.fillStyle(0x3e2723, 0.7);
+    for (let i = 0; i < 6; i++) {
+      g4.fillRect(26, 44 + i * 9, 12, 2);
+    }
+
+    // Large tropical leaves radiating outward
+    // Left drooping leaves
+    g4.fillStyle(0x1b5e20, 1);
+    g4.fillRect(0, 20, 8, 28);
+    g4.fillRect(4, 16, 10, 8);
+    g4.fillRect(8, 24, 8, 20);
+
+    // More left leaves (lighter)
+    g4.fillStyle(0x2e7d32, 1);
+    g4.fillRect(2, 22, 6, 18);
+    g4.fillRect(10, 18, 8, 16);
+
+    // Right drooping leaves
+    g4.fillStyle(0x1b5e20, 1);
+    g4.fillRect(56, 20, 8, 28);
+    g4.fillRect(50, 16, 10, 8);
+    g4.fillRect(48, 24, 8, 20);
+
+    // More right leaves (lighter)
+    g4.fillStyle(0x2e7d32, 1);
+    g4.fillRect(56, 22, 6, 18);
+    g4.fillRect(46, 18, 8, 16);
+
+    // Center top foliage mass
+    g4.fillStyle(0x1b5e20, 1);
+    g4.fillRect(16, 8, 32, 20);
+    g4.fillRect(12, 14, 40, 16);
+
+    // Top leaves pointing up
+    g4.fillStyle(0x2e7d32, 1);
+    g4.fillRect(20, 2, 6, 14);
+    g4.fillRect(28, 0, 8, 12);
+    g4.fillRect(38, 2, 6, 14);
+
+    // Middle foliage layer
+    g4.fillStyle(0x388e3c, 1);
+    g4.fillRect(14, 20, 36, 14);
+
+    // Leaf vein details (lighter streaks)
+    g4.fillStyle(0x4caf50, 1);
+    g4.fillRect(18, 10, 2, 12);
+    g4.fillRect(32, 6, 2, 14);
+    g4.fillRect(44, 10, 2, 12);
+    g4.fillRect(4, 26, 2, 14);
+    g4.fillRect(58, 26, 2, 14);
+
+    // Leaf highlights
+    g4.fillStyle(0x66bb6a, 1);
+    g4.fillRect(22, 4, 4, 6);
+    g4.fillRect(36, 4, 4, 6);
+    g4.fillRect(24, 16, 6, 4);
+    g4.fillRect(34, 18, 6, 4);
+
+    // Banana bunch (hanging from left side)
+    g4.fillStyle(0xffeb3b, 1);
+    g4.fillRect(10, 32, 4, 8);
+    g4.fillRect(14, 34, 3, 6);
+    g4.fillRect(8, 34, 3, 6);
+
+    // Banana shadows
+    g4.fillStyle(0xfbc02d, 1);
+    g4.fillRect(10, 36, 2, 4);
+    g4.fillRect(14, 36, 2, 4);
+
+    // Banana stem
+    g4.fillStyle(0x558b2f, 1);
+    g4.fillRect(11, 28, 3, 5);
+
+    // Second banana bunch (right side)
+    g4.fillStyle(0xffeb3b, 1);
+    g4.fillRect(48, 30, 4, 8);
+    g4.fillRect(52, 32, 3, 6);
+    g4.fillRect(46, 32, 3, 6);
+
+    // Banana shadows
+    g4.fillStyle(0xfbc02d, 1);
+    g4.fillRect(48, 34, 2, 4);
+    g4.fillRect(52, 34, 2, 4);
+
+    // Banana stem
+    g4.fillStyle(0x558b2f, 1);
+    g4.fillRect(49, 26, 3, 5);
+
+    g4.generateTexture('jungle_tree', treeWidth, treeHeight);
+    g4.destroy();
+
+    // Vine decoration
+    const g5 = this.make.graphics({ x: 0, y: 0 });
+    const vineWidth = TILE_SIZE;
+    const vineHeight = TILE_SIZE * 2;
+
+    // Main vine
+    g5.fillStyle(0x355e3b, 1);
+    g5.fillRect(6, 0, 3, vineHeight);
+
+    // Leaves on vine
+    g5.fillStyle(0x228b22, 1);
+    g5.fillRect(2, 4, 5, 3);
+    g5.fillRect(9, 10, 5, 3);
+    g5.fillRect(3, 18, 4, 3);
+    g5.fillRect(10, 26, 4, 3);
+
+    // Leaf highlights
+    g5.fillStyle(0x32cd32, 1);
+    g5.fillRect(3, 5, 2, 1);
+    g5.fillRect(10, 11, 2, 1);
+
+    g5.generateTexture('vine', vineWidth, vineHeight);
+    g5.destroy();
+
+    // Waterfall (2x3 tiles)
+    const g6 = this.make.graphics({ x: 0, y: 0 });
+    const waterfallWidth = TILE_SIZE * 2;
+    const waterfallHeight = TILE_SIZE * 3;
+
+    // Background rock
+    g6.fillStyle(0x505050, 1);
+    g6.fillRect(0, 0, waterfallWidth, waterfallHeight);
+
+    // Water flowing
+    g6.fillStyle(0x87ceeb, 1);
+    g6.fillRect(8, 0, 16, waterfallHeight);
+
+    // Water foam/white streaks
+    g6.fillStyle(0xe0f0ff, 0.9);
+    g6.fillRect(10, 0, 3, waterfallHeight);
+    g6.fillRect(18, 0, 2, waterfallHeight);
+
+    // Mist at bottom
+    g6.fillStyle(0xffffff, 0.5);
+    g6.fillRect(4, waterfallHeight - 8, 24, 8);
+
+    // Sparkles
+    g6.fillStyle(0xffffff, 0.8);
+    g6.fillRect(12, 8, 2, 2);
+    g6.fillRect(16, 20, 2, 2);
+    g6.fillRect(11, 36, 2, 2);
+
+    g6.generateTexture('waterfall', waterfallWidth, waterfallHeight);
+    g6.destroy();
+
+    // Jungle flower decoration (colorful)
+    const g7 = this.make.graphics({ x: 0, y: 0 });
+    
+    // Stem
+    g7.fillStyle(0x228b22, 1);
+    g7.fillRect(7, 8, 2, 8);
+
+    // Leaves
+    g7.fillStyle(0x32cd32, 1);
+    g7.fillRect(4, 10, 3, 2);
+    g7.fillRect(9, 12, 3, 2);
+
+    // Flower petals (tropical orange/red)
+    g7.fillStyle(0xff6347, 1);
+    g7.fillRect(5, 2, 6, 4);
+    g7.fillRect(3, 4, 3, 4);
+    g7.fillRect(10, 4, 3, 4);
+
+    // Flower center (yellow)
+    g7.fillStyle(0xffd700, 1);
+    g7.fillRect(6, 4, 4, 3);
+
+    g7.generateTexture('jungle_flower', size, size);
+    g7.destroy();
   }
 }

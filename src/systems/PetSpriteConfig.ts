@@ -40,6 +40,13 @@ export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   eagle: { left: 'eagle_left', right: 'eagle_right', scale: 0.018, offset: { x: 160, y: 490 } },
   fox: { left: 'fox_left', right: 'fox_right', scale: 0.024, offset: { x: 200, y: 420 } },
   bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.036, offset: { x: 170, y: 330 } },
+  
+  // Jungle pets (using blob placeholder until sprites are created)
+  parrot: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
+  monkey: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
+  toucan: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
+  sloth: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
+  jaguar: { left: 'blob_left', right: 'blob_right', scale: 0.027, offset: { x: 150, y: 240 } },
 };
 
 // Fallback blob sprite for any pets without custom sprites

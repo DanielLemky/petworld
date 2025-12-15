@@ -8,6 +8,7 @@ import { HomeScene } from './scenes/HomeScene';
 import { SnowScene } from './scenes/SnowScene';
 import { BeachScene } from './scenes/BeachScene';
 import { MountainScene } from './scenes/MountainScene';
+import { JungleScene } from './scenes/JungleScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -26,7 +27,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [BootScene, AccountSelectScene, MenuScene, WorldScene, HomeScene, SnowScene, BeachScene, MountainScene],
+  scene: [BootScene, AccountSelectScene, MenuScene, WorldScene, HomeScene, SnowScene, BeachScene, MountainScene, JungleScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
