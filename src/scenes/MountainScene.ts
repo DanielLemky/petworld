@@ -100,8 +100,8 @@ export class MountainScene extends Phaser.Scene {
   }
 
   private createWorld(): void {
-    const worldWidth = 45;
-    const worldHeight = 35;
+    const worldWidth = 225;
+    const worldHeight = 175;
 
     this.physics.world.setBounds(0, 0, worldWidth * TILE_SIZE, worldHeight * TILE_SIZE);
 
@@ -121,9 +121,9 @@ export class MountainScene extends Phaser.Scene {
     // Mountain paths
     this.createMountainPaths();
 
-    // Cliff walls along the top
+    // Cliff walls along the top (scaled)
     for (let x = 0; x < worldWidth; x++) {
-      for (let y = 0; y < 3; y++) {
+      for (let y = 0; y < 15; y++) {
         const cliff = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -133,49 +133,62 @@ export class MountainScene extends Phaser.Scene {
       }
     }
 
-    // Mountain peaks in background
-    const peakPositions = [
-      { x: 8, y: 2 }, { x: 20, y: 1 }, { x: 35, y: 2 },
-    ];
-    peakPositions.forEach(pos => {
+    // Mountain peaks in background (~15 peaks procedurally placed)
+    const peakRandom = new Phaser.Math.RandomDataGenerator(['mountain-peaks']);
+    for (let i = 0; i < 15; i++) {
+      const x = peakRandom.integerInRange(10, worldWidth - 10);
+      const y = peakRandom.integerInRange(2, 12);
       const peak = this.add.image(
-        pos.x * TILE_SIZE + TILE_SIZE * 1.5,
-        pos.y * TILE_SIZE + TILE_SIZE,
+        x * TILE_SIZE + TILE_SIZE * 1.5,
+        y * TILE_SIZE + TILE_SIZE,
         'mountain_peak'
       );
       peak.setDepth(-8);
       peak.setAlpha(0.7);
-    });
+    }
 
-    // Boulders as obstacles
+    // Boulders as obstacles (~45 boulders procedurally placed)
     this.boulders = this.physics.add.staticGroup();
-    const boulderPositions = [
-      { x: 10, y: 10 }, { x: 25, y: 8 }, { x: 38, y: 12 },
-      { x: 8, y: 20 }, { x: 30, y: 18 }, { x: 15, y: 25 },
-      { x: 35, y: 25 }, { x: 22, y: 30 }, { x: 40, y: 8 },
-    ];
-
-    boulderPositions.forEach(pos => {
-      const boulder = this.add.image(
-        pos.x * TILE_SIZE + TILE_SIZE,
-        pos.y * TILE_SIZE + TILE_SIZE,
-        'boulder'
+    const boulderRandom = new Phaser.Math.RandomDataGenerator(['mountain-boulders']);
+    for (let i = 0; i < 45; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = boulderRandom.integerInRange(10, worldWidth - 10);
+        y = boulderRandom.integerInRange(20, worldHeight - 10);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          // Avoid exit zone
+          (x < 15 && y >= 75 && y <= 100) ||
+          // Avoid cave area
+          (x >= 95 && x <= 105 && y >= 20 && y <= 30)
+        )
       );
-      boulder.setDepth(pos.y * TILE_SIZE + TILE_SIZE * 2);
 
-      const collider = this.boulders.create(
-        pos.x * TILE_SIZE + TILE_SIZE,
-        pos.y * TILE_SIZE + TILE_SIZE * 1.3,
-        'rock'
-      ) as Phaser.Physics.Arcade.Sprite;
-      collider.setVisible(false);
-      collider.setSize(28, 14);
-      collider.refreshBody();
-    });
+      if (attempts < 50) {
+        const boulder = this.add.image(
+          x * TILE_SIZE + TILE_SIZE,
+          y * TILE_SIZE + TILE_SIZE,
+          'boulder'
+        );
+        boulder.setDepth(y * TILE_SIZE + TILE_SIZE * 2);
 
-    // Cave entrance decoration
-    const caveX = 20;
-    const caveY = 5;
+        const collider = this.boulders.create(
+          x * TILE_SIZE + TILE_SIZE,
+          y * TILE_SIZE + TILE_SIZE * 1.3,
+          'rock'
+        ) as Phaser.Physics.Arcade.Sprite;
+        collider.setVisible(false);
+        collider.setSize(28, 14);
+        collider.refreshBody();
+      }
+    }
+
+    // Cave entrance decoration (scaled position)
+    const caveX = 100;
+    const caveY = 25;
     const cave = this.add.image(
       caveX * TILE_SIZE + TILE_SIZE,
       caveY * TILE_SIZE + TILE_SIZE,
@@ -193,11 +206,11 @@ export class MountainScene extends Phaser.Scene {
     caveCollider.setSize(32, 32);
     caveCollider.refreshBody();
 
-    // Exit zone (path back to main world)
-    this.exitZone = this.add.zone(2 * TILE_SIZE, 17 * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 3);
+    // Exit zone (path back to main world) - scaled position
+    this.exitZone = this.add.zone(5 * TILE_SIZE, 85 * TILE_SIZE, TILE_SIZE * 4, TILE_SIZE * 6);
 
     // Exit sign
-    const exitText = this.add.text(2 * TILE_SIZE, 15.5 * TILE_SIZE, 'To World', {
+    const exitText = this.add.text(5 * TILE_SIZE, 82 * TILE_SIZE, 'To World', {
       fontSize: '8px',
       color: '#ffffff',
       backgroundColor: '#2d2d44aa',
@@ -206,7 +219,7 @@ export class MountainScene extends Phaser.Scene {
     exitText.setOrigin(0.5);
     exitText.setDepth(100);
 
-    const arrow = this.add.text(2 * TILE_SIZE, 16 * TILE_SIZE, '◀', {
+    const arrow = this.add.text(5 * TILE_SIZE, 83 * TILE_SIZE, '◀', {
       fontSize: '10px',
       color: '#4ade80',
     });
@@ -222,9 +235,9 @@ export class MountainScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    // Path tiles leading to exit
-    for (let y = 15; y < 20; y++) {
-      for (let x = 0; x < 4; x++) {
+    // Path tiles leading to exit (wider path)
+    for (let y = 75; y < 100; y++) {
+      for (let x = 0; x < 10; x++) {
         const path = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -236,14 +249,17 @@ export class MountainScene extends Phaser.Scene {
   }
 
   private createMountainPaths(): void {
-    // Winding path through the mountain
+    // Winding paths through the mountain (scaled 5x)
     const pathTiles = [
       // Main horizontal path
-      ...Array.from({ length: 30 }, (_, i) => ({ x: 5 + i, y: 17 })),
+      ...Array.from({ length: 150 }, (_, i) => ({ x: 25 + i, y: 85 })),
       // Vertical path
-      ...Array.from({ length: 10 }, (_, i) => ({ x: 20, y: 10 + i })),
-      // Another path
-      ...Array.from({ length: 15 }, (_, i) => ({ x: 10 + i, y: 25 })),
+      ...Array.from({ length: 50 }, (_, i) => ({ x: 100, y: 50 + i })),
+      // Another horizontal path
+      ...Array.from({ length: 75 }, (_, i) => ({ x: 50 + i, y: 125 })),
+      // Additional paths for larger map
+      ...Array.from({ length: 60 }, (_, i) => ({ x: 150, y: 60 + i })),
+      ...Array.from({ length: 80 }, (_, i) => ({ x: 30 + i, y: 50 })),
     ];
 
     pathTiles.forEach(pos => {
@@ -257,9 +273,10 @@ export class MountainScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
+    // Spawn near exit zone on scaled map
     this.player = this.physics.add.sprite(
-      5 * TILE_SIZE + TILE_SIZE / 2,
-      17 * TILE_SIZE + PLAYER_HEIGHT / 2,
+      15 * TILE_SIZE + TILE_SIZE / 2,
+      85 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_right'
     ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
@@ -276,13 +293,33 @@ export class MountainScene extends Phaser.Scene {
   private createPets(): void {
     this.pets = this.physics.add.group();
 
-    // Spawn ground mountain pets (goat, fox, bear cub)
+    // Spawn ground mountain pets (~40 pets procedurally placed)
     const groundPetTypes = ['GOAT', 'FOX', 'BEAR_CUB'];
-    const spawnPositions = [
-      { x: 15, y: 12 }, { x: 32, y: 15 }, { x: 12, y: 22 },
-      { x: 28, y: 22 }, { x: 38, y: 20 }, { x: 8, y: 28 },
-      { x: 25, y: 28 }, { x: 40, y: 28 },
-    ];
+    const worldWidth = 225;
+    const worldHeight = 175;
+    const spawnPositions: { x: number; y: number }[] = [];
+
+    const petRandom = new Phaser.Math.RandomDataGenerator(['mountain-pets']);
+    for (let i = 0; i < 40; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = petRandom.integerInRange(20, worldWidth - 10);
+        y = petRandom.integerInRange(25, worldHeight - 10);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (
+          // Avoid exit zone
+          (x < 15 && y >= 75 && y <= 100) ||
+          // Avoid cliff area
+          y < 20
+        )
+      );
+      if (attempts < 50) {
+        spawnPositions.push({ x, y });
+      }
+    }
 
     spawnPositions.forEach(pos => {
       const petType = groundPetTypes[Math.floor(Math.random() * groundPetTypes.length)];
@@ -312,11 +349,17 @@ export class MountainScene extends Phaser.Scene {
   private createEagles(): void {
     this.eagles = this.physics.add.group();
 
-    // Eagles fly around the mountain
-    const eaglePositions = [
-      { x: 12, y: 8 }, { x: 30, y: 10 }, { x: 22, y: 20 },
-      { x: 38, y: 15 }, { x: 8, y: 18 },
-    ];
+    // Eagles fly around the mountain (~25 eagles procedurally placed)
+    const worldWidth = 225;
+    const worldHeight = 175;
+    const eaglePositions: { x: number; y: number }[] = [];
+
+    const eagleRandom = new Phaser.Math.RandomDataGenerator(['mountain-eagles']);
+    for (let i = 0; i < 25; i++) {
+      const x = eagleRandom.integerInRange(15, worldWidth - 15);
+      const y = eagleRandom.integerInRange(20, worldHeight - 20);
+      eaglePositions.push({ x, y });
+    }
 
     eaglePositions.forEach(pos => {
       const eagle = this.eagles.create(
@@ -782,9 +825,9 @@ export class MountainScene extends Phaser.Scene {
   private createCollectibles(): void {
     this.collectibles = this.physics.add.group();
 
-    // TREATS spawns in mountains - good for luring bear cubs
+    // TREATS spawns in mountains - good for luring bear cubs (scaled position)
     if (!InventoryManager.hasTool('TREATS')) {
-      this.createCollectibleItem(25, 15, 'TREATS');
+      this.createCollectibleItem(125, 75, 'TREATS');
     }
 
     this.physics.add.overlap(this.player, this.collectibles, (_, collectible) => {

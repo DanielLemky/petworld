@@ -102,23 +102,23 @@ export class BeachScene extends Phaser.Scene {
   }
 
   private createWorld(): void {
-    const worldWidth = 45;
-    const worldHeight = 35;
+    const worldWidth = 225;
+    const worldHeight = 175;
 
     this.physics.world.setBounds(0, 0, worldWidth * TILE_SIZE, worldHeight * TILE_SIZE);
 
-    // Create the beach layout: ocean on the right, sand on the left
+    // Create the beach layout: ocean on the right, sand on the left (scaled 5x)
     for (let y = 0; y < worldHeight; y++) {
       for (let x = 0; x < worldWidth; x++) {
         let tileType: string;
 
-        if (x > 35) {
+        if (x > 175) {
           // Deep ocean
           tileType = 'ocean';
-        } else if (x > 30) {
+        } else if (x > 150) {
           // Shallow water
           tileType = 'shallow_water';
-        } else if (x > 8) {
+        } else if (x > 40) {
           // Sandy beach
           tileType = Math.random() > 0.9 ? 'sand_shells' : 'sand';
         } else {
@@ -135,64 +135,71 @@ export class BeachScene extends Phaser.Scene {
       }
     }
 
-    // Ocean bounds (can't go too deep)
+    // Ocean bounds (scaled)
     this.oceanBounds = new Phaser.Geom.Rectangle(
-      31 * TILE_SIZE,
+      155 * TILE_SIZE,
       0,
-      14 * TILE_SIZE,
+      70 * TILE_SIZE,
       worldHeight * TILE_SIZE
     );
 
-    // Palm trees
+    // Palm trees (~45 trees procedurally placed)
     this.trees = this.physics.add.staticGroup();
-    const treePositions = [
-      { x: 12, y: 5 }, { x: 18, y: 8 }, { x: 25, y: 4 },
-      { x: 14, y: 18 }, { x: 22, y: 22 }, { x: 10, y: 28 },
-      { x: 28, y: 15 }, { x: 16, y: 12 }, { x: 20, y: 30 },
-    ];
-
-    treePositions.forEach(pos => {
-      const treeWidth = TILE_SIZE * 4;   // 2x scale
-      const treeHeight = TILE_SIZE * 6;  // 2x scale
-
-      const tree = this.add.image(
-        pos.x * TILE_SIZE + treeWidth / 2,
-        pos.y * TILE_SIZE + treeHeight / 2,
-        'palm_tree'
+    const treeRandom = new Phaser.Math.RandomDataGenerator(['beach-trees']);
+    for (let i = 0; i < 45; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = treeRandom.integerInRange(45, 145);
+        y = treeRandom.integerInRange(10, worldHeight - 15);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (x < 15 && y >= 75 && y <= 100) // Avoid exit zone
       );
-      tree.setDepth(pos.y * TILE_SIZE + treeHeight);
 
-      const collider = this.trees.create(
-        pos.x * TILE_SIZE + treeWidth / 2,
-        pos.y * TILE_SIZE + treeHeight * 0.8,  // Position collider at base of larger tree
-        'sand'
-      ) as Phaser.Physics.Arcade.Sprite;
-      collider.setVisible(false);
-      collider.setSize(treeWidth * 0.6, treeHeight * 0.2);  // Scale collider proportionally
-      collider.refreshBody();
-    });
+      if (attempts < 50) {
+        const treeWidth = TILE_SIZE * 4;
+        const treeHeight = TILE_SIZE * 6;
 
-    // Beach umbrellas
-    const umbrellaPositions = [
-      { x: 20, y: 10 }, { x: 26, y: 18 }, { x: 18, y: 26 },
-    ];
+        const tree = this.add.image(
+          x * TILE_SIZE + treeWidth / 2,
+          y * TILE_SIZE + treeHeight / 2,
+          'palm_tree'
+        );
+        tree.setDepth(y * TILE_SIZE + treeHeight);
 
-    umbrellaPositions.forEach(pos => {
+        const collider = this.trees.create(
+          x * TILE_SIZE + treeWidth / 2,
+          y * TILE_SIZE + treeHeight * 0.8,
+          'sand'
+        ) as Phaser.Physics.Arcade.Sprite;
+        collider.setVisible(false);
+        collider.setSize(treeWidth * 0.6, treeHeight * 0.2);
+        collider.refreshBody();
+      }
+    }
+
+    // Beach umbrellas (~15 umbrellas procedurally placed)
+    const umbrellaRandom = new Phaser.Math.RandomDataGenerator(['beach-umbrellas']);
+    for (let i = 0; i < 15; i++) {
+      const x = umbrellaRandom.integerInRange(50, 140);
+      const y = umbrellaRandom.integerInRange(15, worldHeight - 15);
       const umbrella = this.add.image(
-        pos.x * TILE_SIZE + TILE_SIZE / 2,
-        pos.y * TILE_SIZE + TILE_SIZE / 2,
+        x * TILE_SIZE + TILE_SIZE / 2,
+        y * TILE_SIZE + TILE_SIZE / 2,
         'beach_umbrella'
       );
-      umbrella.setDepth(pos.y * TILE_SIZE);
-    });
+      umbrella.setDepth(y * TILE_SIZE);
+    }
 
-    // Exit zone (path back to main world)
-    this.exitZone = this.add.zone(1 * TILE_SIZE, 17 * TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 3);
+    // Exit zone (path back to main world) - scaled position
+    this.exitZone = this.add.zone(5 * TILE_SIZE, 85 * TILE_SIZE, TILE_SIZE * 4, TILE_SIZE * 6);
     this.physics.add.existing(this.exitZone, true);
 
-    // Create path tiles leading to exit
-    for (let y = 15; y < 20; y++) {
-      for (let x = 0; x < 4; x++) {
+    // Create path tiles leading to exit (wider path)
+    for (let y = 75; y < 100; y++) {
+      for (let x = 0; x < 10; x++) {
         const path = this.add.image(
           x * TILE_SIZE + TILE_SIZE / 2,
           y * TILE_SIZE + TILE_SIZE / 2,
@@ -203,7 +210,7 @@ export class BeachScene extends Phaser.Scene {
     }
 
     // Exit sign
-    const exitText = this.add.text(2 * TILE_SIZE, 14 * TILE_SIZE, 'To World', {
+    const exitText = this.add.text(5 * TILE_SIZE, 72 * TILE_SIZE, 'To World', {
       fontSize: '8px',
       color: '#ffffff',
       backgroundColor: '#2d2d44aa',
@@ -212,7 +219,7 @@ export class BeachScene extends Phaser.Scene {
     exitText.setOrigin(0.5);
     exitText.setDepth(100);
 
-    const arrow = this.add.text(1.5 * TILE_SIZE, 14.5 * TILE_SIZE, '◀', {
+    const arrow = this.add.text(5 * TILE_SIZE, 73 * TILE_SIZE, '◀', {
       fontSize: '10px',
       color: '#4ade80',
     });
@@ -233,10 +240,10 @@ export class BeachScene extends Phaser.Scene {
   }
 
   private createWaveEffect(): void {
-    // Create subtle wave lines at the water edge
-    for (let y = 0; y < 35; y += 3) {
+    // Create subtle wave lines at the water edge (scaled position)
+    for (let y = 0; y < 175; y += 3) {
       const wave = this.add.rectangle(
-        31 * TILE_SIZE,
+        155 * TILE_SIZE,
         y * TILE_SIZE + TILE_SIZE,
         TILE_SIZE * 0.5,
         2,
@@ -251,15 +258,16 @@ export class BeachScene extends Phaser.Scene {
         alpha: 0,
         duration: 1500,
         repeat: -1,
-        delay: y * 100,
+        delay: (y % 35) * 100,
       });
     }
   }
 
   private createPlayer(): void {
+    // Spawn near exit zone on scaled map
     this.player = this.physics.add.sprite(
-      5 * TILE_SIZE + TILE_SIZE / 2,
-      17 * TILE_SIZE + PLAYER_HEIGHT / 2,
+      15 * TILE_SIZE + TILE_SIZE / 2,
+      85 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_right'
     ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
@@ -276,12 +284,26 @@ export class BeachScene extends Phaser.Scene {
   private createPets(): void {
     this.pets = this.physics.add.group();
 
-    // Spawn beach pets on the sand
-    const spawnPositions = [
-      { x: 15, y: 8 }, { x: 22, y: 12 }, { x: 28, y: 8 },
-      { x: 12, y: 20 }, { x: 25, y: 25 }, { x: 18, y: 15 },
-      { x: 20, y: 28 }, { x: 26, y: 20 }, { x: 14, y: 25 },
-    ];
+    // Spawn beach pets on the sand (~45 pets procedurally placed)
+    const worldHeight = 175;
+    const spawnPositions: { x: number; y: number }[] = [];
+
+    const petRandom = new Phaser.Math.RandomDataGenerator(['beach-pets']);
+    for (let i = 0; i < 45; i++) {
+      let x: number, y: number;
+      let attempts = 0;
+      do {
+        x = petRandom.integerInRange(45, 145); // Beach area
+        y = petRandom.integerInRange(10, worldHeight - 10);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        (x < 15 && y >= 75 && y <= 100) // Avoid exit zone
+      );
+      if (attempts < 50) {
+        spawnPositions.push({ x, y });
+      }
+    }
 
     spawnPositions.forEach(pos => {
       const petType = BEACH_PET_TYPES[Math.floor(Math.random() * BEACH_PET_TYPES.length)];
@@ -680,9 +702,9 @@ export class BeachScene extends Phaser.Scene {
   private createCollectibles(): void {
     this.collectibles = this.physics.add.group();
 
-    // FISHING_ROD spawns at the beach
+    // FISHING_ROD spawns at the beach (scaled position)
     const toolSpawns: { tool: ToolType; x: number; y: number }[] = [
-      { tool: 'FISHING_ROD', x: 25, y: 12 },
+      { tool: 'FISHING_ROD', x: 125, y: 60 },
     ];
 
     toolSpawns.forEach(spawn => {
