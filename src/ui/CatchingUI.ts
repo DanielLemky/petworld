@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { PALETTE, PET_TYPES } from '../utils/constants';
 import { InventoryManager, TOOL_INFO } from '../systems/InventoryManager';
 import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
+import { getSpriteKey, getPetSpriteConfig } from '../systems/PetSpriteConfig';
 
 export type CatchResult = 'success' | 'failure' | 'cancelled' | 'no_tool';
 
@@ -86,12 +87,11 @@ export class CatchingUI {
     this.petNameText.setOrigin(0.5);
     this.container.add(this.petNameText);
 
-    // Pet sprite (bouncing) - butterflies use different sprite naming
-    const spriteKey = petType.toLowerCase().startsWith('butterfly_')
-      ? petType.toLowerCase()
-      : `pet_${petType.toLowerCase()}`;
+    // Pet sprite (bouncing) - use animal sprites from PetSpriteConfig
+    const spriteKey = getSpriteKey(petType, true);
     this.petSprite = this.scene.add.image(0, -45, spriteKey);
-    this.petSprite.setScale(2);
+    const petConfig = getPetSpriteConfig(petType);
+    this.petSprite.setScale(petConfig.scale * 1.5);
     this.container.add(this.petSprite);
 
     // Bounce animation for pet
