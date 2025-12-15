@@ -4,7 +4,7 @@ export const TILE_SIZE = 16;
 export const PLAYER_WIDTH = 16;
 export const PLAYER_HEIGHT = 32;
 export const PLAYER_SPEED = 150;
-export const PLAYER_RUN_MULTIPLIER = 3; // 3x speed when running
+export const PLAYER_RUN_MULTIPLIER = 2; // 2x speed when running
 
 // Stardew Valley inspired color palette
 export const PALETTE = {
