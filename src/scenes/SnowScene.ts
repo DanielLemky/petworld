@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -18,6 +18,7 @@ export class SnowScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private shiftKey!: Phaser.Input.Keyboard.Key;
   private trees!: Phaser.Physics.Arcade.StaticGroup;
   private pets!: Phaser.Physics.Arcade.Group;
   private playerAnimator!: PlayerAnimator;
@@ -338,6 +339,7 @@ this.player = this.physics.add.sprite(
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
       };
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
       this.interactKey.on('down', () => this.tryInteract());
 
@@ -459,8 +461,12 @@ this.player = this.physics.add.sprite(
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Ice makes you slide (less control, more momentum)
-    const speed = this.isOnIce ? PLAYER_SPEED * 1.3 : PLAYER_SPEED;
+    // Calculate speed with terrain modifiers and run multiplier
+    const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
+    let speed = this.isOnIce ? PLAYER_SPEED * 1.3 : PLAYER_SPEED;
+    if (isRunning) {
+      speed *= PLAYER_RUN_MULTIPLIER;
+    }
     const friction = this.isOnIce ? 0.98 : 1;
 
     // Get gamepad input
@@ -524,7 +530,7 @@ this.player = this.physics.add.sprite(
 
     // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX);
+    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;

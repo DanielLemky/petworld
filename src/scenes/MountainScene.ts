@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -16,6 +16,7 @@ export class MountainScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private shiftKey!: Phaser.Input.Keyboard.Key;
   private boulders!: Phaser.Physics.Arcade.StaticGroup;
   private pets!: Phaser.Physics.Arcade.Group;
   private playerAnimator!: PlayerAnimator;
@@ -359,6 +360,7 @@ export class MountainScene extends Phaser.Scene {
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
       };
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
       this.interactKey.on('down', () => this.tryInteract());
 
@@ -518,7 +520,12 @@ export class MountainScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    const speed = PLAYER_SPEED;
+    // Calculate speed with run multiplier
+    const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
+    let speed = PLAYER_SPEED;
+    if (isRunning) {
+      speed *= PLAYER_RUN_MULTIPLIER;
+    }
 
     // Get gamepad input
     const leftStick = GamepadManager.getLeftStick();
@@ -565,7 +572,7 @@ export class MountainScene extends Phaser.Scene {
 
     // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX);
+    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;

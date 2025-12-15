@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT, PET_TYPES } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, PET_TYPES } from '../utils/constants';
 import { CatchingUI, type CatchResult } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -16,6 +16,7 @@ export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private shiftKey!: Phaser.Input.Keyboard.Key;
   private trees!: Phaser.Physics.Arcade.StaticGroup;
   private pets!: Phaser.Physics.Arcade.Group;
   private butterflies!: Phaser.Physics.Arcade.Group;
@@ -1162,6 +1163,7 @@ export class WorldScene extends Phaser.Scene {
         D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
       };
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+      this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
       // Handle interact key
       this.interactKey.on('down', () => this.handleInteraction());
@@ -1257,8 +1259,12 @@ export class WorldScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Speed is reduced in water
-    const speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
+    // Calculate speed with terrain modifiers and run multiplier
+    const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
+    let speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
+    if (isRunning) {
+      speed *= PLAYER_RUN_MULTIPLIER;
+    }
 
     // Get gamepad input
     const leftStick = GamepadManager.getLeftStick();
@@ -1305,7 +1311,7 @@ export class WorldScene extends Phaser.Scene {
 
     // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX);
+    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
 
     // Update player sprite direction (keep for texture switching)
     if (newDirection !== this.playerDirection) {

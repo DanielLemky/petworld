@@ -31,9 +31,12 @@ export class PlayerAnimator {
    * Update animation state based on movement and direction
    * Call this once per frame in scene's update() method
    */
-  updateAnimation(isMoving: boolean, directionX: number): void {
-    // Handle walking animation
-    if (isMoving && !this.isWalking) {
+  updateAnimation(isMoving: boolean, directionX: number, isRunning: boolean = false): void {
+    // Handle walking/running animation
+    if (isMoving && isRunning && !this.isWalking) {
+      this.startRunningAnimation();
+      this.player.anims.play(PLAYER_CONFIG.ANIM_WALK);
+    } else if (isMoving && !isRunning && !this.isWalking) {
       this.startWalkingAnimation();
       this.player.anims.play(PLAYER_CONFIG.ANIM_WALK);
     } else if (!isMoving && this.isWalking) {
@@ -76,7 +79,7 @@ export class PlayerAnimator {
    */
   private startWalkingAnimation(): void {
     this.isWalking = true;
-    
+
     // Stop any existing walk tween
     if (this.walkTween) {
       this.walkTween.stop();
@@ -85,19 +88,27 @@ export class PlayerAnimator {
     // Create squash/stretch animation using Option 2 (10% variation)
     this.walkTween = this.scene.tweens.add({
       targets: this.player,
-      scaleY: { 
-        from: PLAYER_CONFIG.WALK_SCALE_Y_MAX, 
-        to: PLAYER_CONFIG.WALK_SCALE_Y_MIN 
+      scaleY: {
+        from: PLAYER_CONFIG.WALK_SCALE_Y_MAX,
+        to: PLAYER_CONFIG.WALK_SCALE_Y_MIN
       },
-      scaleX: { 
-        from: PLAYER_CONFIG.WALK_SCALE_X_MIN, 
-        to: PLAYER_CONFIG.WALK_SCALE_X_MAX 
+      scaleX: {
+        from: PLAYER_CONFIG.WALK_SCALE_X_MIN,
+        to: PLAYER_CONFIG.WALK_SCALE_X_MAX
       },
       duration: PLAYER_CONFIG.WALK_ANIMATION_DURATION,
       yoyo: true,
       repeat: -1,
       ease: PLAYER_CONFIG.WALK_ANIMATION_EASE,
     });
+  }
+
+  /**
+   * Start running animation (identical to walking)
+   */
+  private startRunningAnimation(): void {
+    // Use same animation as walking for consistency
+    this.startWalkingAnimation();
   }
 
   /**

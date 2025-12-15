@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_HEIGHT, PALETTE, getCorrectPenForPet, getPenConfigById } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, PALETTE, getCorrectPenForPet, getPenConfigById } from '../utils/constants';
 import { PetManager } from '../systems/PetManager';
 import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -28,6 +28,7 @@ export class HomeScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
+  private shiftKey!: Phaser.Input.Keyboard.Key;
   private playerDirection: string = 'down';
   private pets!: Phaser.Physics.Arcade.Group;
   private globalFences!: Phaser.Physics.Arcade.StaticGroup;
@@ -899,6 +900,7 @@ export class HomeScene extends Phaser.Scene {
       this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
       this.feedKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
       this.takeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+      this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
       const worldKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M);
       const menuKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
@@ -921,25 +923,32 @@ export class HomeScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
+    // Calculate speed with run multiplier
+    const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
+    let speed = PLAYER_SPEED;
+    if (isRunning) {
+      speed *= PLAYER_RUN_MULTIPLIER;
+    }
+
     // Get gamepad input
     const leftStick = GamepadManager.getLeftStick();
     const dpad = GamepadManager.getDPad();
 
     // Check horizontal movement (keyboard, gamepad stick, or d-pad)
     if (this.cursors?.left.isDown || this.wasd?.A.isDown || leftStick.x < -0.2 || dpad.x < 0) {
-      velocityX = -PLAYER_SPEED;
+      velocityX = -speed;
       newDirection = 'left';
     } else if (this.cursors?.right.isDown || this.wasd?.D.isDown || leftStick.x > 0.2 || dpad.x > 0) {
-      velocityX = PLAYER_SPEED;
+      velocityX = speed;
       newDirection = 'right';
     }
 
     // Check vertical movement (keyboard, gamepad stick, or d-pad)
     if (this.cursors?.up.isDown || this.wasd?.W.isDown || leftStick.y < -0.2 || dpad.y < 0) {
-      velocityY = -PLAYER_SPEED;
+      velocityY = -speed;
       if (velocityX === 0) newDirection = 'up';
     } else if (this.cursors?.down.isDown || this.wasd?.S.isDown || leftStick.y > 0.2 || dpad.y > 0) {
-      velocityY = PLAYER_SPEED;
+      velocityY = speed;
       if (velocityX === 0) newDirection = 'down';
     }
 
@@ -966,7 +975,7 @@ export class HomeScene extends Phaser.Scene {
 
     // Handle player animations using unified animator
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX);
+    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
