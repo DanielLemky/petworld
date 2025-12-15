@@ -10,7 +10,7 @@ import { PlayerAnimator } from '../systems/PlayerAnimator';
 
 // Farm dimensions
 const FARM_WIDTH = 200;
-const FARM_HEIGHT = 180;
+const FARM_HEIGHT = 240;
 
 // Pen dimensions and positions
 const PEN_WIDTH = 66;
@@ -166,6 +166,10 @@ export class HomeScene extends Phaser.Scene {
     // Row 3: Beach and Butterfly Garden
     this.createPen('beach', 5, 130, PEN_WIDTH, PEN_HEIGHT);
     this.createPen('butterfly', 100, 130, PEN_WIDTH, PEN_HEIGHT);
+
+    // Row 4: Jungle and vacant space for future biome
+    this.createPen('jungle', 5, 185, PEN_WIDTH, PEN_HEIGHT);
+    this.createVacantPenFencing(100, 185, PEN_WIDTH, PEN_HEIGHT);
   }
 
   private createPaths(): void {
@@ -632,6 +636,41 @@ export class HomeScene extends Phaser.Scene {
           }
         }
         break;
+    }
+  }
+
+  private createVacantPenFencing(startX: number, startY: number, width: number, height: number): void {
+    // Create fencing group for vacant pen (similar to createPenFences but without pen data)
+    const fences = this.physics.add.staticGroup();
+
+    // Gate positions (all gates are 2 tiles wide/tall and centered)
+    const horizontalGateStartX = startX + Math.floor(width / 2) - 1;
+    const horizontalGateEndX = horizontalGateStartX + 2;
+    const verticalGateStartY = startY + Math.floor(height / 2) - 1;
+    const verticalGateEndY = verticalGateStartY + 2;
+
+    // Top fence (with gate)
+    for (let x = startX; x < startX + width; x++) {
+      if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
+      this.createFencePost(fences, x, startY);
+    }
+
+    // Bottom fence (with gate)
+    for (let x = startX; x < startX + width; x++) {
+      if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
+      this.createFencePost(fences, x, startY + height - 1);
+    }
+
+    // Left fence (with gate)
+    for (let y = startY + 1; y < startY + height - 1; y++) {
+      if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
+      this.createFencePost(fences, startX, y);
+    }
+
+    // Right fence (with gate)
+    for (let y = startY + 1; y < startY + height - 1; y++) {
+      if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
+      this.createFencePost(fences, startX + width - 1, y);
     }
   }
 
