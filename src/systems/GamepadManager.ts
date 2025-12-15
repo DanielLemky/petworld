@@ -166,9 +166,8 @@ class GamepadManagerClass {
    * Check if a button is currently held down.
    */
   isButtonDown(buttonIndex: number): boolean {
-    const pad = this.getPad();
-    if (!pad) return false;
-    return pad.buttons[buttonIndex]?.pressed ?? false;
+    // Use cached button states for consistency with isButtonJustPressed
+    return this.currentButtonStates[buttonIndex] ?? false;
   }
 
   /**
