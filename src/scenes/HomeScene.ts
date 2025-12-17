@@ -468,14 +468,14 @@ export class HomeScene extends Phaser.Scene {
       this.createFencePost(fences, x, startY + height - 1, false);
     }
 
-    // Left fence (with gate) - vertical
-    for (let y = startY + 1; y < startY + height - 1; y++) {
+    // Left fence (with gate) - vertical, spaced
+    for (let y = startY + 1; y < startY + height - 1; y += 2) { // Skip every other tile for spacing
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX, y, true);
     }
 
-    // Right fence (with gate) - vertical
-    for (let y = startY + 1; y < startY + height - 1; y++) {
+    // Right fence (with gate) - vertical, spaced
+    for (let y = startY + 1; y < startY + height - 1; y += 2) { // Skip every other tile for spacing
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX + width - 1, y, true);
     }
@@ -490,8 +490,8 @@ export class HomeScene extends Phaser.Scene {
     const post = this.add.image(x, y, spriteKey);
 
     if (isVertical) {
-      // Vertical fence: scale to fit tile width (32px for 2-tile visual)
-      post.setScale(32 / 424); // Scale 424px sprite to 32px (0.075)
+      // Vertical fence: scale to 32px height (2-tile visual span)
+      post.setScale(32 / 2304); // Scale 2304px height to 32px (0.014)
     } else {
       // Horizontal fence: scale to 32px width
       post.setScale(32 / 1191); // Scale 1191px sprite to 32px (0.027)
@@ -670,14 +670,14 @@ export class HomeScene extends Phaser.Scene {
       this.createFencePost(fences, x, startY + height - 1, false);
     }
 
-    // Left fence (with gate) - vertical
-    for (let y = startY + 1; y < startY + height - 1; y++) {
+    // Left fence (with gate) - vertical, spaced
+    for (let y = startY + 1; y < startY + height - 1; y += 2) { // Skip every other tile for spacing
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX, y, true);
     }
 
-    // Right fence (with gate) - vertical
-    for (let y = startY + 1; y < startY + height - 1; y++) {
+    // Right fence (with gate) - vertical, spaced
+    for (let y = startY + 1; y < startY + height - 1; y += 2) { // Skip every other tile for spacing
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
       this.createFencePost(fences, startX + width - 1, y, true);
     }
