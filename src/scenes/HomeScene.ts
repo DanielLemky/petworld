@@ -499,10 +499,15 @@ export class HomeScene extends Phaser.Scene {
 
     post.setDepth(tileY * TILE_SIZE);
 
-    // Physics collider (unchanged)
+    // Physics collider - sized to match visual fence dimensions
     const collider = fences.create(x, y, 'grass') as Phaser.Physics.Arcade.Sprite;
     collider.setVisible(false);
-    collider.setSize(TILE_SIZE - 4, TILE_SIZE - 4);
+
+    if (isVertical) {
+      collider.setSize(32, 32); // Cover full 32px height of vertical fences
+    } else {
+      collider.setSize(32, TILE_SIZE - 4); // Cover full 32px width of horizontal fences
+    }
     collider.refreshBody();
   }
 
