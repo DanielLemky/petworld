@@ -37,7 +37,7 @@ export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   
    // Mountain pets
    goat: { left: 'mountain_goat_left', right: 'mountain_goat_right', scale: 0.027, offset: { x: 180, y: 470 } },
-   horse: { left: 'horse_left', right: 'horse_right', scale: 0.038, offset: { x: 180, y: 400 } },
+   horse: { left: 'horse_left', right: 'horse_right', scale: 0.045, offset: { x: 180, y: 400 } },
    eagle: { left: 'eagle_left', right: 'eagle_right', scale: 0.018, offset: { x: 160, y: 490 } },
   fox: { left: 'fox_left', right: 'fox_right', scale: 0.024, offset: { x: 200, y: 420 } },
   bear_cub: { left: 'bear_left', right: 'bear_right', scale: 0.036, offset: { x: 170, y: 330 } },

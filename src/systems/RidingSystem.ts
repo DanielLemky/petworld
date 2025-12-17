@@ -6,8 +6,9 @@ import { PLAYER_CONFIG } from './PlayerConfig';
 
 // Riding configuration
 const RIDING_CONFIG = {
-  // Player scale when riding (slightly larger to accommodate horse)
-  RIDING_SCALE: 0.03,
+  // Player scale when riding - larger than normal to compensate for smaller sprite dimensions
+  // Riding sprites are ~693x1790 vs regular player ~1568x2720, so scale up ~2.2x
+  RIDING_SCALE: 0.05,
 
   // Dismounted horse behavior
   HORSE_IDLE_WANDER_SPEED: 10,
