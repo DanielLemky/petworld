@@ -899,10 +899,10 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
-    // Place player at starting position (near the house)
+    // Place player at starting position (below the central house)
     this.player = this.physics.add.sprite(
       60 * TILE_SIZE + TILE_SIZE / 2,
-      45 * TILE_SIZE + PLAYER_HEIGHT / 2,
+      55 * TILE_SIZE + PLAYER_HEIGHT / 2,
       'player_down'
     ) as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
