@@ -190,9 +190,9 @@ export class JungleScene extends Phaser.Scene {
     );
 
     // Waterfall at top of river - positioned so bottom overlaps top of map
-    const waterfallOverlapY = 20; // Waterfall bottom at Y=20 (overlaps map top)
+    const waterfallOverlapY = 60; // Waterfall bottom at Y=60 (moved down 40px)
     const waterfallHeight = 240; // Current scaled height
-    const waterfallTopY = waterfallOverlapY - waterfallHeight; // -220px
+    const waterfallTopY = waterfallOverlapY - waterfallHeight; // -180px
 
     const waterfall = this.add.image(
       (riverX + riverWidth / 2) * TILE_SIZE,
@@ -598,7 +598,7 @@ export class JungleScene extends Phaser.Scene {
     // Create particle emitter for mist near waterfall
     const riverX = 120;
     const riverWidth = 4; // 1/4 of original width (was 15)
-    const waterfallOverlapY = 20; // Waterfall bottom overlaps map top
+    const waterfallOverlapY = 60; // Waterfall bottom overlaps map top
 
     this.mistEmitter = this.add.particles(
       (riverX + riverWidth / 2) * TILE_SIZE,
