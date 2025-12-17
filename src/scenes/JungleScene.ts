@@ -196,14 +196,14 @@ export class JungleScene extends Phaser.Scene {
       'waterfall'
     );
 
-    // Scale waterfall sprite to fit expected dimensions (maintains aspect ratio)
+    // Scale waterfall sprite to 3x expected dimensions (maintains aspect ratio)
     const spriteWidth = 1203;
     const spriteHeight = 1826;
-    const targetWidth = TILE_SIZE * 2 * 2.5;   // 80px (original size * scale)
-    const targetHeight = TILE_SIZE * 3 * 2.5;  // 120px
+    const targetWidth = TILE_SIZE * 2 * 2.5 * 3;   // 240px (original size * scale * 3)
+    const targetHeight = TILE_SIZE * 3 * 2.5 * 3;  // 360px
     const scaleX = targetWidth / spriteWidth;
     const scaleY = targetHeight / spriteHeight;
-    const scale = Math.min(scaleX, scaleY); // ~0.066
+    const scale = Math.min(scaleX, scaleY); // ~0.199
     waterfall.setScale(scale);
 
     waterfall.setDepth(100);
