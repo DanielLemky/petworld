@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, PALETTE, getCorrectPenForPet, getPenConfigById } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, getCorrectPenForPet, getPenConfigById } from '../utils/constants';
 import { PetManager } from '../systems/PetManager';
 import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -286,27 +286,11 @@ export class HomeScene extends Phaser.Scene {
     const x = startX * TILE_SIZE + barnWidth / 2;
     const y = startY * TILE_SIZE + barnHeight / 2;
 
-    // Barn base
-    const barnBase = this.add.rectangle(x, y + 10, barnWidth, barnHeight - 20, 0x8b4513);
-    barnBase.setStrokeStyle(2, 0x5d2e0c);
-    barnBase.setDepth(startY * TILE_SIZE);
-
-    // Barn roof
-    const roof = this.add.rectangle(x, y - barnHeight / 2 + 15, barnWidth + 10, 30, 0x654321);
-    roof.setStrokeStyle(2, 0x3d2817);
-    roof.setDepth(startY * TILE_SIZE - 1);
-
-    // Barn doors (large)
-    const doorLeft = this.add.rectangle(x - 20, y + 25, 30, 50, PALETTE.WOOD_DARK);
-    doorLeft.setDepth(startY * TILE_SIZE + 1);
-    const doorRight = this.add.rectangle(x + 20, y + 25, 30, 50, PALETTE.WOOD_DARK);
-    doorRight.setDepth(startY * TILE_SIZE + 1);
-
-    // Cross beams on doors
-    this.add.line(x - 20, y + 25, -12, -20, 12, 20, 0x3d2817).setDepth(startY * TILE_SIZE + 2);
-    this.add.line(x - 20, y + 25, 12, -20, -12, 20, 0x3d2817).setDepth(startY * TILE_SIZE + 2);
-    this.add.line(x + 20, y + 25, -12, -20, 12, 20, 0x3d2817).setDepth(startY * TILE_SIZE + 2);
-    this.add.line(x + 20, y + 25, 12, -20, -12, 20, 0x3d2817).setDepth(startY * TILE_SIZE + 2);
+    // Replace procedural barn with sprite
+    const barn = this.add.image(x, y, 'barn');
+    const scale = Math.min(barnWidth / 1887, barnHeight / 1206); // Scale to fit 160x112 area
+    barn.setScale(scale);
+    barn.setDepth(startY * TILE_SIZE);
 
     // Sign
     const sign = this.add.text(x, y - barnHeight / 2 - 10, 'Barn', {

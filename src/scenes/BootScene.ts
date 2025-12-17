@@ -48,6 +48,9 @@ export class BootScene extends Phaser.Scene {
     // Load house sprite
     this.load.image('house', '/assets/sprites/house.png');
 
+    // Load barn sprite
+    this.load.image('barn', '/assets/sprites/barn.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
