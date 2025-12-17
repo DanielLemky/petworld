@@ -167,7 +167,7 @@ export class JungleScene extends Phaser.Scene {
     // River running from top to bottom (roughly center-right of map)
     const riverX = 120;
     const riverWidth = 4; // 1/4 of original width (was 15)
-    const waterfallY = 5;
+    const waterfallY = 0; // Start river at very top of map
 
     // Create river tiles
     for (let y = waterfallY; y < worldHeight; y++) {
@@ -189,10 +189,14 @@ export class JungleScene extends Phaser.Scene {
       (worldHeight - waterfallY) * TILE_SIZE
     );
 
-    // Waterfall at top of river
+    // Waterfall at top of river - positioned so bottom aligns with gameplay area start
+    const gameplayStartY = 80; // Top of gameplay area (below UI)
+    const waterfallHeight = 240; // Current scaled height
+    const waterfallTopY = gameplayStartY - waterfallHeight; // -160px
+
     const waterfall = this.add.image(
       (riverX + riverWidth / 2) * TILE_SIZE,
-      waterfallY * TILE_SIZE + TILE_SIZE,
+      waterfallTopY,
       'waterfall'
     );
 
@@ -208,8 +212,9 @@ export class JungleScene extends Phaser.Scene {
 
     waterfall.setDepth(100);
 
-    // Add some rocks around waterfall
-    this.createWaterfallRocks(riverX, waterfallY, riverWidth);
+    // Add some rocks around waterfall (position near gameplay area)
+    const rockY = Math.floor(gameplayStartY / TILE_SIZE); // Convert to tile coordinates
+    this.createWaterfallRocks(riverX, rockY, riverWidth);
 
     // Create jungle trees (~480 trees for very dense jungle)
     this.trees = this.physics.add.staticGroup();
@@ -593,11 +598,11 @@ export class JungleScene extends Phaser.Scene {
     // Create particle emitter for mist near waterfall
     const riverX = 120;
     const riverWidth = 4; // 1/4 of original width (was 15)
-    const waterfallY = 5;
+    const gameplayStartY = 80; // Top of gameplay area (below UI)
 
     this.mistEmitter = this.add.particles(
       (riverX + riverWidth / 2) * TILE_SIZE,
-      (waterfallY + 3) * TILE_SIZE,
+      gameplayStartY - 20, // Position mist near bottom of waterfall
       'mist_particle',
       {
         x: { min: -30, max: 30 },
