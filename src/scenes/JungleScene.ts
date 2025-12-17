@@ -275,9 +275,6 @@ export class JungleScene extends Phaser.Scene {
     // Add jungle flowers scattered around
     this.createJungleFlowers(worldWidth, worldHeight, riverX, riverWidth);
 
-    // Add decorative vines around the map borders
-    this.createMapBorderDecorations(worldWidth, worldHeight);
-
     // Exit zone (path back to main world) - at bottom edge
     this.exitZone = this.add.zone(100 * TILE_SIZE, (worldHeight - 3) * TILE_SIZE, TILE_SIZE * 8, TILE_SIZE * 4);
 
@@ -934,80 +931,5 @@ export class JungleScene extends Phaser.Scene {
 
   private updateInventoryUI(): void {
     this.inventoryText.setText(this.getInventoryText());
-  }
-
-  private createMapBorderDecorations(worldWidth: number, worldHeight: number): void {
-    // Add decorative vines around the entire map borders
-    // Placed outside the main terrain area for visual framing
-
-    // Top border - vines along Y=0 to Y=2
-    for (let x = 0; x < worldWidth; x += 3) { // Every 3 tiles for performance
-      if (x >= worldWidth - 3) continue; // Skip near right edge for corner handling
-
-      const vine = this.add.image(
-        x * TILE_SIZE + TILE_SIZE,
-        1 * TILE_SIZE,
-        'jungle_vine'
-      );
-      vine.setDepth(-10); // Behind terrain but above background
-      vine.setAlpha(0.8); // Slightly transparent
-    }
-
-    // Bottom border - vines along Y=worldHeight-2 to worldHeight
-    for (let x = 0; x < worldWidth; x += 3) {
-      if (x >= worldWidth - 3) continue;
-
-      const vine = this.add.image(
-        x * TILE_SIZE + TILE_SIZE,
-        (worldHeight - 1) * TILE_SIZE,
-        'jungle_vine'
-      );
-      vine.setDepth(-10);
-      vine.setAlpha(0.8);
-    }
-
-    // Left border - vines along X=0 to X=2
-    for (let y = 0; y < worldHeight; y += 3) {
-      if (y >= worldHeight - 3) continue;
-
-      const vine = this.add.image(
-        1 * TILE_SIZE,
-        y * TILE_SIZE + TILE_SIZE,
-        'jungle_vine'
-      );
-      vine.setDepth(-10);
-      vine.setAlpha(0.8);
-    }
-
-    // Right border - vines along X=worldWidth-2 to worldWidth
-    for (let y = 0; y < worldHeight; y += 3) {
-      if (y >= worldHeight - 3) continue;
-
-      const vine = this.add.image(
-        (worldWidth - 1) * TILE_SIZE,
-        y * TILE_SIZE + TILE_SIZE,
-        'jungle_vine'
-      );
-      vine.setDepth(-10);
-      vine.setAlpha(0.8);
-    }
-
-    // Corner decorations - special placement for the 4 corners
-    const corners = [
-      { x: 1, y: 1 }, // Top-left
-      { x: worldWidth - 1, y: 1 }, // Top-right
-      { x: 1, y: worldHeight - 1 }, // Bottom-left
-      { x: worldWidth - 1, y: worldHeight - 1 }, // Bottom-right
-    ];
-
-    corners.forEach(corner => {
-      const cornerVine = this.add.image(
-        corner.x * TILE_SIZE,
-        corner.y * TILE_SIZE,
-        'jungle_vine'
-      );
-      cornerVine.setDepth(-10);
-      cornerVine.setAlpha(0.9); // Slightly more opaque for corners
-    });
   }
 }
