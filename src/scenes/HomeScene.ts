@@ -241,8 +241,8 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createFarmhouse(startX: number, startY: number): void {
-    const houseWidth = 8 * TILE_SIZE * 5; // 5x bigger
-    const houseHeight = 6 * TILE_SIZE * 5; // 5x bigger
+    const houseWidth = TILE_SIZE * 2.5 * 5; // Same size as world house (200px)
+    const houseHeight = TILE_SIZE * 2 * 5; // Same size as world house (160px)
     const x = startX * TILE_SIZE + houseWidth / 2;
     const y = startY * TILE_SIZE + houseHeight / 2;
 
