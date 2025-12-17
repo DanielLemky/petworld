@@ -190,9 +190,9 @@ export class JungleScene extends Phaser.Scene {
     );
 
     // Waterfall at top of river - positioned so bottom overlaps top of map
-    const waterfallOverlapY = -20; // Waterfall bottom overlaps map top by 20px below
+    const waterfallOverlapY = 20; // Waterfall bottom at Y=20 (overlaps map top)
     const waterfallHeight = 240; // Current scaled height
-    const waterfallTopY = waterfallOverlapY - waterfallHeight; // -260px
+    const waterfallTopY = waterfallOverlapY - waterfallHeight; // -220px
 
     const waterfall = this.add.image(
       (riverX + riverWidth / 2) * TILE_SIZE,
@@ -212,8 +212,8 @@ export class JungleScene extends Phaser.Scene {
 
     waterfall.setDepth(100);
 
-    // Add some rocks around waterfall (position near visible waterfall area)
-    const rockY = 1; // Position rocks around tile Y=1 (near map top)
+    // Add some rocks around waterfall (position near waterfall bottom)
+    const rockY = Math.floor(waterfallOverlapY / TILE_SIZE); // Convert to tile coordinates
     this.createWaterfallRocks(riverX, rockY, riverWidth);
 
     // Create jungle trees (~480 trees for very dense jungle)
@@ -598,11 +598,11 @@ export class JungleScene extends Phaser.Scene {
     // Create particle emitter for mist near waterfall
     const riverX = 120;
     const riverWidth = 4; // 1/4 of original width (was 15)
-    const mistY = 10; // Position mist near visible waterfall area
+    const waterfallOverlapY = 20; // Waterfall bottom overlaps map top
 
     this.mistEmitter = this.add.particles(
       (riverX + riverWidth / 2) * TILE_SIZE,
-      mistY, // Position mist near visible waterfall
+      waterfallOverlapY - 10, // Position mist near bottom of waterfall
       'mist_particle',
       {
         x: { min: -30, max: 30 },
