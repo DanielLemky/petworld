@@ -528,8 +528,8 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    // Transition zone
-    this.mountainZone = this.add.zone(0, mountainY * TILE_SIZE + TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 4);
+    // Transition zone (positioned 1 tile inward from edge to allow overlap when riding)
+    this.mountainZone = this.add.zone(TILE_SIZE, mountainY * TILE_SIZE + TILE_SIZE, TILE_SIZE * 2, TILE_SIZE * 4);
     this.physics.add.existing(this.mountainZone, true);
 
     // Sign
