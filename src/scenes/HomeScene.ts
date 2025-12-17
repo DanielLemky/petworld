@@ -456,14 +456,14 @@ export class HomeScene extends Phaser.Scene {
     const verticalGateStartY = startY + Math.floor(height / 2) - 1;
     const verticalGateEndY = verticalGateStartY + 2;
 
-    // Top fence (with gate) - horizontal
-    for (let x = startX; x < startX + width; x++) {
+    // Top fence (with gate) - horizontal, spaced
+    for (let x = startX; x < startX + width; x += 2) { // Skip every other tile for spacing
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY, false);
     }
 
-    // Bottom fence (with gate) - horizontal
-    for (let x = startX; x < startX + width; x++) {
+    // Bottom fence (with gate) - horizontal, spaced
+    for (let x = startX; x < startX + width; x += 2) { // Skip every other tile for spacing
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY + height - 1, false);
     }
@@ -658,14 +658,14 @@ export class HomeScene extends Phaser.Scene {
     const verticalGateStartY = startY + Math.floor(height / 2) - 1;
     const verticalGateEndY = verticalGateStartY + 2;
 
-    // Top fence (with gate) - horizontal
-    for (let x = startX; x < startX + width; x++) {
+    // Top fence (with gate) - horizontal, spaced
+    for (let x = startX; x < startX + width; x += 2) { // Skip every other tile for spacing
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY, false);
     }
 
-    // Bottom fence (with gate) - horizontal
-    for (let x = startX; x < startX + width; x++) {
+    // Bottom fence (with gate) - horizontal, spaced
+    for (let x = startX; x < startX + width; x += 2) { // Skip every other tile for spacing
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
       this.createFencePost(fences, x, startY + height - 1, false);
     }
