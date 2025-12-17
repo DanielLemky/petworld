@@ -687,12 +687,12 @@ export class WorldScene extends Phaser.Scene {
   private createHouse(tileX: number, tileY: number): void {
     const x = tileX * TILE_SIZE + TILE_SIZE;
     const y = tileY * TILE_SIZE + TILE_SIZE;
-    const houseWidth = TILE_SIZE * 2.5;
-    const houseHeight = TILE_SIZE * 2;
+    const houseWidth = TILE_SIZE * 2.5 * 5; // 5x bigger
+    const houseHeight = TILE_SIZE * 2 * 5; // 5x bigger
 
     // Replace procedural house with sprite
     const house = this.add.image(x, y, 'house');
-    const scale = Math.min(houseWidth / 944, houseHeight / 579); // Scale to fit 40x32 area
+    const scale = Math.min(houseWidth / 944, houseHeight / 579); // Scale to fit larger area
     house.setScale(scale);
     house.setDepth(tileY * TILE_SIZE);
 

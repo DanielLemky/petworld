@@ -241,14 +241,14 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createFarmhouse(startX: number, startY: number): void {
-    const houseWidth = 8 * TILE_SIZE;
-    const houseHeight = 6 * TILE_SIZE;
+    const houseWidth = 8 * TILE_SIZE * 5; // 5x bigger
+    const houseHeight = 6 * TILE_SIZE * 5; // 5x bigger
     const x = startX * TILE_SIZE + houseWidth / 2;
     const y = startY * TILE_SIZE + houseHeight / 2;
 
     // Replace procedural house with sprite
     const house = this.add.image(x, y, 'house');
-    const scale = Math.min(houseWidth / 944, houseHeight / 579); // Scale to fit 128x96 area
+    const scale = Math.min(houseWidth / 944, houseHeight / 579); // Scale to fit larger area
     house.setScale(scale);
     house.setDepth(startY * TILE_SIZE);
 
