@@ -192,7 +192,7 @@ export class JungleScene extends Phaser.Scene {
     // Waterfall at top of river
     const waterfall = this.add.image(
       (riverX + riverWidth / 2) * TILE_SIZE,
-      -120, // Top of waterfall at Y=-120
+      -110, // Top of waterfall at Y=-110 (moved down 10px)
       'waterfall'
     );
 
@@ -596,7 +596,7 @@ export class JungleScene extends Phaser.Scene {
 
     this.mistEmitter = this.add.particles(
       (riverX + riverWidth / 2) * TILE_SIZE,
-      110, // Position mist near bottom of waterfall at Y=110
+      120, // Position mist near bottom of waterfall at Y=120
       'mist_particle',
       {
         x: { min: -30, max: 30 },
