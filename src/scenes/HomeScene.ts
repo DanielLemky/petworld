@@ -485,12 +485,12 @@ export class HomeScene extends Phaser.Scene {
     const x = tileX * TILE_SIZE + TILE_SIZE / 2;
     const y = tileY * TILE_SIZE + TILE_SIZE / 2;
 
-    // Visual fence post
-    const post = this.add.rectangle(x, y, TILE_SIZE - 4, TILE_SIZE - 4, PALETTE.WOOD_LIGHT);
-    post.setStrokeStyle(2, PALETTE.WOOD_DARK);
+    // Visual fence post using sprite (scaled to 32px / 2 tiles)
+    const post = this.add.image(x, y, 'fence');
+    post.setScale(32 / 1191); // Scale 1191px sprite to 32px (0.027)
     post.setDepth(tileY * TILE_SIZE);
 
-    // Physics collider
+    // Physics collider (unchanged)
     const collider = fences.create(x, y, 'grass') as Phaser.Physics.Arcade.Sprite;
     collider.setVisible(false);
     collider.setSize(TILE_SIZE - 4, TILE_SIZE - 4);

@@ -41,6 +41,9 @@ export class BootScene extends Phaser.Scene {
     // Load waterfall sprite
     this.load.image('waterfall', '/assets/sprites/waterfall.png');
 
+    // Load fence sprite
+    this.load.image('fence', '/assets/sprites/fence.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
@@ -1765,35 +1768,5 @@ export class BootScene extends Phaser.Scene {
 
     g7.generateTexture('jungle_flower', size, size);
     g7.destroy();
-
-    // Decorative vines for map borders (2x2 tiles)
-    const g8 = this.make.graphics({ x: 0, y: 0 });
-    const vineSize = TILE_SIZE * 2;
-
-    // Base vine color (dark green)
-    g8.fillStyle(0x1b5e20, 1);
-
-    // Curved vine stems
-    g8.fillRect(4, 8, 24, 3);  // Horizontal base
-    g8.fillRect(12, 0, 3, 16);  // Vertical stem
-
-    // Vine tendrils curving outward
-    g8.fillRect(8, 4, 2, 8);   // Left tendril
-    g8.fillRect(22, 4, 2, 8);  // Right tendril
-
-    // Leaves attached to vines
-    g8.fillStyle(0x2e7d32, 1);
-    g8.fillRect(2, 2, 6, 4);   // Top left leaf
-    g8.fillRect(24, 2, 6, 4);  // Top right leaf
-    g8.fillRect(0, 12, 4, 6);  // Bottom left leaf
-    g8.fillRect(28, 12, 4, 6); // Bottom right leaf
-
-    // Small flowers on vines
-    g8.fillStyle(0xffeb3b, 1);
-    g8.fillRect(6, 6, 2, 2);   // Left flower
-    g8.fillRect(24, 6, 2, 2);  // Right flower
-
-    g8.generateTexture('jungle_vine', vineSize, vineSize);
-    g8.destroy();
   }
 }
