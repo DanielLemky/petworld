@@ -166,7 +166,7 @@ export class JungleScene extends Phaser.Scene {
 
     // River running from top to bottom (roughly center-right of map)
     const riverX = 120;
-    const riverWidth = 15;
+    const riverWidth = 4; // 1/4 of original width (was 15)
     const waterfallY = 5;
 
     // Create river tiles
@@ -196,14 +196,14 @@ export class JungleScene extends Phaser.Scene {
       'waterfall'
     );
 
-    // Scale waterfall sprite to 3x expected dimensions (maintains aspect ratio)
+    // Scale waterfall sprite to 2x expected dimensions (maintains aspect ratio)
     const spriteWidth = 1203;
     const spriteHeight = 1826;
-    const targetWidth = TILE_SIZE * 2 * 2.5 * 3;   // 240px (original size * scale * 3)
-    const targetHeight = TILE_SIZE * 3 * 2.5 * 3;  // 360px
+    const targetWidth = TILE_SIZE * 2 * 2.5 * 2;   // 160px (original size * scale * 2)
+    const targetHeight = TILE_SIZE * 3 * 2.5 * 2;  // 240px
     const scaleX = targetWidth / spriteWidth;
     const scaleY = targetHeight / spriteHeight;
-    const scale = Math.min(scaleX, scaleY); // ~0.199
+    const scale = Math.min(scaleX, scaleY); // ~0.133
     waterfall.setScale(scale);
 
     waterfall.setDepth(100);
@@ -425,7 +425,7 @@ export class JungleScene extends Phaser.Scene {
     const worldWidth = 200;
     const worldHeight = 150;
     const riverX = 120;
-    const riverWidth = 15;
+    const riverWidth = 4; // 1/4 of original width (was 15)
 
     const petRandom = new Phaser.Math.RandomDataGenerator(['jungle-pets']);
     for (let i = 0; i < 35; i++) {
@@ -592,7 +592,7 @@ export class JungleScene extends Phaser.Scene {
 
     // Create particle emitter for mist near waterfall
     const riverX = 120;
-    const riverWidth = 15;
+    const riverWidth = 4; // 1/4 of original width (was 15)
     const waterfallY = 5;
 
     this.mistEmitter = this.add.particles(
