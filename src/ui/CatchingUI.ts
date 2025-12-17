@@ -257,14 +257,14 @@ export class CatchingUI {
     this.instructionText.setText('CAUGHT!');
     this.instructionText.setColor('#4ade80');
 
-    // Pet celebration
-    this.scene.tweens.add({
-      targets: this.petSprite,
-      angle: 360,
-      scale: 2.5,
-      duration: 500,
-      ease: 'Back.easeOut',
-    });
+     // Pet celebration
+     this.scene.tweens.add({
+       targets: this.petSprite,
+       angle: 360,
+       scale: this.petSprite.scale * 2,
+       duration: 500,
+       ease: 'Back.easeOut',
+     });
 
     // Particles effect
     this.createSuccessParticles();
