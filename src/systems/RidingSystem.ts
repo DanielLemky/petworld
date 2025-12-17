@@ -10,6 +10,13 @@ const RIDING_CONFIG = {
   // Riding sprites are ~693x1790 vs regular player ~1568x2720, so scale up ~2.2x
   RIDING_SCALE: 0.05,
 
+  // Collision body for riding sprite (693x1790)
+  // Positioned at horse's feet, similar scaled size to normal player collision
+  RIDING_BODY_WIDTH: 360,     // ~18px scaled at 0.05
+  RIDING_BODY_HEIGHT: 180,    // ~9px scaled at 0.05
+  RIDING_BODY_OFFSET_X: 165,  // Center horizontally (693-360)/2
+  RIDING_BODY_OFFSET_Y: 1600, // Near bottom of sprite (horse's feet)
+
   // Dismounted horse behavior
   HORSE_IDLE_WANDER_SPEED: 10,
 };
@@ -45,6 +52,10 @@ export class RidingSystem {
   // Local sprite reference for dismounted horse in current scene
   private dismountedHorseSprite: Phaser.Physics.Arcade.Sprite | null = null;
 
+  // Store original collision body values for restoration when dismounting
+  private originalBodySize: { width: number; height: number } | null = null;
+  private originalBodyOffset: { x: number; y: number } | null = null;
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
@@ -53,12 +64,24 @@ export class RidingSystem {
   init(player: Phaser.Physics.Arcade.Sprite): void {
     this.player = player;
 
+    // Store original collision body values (before any modifications)
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    if (body) {
+      // Store in sprite coordinate space (unscaled)
+      this.originalBodySize = { width: body.width / this.player.scaleX, height: body.height / this.player.scaleY };
+      this.originalBodyOffset = { x: body.offset.x / this.player.scaleX, y: body.offset.y / this.player.scaleY };
+    }
+
     // Restore riding state if player was riding when transitioning scenes
     if (RidingSystem.currentlyRiding && RidingSystem.currentlyRidingHorseId) {
       this.isRiding = true;
       this.mountedHorseId = RidingSystem.currentlyRidingHorseId;
       this.updateRidingSprite(this.currentDirection);
       this.player.setScale(RIDING_CONFIG.RIDING_SCALE);
+
+      // Apply riding collision body
+      this.player.setSize(RIDING_CONFIG.RIDING_BODY_WIDTH, RIDING_CONFIG.RIDING_BODY_HEIGHT);
+      this.player.setOffset(RIDING_CONFIG.RIDING_BODY_OFFSET_X, RIDING_CONFIG.RIDING_BODY_OFFSET_Y);
     }
 
     // Check for dismounted horse in this scene
@@ -110,6 +133,10 @@ export class RidingSystem {
     // Switch player to riding sprite
     this.updateRidingSprite(this.currentDirection);
     this.player.setScale(RIDING_CONFIG.RIDING_SCALE);
+
+    // Apply riding collision body
+    this.player.setSize(RIDING_CONFIG.RIDING_BODY_WIDTH, RIDING_CONFIG.RIDING_BODY_HEIGHT);
+    this.player.setOffset(RIDING_CONFIG.RIDING_BODY_OFFSET_X, RIDING_CONFIG.RIDING_BODY_OFFSET_Y);
 
     // Remove from dismounted horses if it was there
     RidingSystem.dismountedHorses.delete(petId);
@@ -206,6 +233,12 @@ export class RidingSystem {
 
     this.player.setTexture(`player_${this.currentDirection}`);
     this.player.setScale(PLAYER_CONFIG.NORMAL_SCALE);
+
+    // Restore original collision body
+    if (this.originalBodySize && this.originalBodyOffset) {
+      this.player.setSize(this.originalBodySize.width, this.originalBodySize.height);
+      this.player.setOffset(this.originalBodyOffset.x, this.originalBodyOffset.y);
+    }
   }
 
   // Update method called each frame - handles direction changes while riding
