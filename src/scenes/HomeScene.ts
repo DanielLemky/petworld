@@ -246,34 +246,11 @@ export class HomeScene extends Phaser.Scene {
     const x = startX * TILE_SIZE + houseWidth / 2;
     const y = startY * TILE_SIZE + houseHeight / 2;
 
-    // House base
-    const houseBase = this.add.rectangle(x, y + 10, houseWidth, houseHeight - 20, PALETTE.WOOD_MID);
-    houseBase.setStrokeStyle(2, PALETTE.WOOD_DARK);
-    houseBase.setDepth(startY * TILE_SIZE);
-
-    // Roof
-    const roof = this.add.triangle(
-      x, y - houseHeight / 2 + 20,
-      0, 50,
-      houseWidth / 2, 0,
-      houseWidth, 50,
-      0xc0392b
-    );
-    roof.setStrokeStyle(2, 0x922b21);
-    roof.setDepth(startY * TILE_SIZE - 1);
-
-    // Door
-    const door = this.add.rectangle(x, y + 30, 24, 40, PALETTE.WOOD_DARK);
-    door.setDepth(startY * TILE_SIZE + 1);
-
-    // Windows
-    const window1 = this.add.rectangle(x - 35, y, 18, 18, PALETTE.WATER_LIGHT);
-    window1.setStrokeStyle(2, PALETTE.WOOD_DARK);
-    window1.setDepth(startY * TILE_SIZE + 1);
-
-    const window2 = this.add.rectangle(x + 35, y, 18, 18, PALETTE.WATER_LIGHT);
-    window2.setStrokeStyle(2, PALETTE.WOOD_DARK);
-    window2.setDepth(startY * TILE_SIZE + 1);
+    // Replace procedural house with sprite
+    const house = this.add.image(x, y, 'house');
+    const scale = Math.min(houseWidth / 944, houseHeight / 579); // Scale to fit 128x96 area
+    house.setScale(scale);
+    house.setDepth(startY * TILE_SIZE);
 
     // Sign
     const sign = this.add.text(x, y - houseHeight / 2 - 10, 'Farmhouse', {
