@@ -680,8 +680,8 @@ export class WorldScene extends Phaser.Scene {
       path.setDepth(-5);
     }
 
-    // Create house at the top of the main path
-    this.createHouse(59, 12);
+    // Create house in the center of the world map
+    this.createHouse(60, 50);
   }
 
   private createHouse(tileX: number, tileY: number): void {
