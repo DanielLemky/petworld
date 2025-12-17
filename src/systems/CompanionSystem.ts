@@ -202,4 +202,15 @@ export class CompanionSystem {
       this.scene.physics.add.collider(this.sprite, group);
     }
   }
+
+  // Hide or show companion (used when player is riding a horse)
+  setVisible(visible: boolean): void {
+    if (this.sprite) {
+      this.sprite.setVisible(visible);
+      this.sprite.setActive(visible);
+      if (this.sprite.body) {
+        (this.sprite.body as Phaser.Physics.Arcade.Body).enable = visible;
+      }
+    }
+  }
 }

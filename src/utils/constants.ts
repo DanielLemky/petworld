@@ -6,6 +6,10 @@ export const PLAYER_HEIGHT = 32;
 export const PLAYER_SPEED = 150;
 export const PLAYER_RUN_MULTIPLIER = 2; // 2x speed when running
 
+// Horse riding speeds
+export const HORSE_RIDE_SPEED = 225; // 1.5x walk speed
+export const HORSE_GALLOP_MULTIPLIER = 2; // 2x riding speed = 450 (faster than run at 300)
+
 // Stardew Valley inspired color palette
 export const PALETTE = {
   // Grass colors
@@ -157,7 +161,7 @@ export const PEN_TYPES = {
   MOUNTAIN: {
     id: 'mountain',
     name: 'Mountain Pen',
-    pets: ['GOAT', 'EAGLE', 'FOX', 'BEAR_CUB'],
+    pets: ['GOAT', 'EAGLE', 'FOX', 'BEAR_CUB', 'HORSE'],
     color: 0x757575,
     groundTile: 'rock',
   },

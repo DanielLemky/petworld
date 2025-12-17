@@ -7,6 +7,7 @@ import { GamepadManager, GAMEPAD_BUTTONS } from '../systems/GamepadManager';
 import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '../systems/PetSpriteConfig';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
+import { RidingSystem } from '../systems/RidingSystem';
 
 // Farm dimensions
 const FARM_WIDTH = 200;
@@ -54,6 +55,8 @@ export class HomeScene extends Phaser.Scene {
   private carryText!: Phaser.GameObjects.Text;
   private penHighlight: Phaser.GameObjects.Rectangle | null = null;
   private playerAnimator!: PlayerAnimator;
+  private ridingSystem!: RidingSystem;
+  private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({ key: SCENES.HOME });
@@ -68,6 +71,10 @@ export class HomeScene extends Phaser.Scene {
 
     // Create the player
     this.createPlayer();
+
+    // Initialize riding system
+    this.ridingSystem = new RidingSystem(this);
+    this.ridingSystem.init(this.player);
 
     // Create pets from the player's collection
     this.createOwnedPets();
@@ -102,6 +109,9 @@ export class HomeScene extends Phaser.Scene {
     this.updateMoodIndicators();
     this.updateCarriedPet();
     this.checkExitZone();
+
+    // Update riding system
+    this.ridingSystem.update();
   }
 
   private handleGamepadButtons(): void {
@@ -117,9 +127,18 @@ export class HomeScene extends Phaser.Scene {
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.LB)) {
       this.handleTakeWithMe();
     }
-    // Y/Triangle button (3) - Go to World
+    // Y/Triangle button (3) - Mount/Dismount horse if applicable, else Go to World
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      this.goToWorld();
+      if (this.ridingSystem.getIsRiding()) {
+        this.handleRideToggle();
+      } else {
+        const nearHorse = this.findNearestHorse();
+        if (nearHorse) {
+          this.handleRideToggle();
+        } else {
+          this.goToWorld();
+        }
+      }
     }
     // Start button - Open menu
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
@@ -821,7 +840,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private createUI(): void {
-    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up | F feed | T/L1 companion | SHIFT/R1 run | M world', {
+    this.infoText = this.add.text(16, 16, 'WASD move | SPACE pick up | F feed | T companion | R ride horse | SHIFT run', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44dd',
@@ -927,6 +946,10 @@ export class HomeScene extends Phaser.Scene {
       this.takeKey.on('down', () => this.handleTakeWithMe());
       worldKey.on('down', () => this.goToWorld());
       menuKey.on('down', () => this.openMenu());
+
+      // R key for mounting/dismounting horse
+      this.rideKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.rideKey.on('down', () => this.handleRideToggle());
     }
   }
 
@@ -941,11 +964,18 @@ export class HomeScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Calculate speed with run multiplier
+    // Check running/galloping state
     const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
-    let speed = PLAYER_SPEED;
-    if (isRunning) {
-      speed *= PLAYER_RUN_MULTIPLIER;
+
+    // Determine speed based on riding state
+    let speed: number;
+    if (this.ridingSystem.getIsRiding()) {
+      speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else {
+      speed = PLAYER_SPEED;
+      if (isRunning) {
+        speed *= PLAYER_RUN_MULTIPLIER;
+      }
     }
 
     // Get gamepad input
@@ -991,13 +1021,17 @@ export class HomeScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle player animations using unified animator
+    // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+
+    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding()) {
+      this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    }
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
-      // PlayerAnimator handles texture changes automatically
+      // RidingSystem will pick up direction changes via velocity in its update()
     }
   }
 
@@ -1297,7 +1331,74 @@ export class HomeScene extends Phaser.Scene {
     }
   }
 
+  private findNearestHorse(): Phaser.Physics.Arcade.Sprite | null {
+    let nearestHorse: Phaser.Physics.Arcade.Sprite | null = null;
+    let nearestDistance = TILE_SIZE * 3;
+
+    // Check pets in pens
+    this.pets.children.each((pet: Phaser.GameObjects.GameObject) => {
+      const sprite = pet as Phaser.Physics.Arcade.Sprite;
+      const petData = sprite.getData('petData') as CaughtPet;
+
+      if (petData && petData.type === 'HORSE') {
+        const distance = Phaser.Math.Distance.Between(
+          this.player.x, this.player.y,
+          sprite.x, sprite.y
+        );
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestHorse = sprite;
+        }
+      }
+      return true;
+    });
+
+    // Also check dismounted horse
+    const dismountedSprite = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedSprite) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedSprite.x, dismountedSprite.y
+      );
+      if (distance < nearestDistance) {
+        nearestHorse = dismountedSprite;
+      }
+    }
+
+    return nearestHorse;
+  }
+
+  private handleRideToggle(): void {
+    if (this.isCarryingPet) return; // Can't mount while carrying
+
+    if (this.ridingSystem.getIsRiding()) {
+      // Dismount
+      const horse = this.ridingSystem.dismount();
+      if (horse) {
+        this.showMessage('Dismounted from horse', '#888888');
+        SoundManager.playClick();
+        // Reinitialize player animator to restore proper scale
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+      }
+    } else {
+      // Try to mount nearby horse
+      const nearHorse = this.findNearestHorse();
+      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+        if (this.ridingSystem.mount(nearHorse)) {
+          this.showMessage('Mounted horse! R to dismount, SHIFT to gallop', '#4ade80');
+          SoundManager.playSuccess();
+        }
+      } else {
+        this.showMessage('No horse nearby to mount', '#888888');
+      }
+    }
+  }
+
   private goToWorld(): void {
+    // Handle dismounted horse on scene exit (returns to home pen)
+    this.ridingSystem.onSceneExit();
+
     this.cameras.main.fadeOut(300, 0, 0, 0);
 
     this.cameras.main.once('camerafadeoutcomplete', () => {

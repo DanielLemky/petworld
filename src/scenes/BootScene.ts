@@ -26,6 +26,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('player_right', '/assets/sprites/player_right.png');
     this.load.image('player', '/assets/sprites/player_down.png');
 
+    // Load player riding horse sprites
+    this.load.image('player_riding_horse_up', '/assets/sprites/player_riding_horse_up.png');
+    this.load.image('player_riding_horse_down', '/assets/sprites/player_riding_horse_down.png');
+    this.load.image('player_riding_horse_left', '/assets/sprites/player_riding_horse_left.png');
+    this.load.image('player_riding_horse_right', '/assets/sprites/player_riding_horse_right.png');
+
     // Load all pet sprites from centralized config
     getAllSpriteKeys().forEach(key => {
       this.load.image(key, `/assets/sprites/${key}.png`);

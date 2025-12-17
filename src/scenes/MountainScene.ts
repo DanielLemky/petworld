@@ -11,6 +11,7 @@ import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '..
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
+import { RidingSystem } from '../systems/RidingSystem';
 
 export class MountainScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -38,6 +39,8 @@ export class MountainScene extends Phaser.Scene {
   
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
+  private ridingSystem!: RidingSystem;
+  private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({ key: SCENES.MOUNTAIN });
@@ -67,6 +70,17 @@ export class MountainScene extends Phaser.Scene {
     this.fetchSystem = new FetchSystem(this, this.player);
     this.fetchSystem.setCompanion(this.companionSystem.getSprite());
     this.companionSystem.setFetchSystem(this.fetchSystem);
+
+    // Initialize riding system
+    this.ridingSystem = new RidingSystem(this);
+    this.ridingSystem.init(this.player);
+
+    // Add colliders for dismounted horse if one exists
+    const dismountedHorse = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedHorse) {
+      this.physics.add.collider(dismountedHorse, this.boulders);
+      this.physics.add.collider(dismountedHorse, this.cliffs);
+    }
 
     this.createPets();
     this.createEagles();
@@ -98,6 +112,7 @@ export class MountainScene extends Phaser.Scene {
     this.updateDepthSorting();
     this.companionSystem.update();
     this.fetchSystem.update();
+    this.ridingSystem.update();
     this.checkExitZone();
   }
 
@@ -440,7 +455,7 @@ export class MountainScene extends Phaser.Scene {
     this.pets = this.physics.add.group();
 
     // Spawn ground mountain pets (~40 pets distributed across all levels)
-    const groundPetTypes = ['GOAT', 'FOX', 'BEAR_CUB'];
+    const groundPetTypes = ['GOAT', 'FOX', 'BEAR_CUB', 'HORSE'];
     const worldWidth = 225;
     const spawnPositions: { x: number; y: number }[] = [];
 
@@ -587,6 +602,14 @@ export class MountainScene extends Phaser.Scene {
           this.openMenu();
         }
       });
+
+      // R key for mounting/dismounting horse
+      this.rideKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.rideKey.on('down', () => {
+        if (!this.isCatching && !this.isTransitioning) {
+          this.handleRideToggle();
+        }
+      });
     }
 
     // Mouse click handler for fetch
@@ -602,6 +625,19 @@ export class MountainScene extends Phaser.Scene {
     // A button (0) - Interact
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
       this.tryInteract();
+    }
+    // Y button (3) - Mount/Dismount horse if applicable, else go to World
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
+      if (this.ridingSystem.getIsRiding()) {
+        this.handleRideToggle();
+      } else {
+        const nearHorse = this.findNearestMountableHorse();
+        if (nearHorse) {
+          this.handleRideToggle();
+        } else {
+          this.goToWorld();
+        }
+      }
     }
     // Start button - Open menu
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
@@ -736,11 +772,18 @@ export class MountainScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Calculate speed with run multiplier
+    // Check running/galloping state
     const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
-    let speed = PLAYER_SPEED;
-    if (isRunning) {
-      speed *= PLAYER_RUN_MULTIPLIER;
+
+    // Determine speed based on riding state
+    let speed: number;
+    if (this.ridingSystem.getIsRiding()) {
+      speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else {
+      speed = PLAYER_SPEED;
+      if (isRunning) {
+        speed *= PLAYER_RUN_MULTIPLIER;
+      }
     }
 
     // Get gamepad input
@@ -786,9 +829,13 @@ export class MountainScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle player animations using unified animator
+    // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+
+    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding()) {
+      this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    }
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
@@ -978,9 +1025,58 @@ export class MountainScene extends Phaser.Scene {
     }
   }
 
+  private findNearestMountableHorse(): Phaser.Physics.Arcade.Sprite | null {
+    // Check dismounted horse first
+    const dismountedSprite = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedSprite) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedSprite.x, dismountedSprite.y
+      );
+      if (distance < TILE_SIZE * 3) {
+        return dismountedSprite;
+      }
+    }
+    return null;
+  }
+
+  private handleRideToggle(): void {
+    if (this.ridingSystem.getIsRiding()) {
+      // Dismount
+      const horse = this.ridingSystem.dismount();
+      if (horse) {
+        showCatchMessage(this, 'Dismounted horse', '#888888');
+        SoundManager.playClick();
+        // Reinitialize player animator to restore proper scale
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+        // Show companion again
+        this.companionSystem.setVisible(true);
+        // Add collider for dismounted horse
+        this.physics.add.collider(horse, this.boulders);
+        this.physics.add.collider(horse, this.cliffs);
+      }
+    } else {
+      // Try to mount nearby horse
+      const nearHorse = this.findNearestMountableHorse();
+      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+        if (this.ridingSystem.mount(nearHorse)) {
+          showCatchMessage(this, 'Mounted horse!', '#4ade80');
+          SoundManager.playSuccess();
+          // Hide companion while riding
+          this.companionSystem.setVisible(false);
+        }
+      } else {
+        showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
+      }
+    }
+  }
+
   private goToWorld(): void {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
+
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
 
     SoundManager.playClick();
 

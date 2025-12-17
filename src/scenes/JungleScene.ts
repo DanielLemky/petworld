@@ -11,6 +11,7 @@ import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '..
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
+import { RidingSystem } from '../systems/RidingSystem';
 
 const JUNGLE_PET_TYPES = ['PARROT', 'MONKEY', 'TOUCAN', 'SLOTH', 'JAGUAR'];
 
@@ -40,6 +41,8 @@ export class JungleScene extends Phaser.Scene {
 
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
+  private ridingSystem!: RidingSystem;
+  private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({ key: SCENES.JUNGLE });
@@ -68,6 +71,12 @@ export class JungleScene extends Phaser.Scene {
     this.fetchSystem = new FetchSystem(this, this.player);
     this.fetchSystem.setCompanion(this.companionSystem.getSprite());
     this.companionSystem.setFetchSystem(this.fetchSystem);
+
+    // Initialize riding system
+    this.ridingSystem = new RidingSystem(this);
+    this.ridingSystem.init(this.player);
+    // Add collider for dismounted horses
+    this.ridingSystem.addCollider(this.trees);
 
     this.createPets();
     this.createCollectibles();
@@ -101,6 +110,7 @@ export class JungleScene extends Phaser.Scene {
     this.updateDepthSorting();
     this.companionSystem.update();
     this.fetchSystem.update();
+    this.ridingSystem.update();
     this.checkExitZone();
 
     // Handle right stick for fetch aiming
@@ -111,6 +121,19 @@ export class JungleScene extends Phaser.Scene {
     // A button (0) - Interact
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
       this.tryInteract();
+    }
+    // Y button - Mount/dismount horse, or go to world if not near horse
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
+      if (this.ridingSystem.getIsRiding()) {
+        this.handleRideToggle();
+      } else {
+        const nearestHorse = this.findNearestMountableHorse();
+        if (nearestHorse) {
+          this.handleRideToggle();
+        } else {
+          this.goToWorld();
+        }
+      }
     }
     // Start button - Open menu
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
@@ -495,6 +518,10 @@ export class JungleScene extends Phaser.Scene {
 
       this.interactKey.on('down', () => this.tryInteract());
 
+      // R key - Mount/dismount horse
+      this.rideKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.rideKey.on('down', () => this.handleRideToggle());
+
       // ESC key - Open menu
       const menuKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
       menuKey.on('down', () => {
@@ -623,11 +650,16 @@ export class JungleScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Calculate speed with terrain modifiers and run multiplier
+    // Calculate speed with terrain modifiers, riding, and run multiplier
     const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
-    let speed = this.isInRiver ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
-    if (isRunning) {
-      speed *= PLAYER_RUN_MULTIPLIER;
+    let speed: number;
+    if (this.ridingSystem.getIsRiding()) {
+      speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else {
+      speed = this.isInRiver ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
+      if (isRunning) {
+        speed *= PLAYER_RUN_MULTIPLIER;
+      }
     }
 
     // Get gamepad input
@@ -673,15 +705,17 @@ export class JungleScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle player animations using unified animator
+    // Handle player animations using unified animator (skip when riding - RidingSystem handles it)
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    if (!this.ridingSystem.getIsRiding()) {
+      this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    }
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
     }
 
-    // Tint player blue when in river
+    // Tint player blue when in river (only when not riding)
     if (this.isInRiver) {
       this.player.setTint(0x88bbff);
     } else {
@@ -824,6 +858,9 @@ export class JungleScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
+    // Handle riding system scene exit (dismounted horses return to home)
+    this.ridingSystem.onSceneExit();
+
     SoundManager.playClick();
 
     this.cameras.main.fadeOut(300, 0, 0, 0);
@@ -831,6 +868,40 @@ export class JungleScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start(SCENES.WORLD);
     });
+  }
+
+  private findNearestMountableHorse(): Phaser.Physics.Arcade.Sprite | null {
+    // Check for dismounted horses nearby that can be mounted
+    const dismountedHorse = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedHorse) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedHorse.x, dismountedHorse.y
+      );
+      if (distance < TILE_SIZE * 2) {
+        return dismountedHorse;
+      }
+    }
+    return null;
+  }
+
+  private handleRideToggle(): void {
+    if (this.isCatching || this.isTransitioning) return;
+
+    if (this.ridingSystem.getIsRiding()) {
+      // Dismount
+      this.ridingSystem.dismount();
+      showCatchMessage(this, 'Dismounted horse', '#888888');
+    } else {
+      // Try to mount
+      const nearestHorse = this.findNearestMountableHorse();
+      if (nearestHorse && this.ridingSystem.canMount(nearestHorse)) {
+        this.ridingSystem.mount(nearestHorse);
+        showCatchMessage(this, 'Mounted horse!', '#4ade80');
+      } else {
+        showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
+      }
+    }
   }
 
   private createCollectibles(): void {

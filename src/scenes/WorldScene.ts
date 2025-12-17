@@ -11,6 +11,7 @@ import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '..
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
+import { RidingSystem } from '../systems/RidingSystem';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -43,6 +44,8 @@ export class WorldScene extends Phaser.Scene {
   private playerAnimator!: PlayerAnimator;
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
+  private ridingSystem!: RidingSystem;
+  private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({ key: SCENES.WORLD });
@@ -76,6 +79,16 @@ export class WorldScene extends Phaser.Scene {
     this.fetchSystem = new FetchSystem(this, this.player);
     this.fetchSystem.setCompanion(this.companionSystem.getSprite());
     this.companionSystem.setFetchSystem(this.fetchSystem);
+
+    // Initialize riding system
+    this.ridingSystem = new RidingSystem(this);
+    this.ridingSystem.init(this.player);
+
+    // Add colliders for dismounted horse if one exists
+    const dismountedHorse = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedHorse) {
+      this.physics.add.collider(dismountedHorse, this.trees);
+    }
 
     // Add overlap detection for home zone entry
     this.physics.add.overlap(this.player, this.homeZone, () => this.goHome());
@@ -139,6 +152,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateDepthSorting();
     this.companionSystem.update();
     this.fetchSystem.update();
+    this.ridingSystem.update();
 
     // Handle water effects
     this.handleWaterEffects(delta, wasInWater);
@@ -153,9 +167,18 @@ export class WorldScene extends Phaser.Scene {
       this.handleInteraction();
     }
 
-    // Y button (3) - Go Home
+    // Y button (3) - Mount/Dismount horse if applicable, else Go Home
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      this.goHome();
+      if (this.ridingSystem.getIsRiding()) {
+        this.handleRideToggle();
+      } else {
+        const nearHorse = this.findNearestMountableHorse();
+        if (nearHorse) {
+          this.handleRideToggle();
+        } else {
+          this.goHome();
+        }
+      }
     }
 
     // Start button - Open menu
@@ -187,7 +210,7 @@ export class WorldScene extends Phaser.Scene {
 
   private createUI(): void {
     // Info text
-    this.infoText = this.add.text(16, 16, 'WASD move | SPACE catch | H home', {
+    this.infoText = this.add.text(16, 16, 'WASD move | SPACE catch | H home | R ride', {
       fontSize: '10px',
       color: '#ffffff',
       backgroundColor: '#2d2d44dd',
@@ -1230,6 +1253,14 @@ export class WorldScene extends Phaser.Scene {
           this.openMenu();
         }
       });
+
+      // R key for mounting/dismounting horse
+      this.rideKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.rideKey.on('down', () => {
+        if (!this.isCatching && !this.isTransitioning) {
+          this.handleRideToggle();
+        }
+      });
     }
 
     // Mouse click handler for fetch
@@ -1241,9 +1272,57 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
+  private findNearestMountableHorse(): Phaser.Physics.Arcade.Sprite | null {
+    // In WorldScene, only dismounted horses can be mounted (wild horses must be caught first)
+    const dismountedSprite = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedSprite) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedSprite.x, dismountedSprite.y
+      );
+      if (distance < TILE_SIZE * 3) {
+        return dismountedSprite;
+      }
+    }
+    return null;
+  }
+
+  private handleRideToggle(): void {
+    if (this.ridingSystem.getIsRiding()) {
+      // Dismount
+      const horse = this.ridingSystem.dismount();
+      if (horse) {
+        showCatchMessage(this, 'Dismounted horse', '#888888');
+        SoundManager.playClick();
+        // Reinitialize player animator to restore proper scale
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+        // Show companion again
+        this.companionSystem.setVisible(true);
+        // Add collider for dismounted horse
+        this.physics.add.collider(horse, this.trees);
+      }
+    } else {
+      // Try to mount nearby horse
+      const nearHorse = this.findNearestMountableHorse();
+      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+        if (this.ridingSystem.mount(nearHorse)) {
+          showCatchMessage(this, 'Mounted horse!', '#4ade80');
+          SoundManager.playSuccess();
+          // Hide companion while riding
+          this.companionSystem.setVisible(false);
+        }
+      } else {
+        showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
+      }
+    }
+  }
+
   private goHome(): void {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
+
+    // Handle dismounted horse on scene exit (returns to home pen)
+    this.ridingSystem.onSceneExit();
 
     // Play transition sound
     SoundManager.playClick();
@@ -1267,6 +1346,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
+
     SoundManager.playClick();
 
     this.cameras.main.fadeOut(300, 0, 0, 0);
@@ -1279,6 +1361,9 @@ export class WorldScene extends Phaser.Scene {
   private goToBeach(): void {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
+
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1293,6 +1378,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
+
     SoundManager.playClick();
 
     this.cameras.main.fadeOut(300, 0, 0, 0);
@@ -1305,6 +1393,9 @@ export class WorldScene extends Phaser.Scene {
   private goToJungle(): void {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
+
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1320,11 +1411,22 @@ export class WorldScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Calculate speed with terrain modifiers and run multiplier
+    // Check running/galloping state
     const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
-    let speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
-    if (isRunning) {
-      speed *= PLAYER_RUN_MULTIPLIER;
+
+    // Determine speed based on riding state and terrain
+    let speed: number;
+    if (this.ridingSystem.getIsRiding()) {
+      // Riding speed (not affected by water as much)
+      speed = this.ridingSystem.getRidingSpeed(isRunning);
+      if (this.isInWater) {
+        speed *= 0.7; // Horses still slow down in water, but not as much
+      }
+    } else {
+      speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
+      if (isRunning) {
+        speed *= PLAYER_RUN_MULTIPLIER;
+      }
     }
 
     // Get gamepad input
@@ -1370,14 +1472,18 @@ export class WorldScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle player animations using unified animator
+    // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
 
-    // Update player sprite direction (keep for texture switching)
+    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding()) {
+      this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    }
+
+    // Update player sprite direction
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
-      // PlayerAnimator handles texture changes automatically
+      // RidingSystem will pick up direction changes via velocity in its update()
     }
   }
 

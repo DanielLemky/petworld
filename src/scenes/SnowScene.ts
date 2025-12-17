@@ -11,6 +11,7 @@ import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '..
 import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
+import { RidingSystem } from '../systems/RidingSystem';
 
 const SNOW_PET_TYPES = ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL'];
 
@@ -40,6 +41,8 @@ export class SnowScene extends Phaser.Scene {
   
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
+  private ridingSystem!: RidingSystem;
+  private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super({ key: SCENES.SNOW });
@@ -68,6 +71,16 @@ export class SnowScene extends Phaser.Scene {
     this.fetchSystem = new FetchSystem(this, this.player);
     this.fetchSystem.setCompanion(this.companionSystem.getSprite());
     this.companionSystem.setFetchSystem(this.fetchSystem);
+
+    // Initialize riding system
+    this.ridingSystem = new RidingSystem(this);
+    this.ridingSystem.init(this.player);
+
+    // Add colliders for dismounted horse if one exists
+    const dismountedHorse = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedHorse) {
+      this.physics.add.collider(dismountedHorse, this.trees);
+    }
 
     this.createPets();
     this.createCollectibles();
@@ -100,6 +113,7 @@ export class SnowScene extends Phaser.Scene {
     this.updateDepthSorting();
     this.companionSystem.update();
     this.fetchSystem.update();
+    this.ridingSystem.update();
     this.checkExitZone();
 
     // Handle right stick for fetch aiming
@@ -110,6 +124,19 @@ export class SnowScene extends Phaser.Scene {
     // A button (0) - Interact
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.A)) {
       this.tryInteract();
+    }
+    // Y button (3) - Mount/Dismount horse if applicable, else go to World
+    if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
+      if (this.ridingSystem.getIsRiding()) {
+        this.handleRideToggle();
+      } else {
+        const nearHorse = this.findNearestMountableHorse();
+        if (nearHorse) {
+          this.handleRideToggle();
+        } else {
+          this.goToWorld();
+        }
+      }
     }
     // Start button - Open menu
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.START)) {
@@ -416,6 +443,14 @@ export class SnowScene extends Phaser.Scene {
           this.openMenu();
         }
       });
+
+      // R key for mounting/dismounting horse
+      this.rideKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.rideKey.on('down', () => {
+        if (!this.isCatching && !this.isTransitioning) {
+          this.handleRideToggle();
+        }
+      });
     }
 
     // Mouse click handler for fetch
@@ -527,11 +562,21 @@ export class SnowScene extends Phaser.Scene {
     let velocityY = 0;
     let newDirection = this.playerDirection;
 
-    // Calculate speed with terrain modifiers and run multiplier
+    // Check running/galloping state
     const isRunning = this.shiftKey?.isDown || GamepadManager.isButtonDown(GAMEPAD_BUTTONS.RB);
-    let speed = this.isOnIce ? PLAYER_SPEED * 1.3 : PLAYER_SPEED;
-    if (isRunning) {
-      speed *= PLAYER_RUN_MULTIPLIER;
+
+    // Determine speed based on riding state and terrain
+    let speed: number;
+    if (this.ridingSystem.getIsRiding()) {
+      speed = this.ridingSystem.getRidingSpeed(isRunning);
+      if (this.isOnIce) {
+        speed *= 1.1; // Horse is slightly faster on ice
+      }
+    } else {
+      speed = this.isOnIce ? PLAYER_SPEED * 1.3 : PLAYER_SPEED;
+      if (isRunning) {
+        speed *= PLAYER_RUN_MULTIPLIER;
+      }
     }
     const friction = this.isOnIce ? 0.98 : 1;
 
@@ -594,13 +639,16 @@ export class SnowScene extends Phaser.Scene {
 
     this.player.setVelocity(velocityX, velocityY);
 
-    // Handle player animations using unified animator
+    // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
-    this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+
+    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding()) {
+      this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
+    }
 
     if (newDirection !== this.playerDirection) {
       this.playerDirection = newDirection;
-      // PlayerAnimator handles texture changes automatically
     }
   }
 
@@ -735,9 +783,50 @@ export class SnowScene extends Phaser.Scene {
     }
   }
 
+  private findNearestMountableHorse(): Phaser.Physics.Arcade.Sprite | null {
+    const dismountedSprite = this.ridingSystem.getDismountedHorseSprite();
+    if (dismountedSprite) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedSprite.x, dismountedSprite.y
+      );
+      if (distance < TILE_SIZE * 3) {
+        return dismountedSprite;
+      }
+    }
+    return null;
+  }
+
+  private handleRideToggle(): void {
+    if (this.ridingSystem.getIsRiding()) {
+      const horse = this.ridingSystem.dismount();
+      if (horse) {
+        showCatchMessage(this, 'Dismounted horse', '#888888');
+        SoundManager.playClick();
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+        this.companionSystem.setVisible(true);
+        this.physics.add.collider(horse, this.trees);
+      }
+    } else {
+      const nearHorse = this.findNearestMountableHorse();
+      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+        if (this.ridingSystem.mount(nearHorse)) {
+          showCatchMessage(this, 'Mounted horse!', '#4ade80');
+          SoundManager.playSuccess();
+          this.companionSystem.setVisible(false);
+        }
+      } else {
+        showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
+      }
+    }
+  }
+
   private goToWorld(): void {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
+
+    // Handle dismounted horse on scene exit
+    this.ridingSystem.onSceneExit();
 
     SoundManager.playClick();
 
