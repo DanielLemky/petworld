@@ -77,6 +77,11 @@ export class BeachScene extends Phaser.Scene {
     // Add collider for dismounted horses
     this.ridingSystem.addCollider(this.trees);
 
+    // Hide companion if player is riding (restored from scene transition)
+    if (this.ridingSystem.getIsRiding()) {
+      this.companionSystem.setVisible(false);
+    }
+
     this.createPets();
     this.createCollectibles();
     this.setupInput();

@@ -38,6 +38,10 @@ export class RidingSystem {
   // Track dismounted horses across scenes (static to persist between scene instances)
   private static dismountedHorses: Map<string, DismountedHorse> = new Map();
 
+  // Track riding state across scenes (static to persist between scene instances)
+  private static currentlyRiding: boolean = false;
+  private static currentlyRidingHorseId: string | null = null;
+
   // Local sprite reference for dismounted horse in current scene
   private dismountedHorseSprite: Phaser.Physics.Arcade.Sprite | null = null;
 
@@ -48,6 +52,14 @@ export class RidingSystem {
   // Initialize with player reference
   init(player: Phaser.Physics.Arcade.Sprite): void {
     this.player = player;
+
+    // Restore riding state if player was riding when transitioning scenes
+    if (RidingSystem.currentlyRiding && RidingSystem.currentlyRidingHorseId) {
+      this.isRiding = true;
+      this.mountedHorseId = RidingSystem.currentlyRidingHorseId;
+      this.updateRidingSprite(this.currentDirection);
+      this.player.setScale(RIDING_CONFIG.RIDING_SCALE);
+    }
 
     // Check for dismounted horse in this scene
     this.restoreDismountedHorse();
@@ -83,6 +95,10 @@ export class RidingSystem {
 
     this.isRiding = true;
     this.mountedHorseId = petId;
+
+    // Update static state for scene transition persistence
+    RidingSystem.currentlyRiding = true;
+    RidingSystem.currentlyRidingHorseId = petId;
 
     // Hide the horse sprite
     horseSprite.setVisible(false);
@@ -124,6 +140,10 @@ export class RidingSystem {
     // Reset riding state
     this.isRiding = false;
     this.mountedHorseId = null;
+
+    // Clear static state
+    RidingSystem.currentlyRiding = false;
+    RidingSystem.currentlyRidingHorseId = null;
 
     // Restore player normal sprite and scale
     this.restorePlayerSprite();

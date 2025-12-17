@@ -84,6 +84,11 @@ export class WorldScene extends Phaser.Scene {
     this.ridingSystem = new RidingSystem(this);
     this.ridingSystem.init(this.player);
 
+    // Hide companion if player is riding (restored from scene transition)
+    if (this.ridingSystem.getIsRiding()) {
+      this.companionSystem.setVisible(false);
+    }
+
     // Add colliders for dismounted horse if one exists
     const dismountedHorse = this.ridingSystem.getDismountedHorseSprite();
     if (dismountedHorse) {
