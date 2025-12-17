@@ -35,6 +35,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image('puppy_left_ball', '/assets/sprites/puppy_left_ball.png');
     this.load.image('puppy_right_ball', '/assets/sprites/puppy_right_ball.png');
 
+    // Load jungle tree sprite
+    this.load.image('jungle_tree', '/assets/sprites/jungle_tree.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
@@ -1707,118 +1710,7 @@ export class BootScene extends Phaser.Scene {
     g3.generateTexture('jungle_river', size, size);
     g3.destroy();
 
-    // Jungle tree (tropical tree with broad leaves and bananas)
-    const g4 = this.make.graphics({ x: 0, y: 0 });
-    const treeWidth = TILE_SIZE * 4;
-    const treeHeight = TILE_SIZE * 6;
 
-    // Shadow
-    g4.fillStyle(PALETTE.SHADOW, 0.3);
-    g4.fillEllipse(treeWidth / 2, treeHeight - 6, 44, 14);
-
-    // Trunk (thick tropical trunk)
-    g4.fillStyle(0x5d4037, 1);
-    g4.fillRect(26, 40, 12, 54);
-
-    // Trunk shading (left side darker)
-    g4.fillStyle(0x4e342e, 1);
-    g4.fillRect(26, 40, 4, 54);
-
-    // Trunk highlight (right side)
-    g4.fillStyle(0x6d4c41, 1);
-    g4.fillRect(34, 44, 3, 46);
-
-    // Trunk ring textures
-    g4.fillStyle(0x3e2723, 0.7);
-    for (let i = 0; i < 6; i++) {
-      g4.fillRect(26, 44 + i * 9, 12, 2);
-    }
-
-    // Large tropical leaves radiating outward
-    // Left drooping leaves
-    g4.fillStyle(0x1b5e20, 1);
-    g4.fillRect(0, 20, 8, 28);
-    g4.fillRect(4, 16, 10, 8);
-    g4.fillRect(8, 24, 8, 20);
-
-    // More left leaves (lighter)
-    g4.fillStyle(0x2e7d32, 1);
-    g4.fillRect(2, 22, 6, 18);
-    g4.fillRect(10, 18, 8, 16);
-
-    // Right drooping leaves
-    g4.fillStyle(0x1b5e20, 1);
-    g4.fillRect(56, 20, 8, 28);
-    g4.fillRect(50, 16, 10, 8);
-    g4.fillRect(48, 24, 8, 20);
-
-    // More right leaves (lighter)
-    g4.fillStyle(0x2e7d32, 1);
-    g4.fillRect(56, 22, 6, 18);
-    g4.fillRect(46, 18, 8, 16);
-
-    // Center top foliage mass
-    g4.fillStyle(0x1b5e20, 1);
-    g4.fillRect(16, 8, 32, 20);
-    g4.fillRect(12, 14, 40, 16);
-
-    // Top leaves pointing up
-    g4.fillStyle(0x2e7d32, 1);
-    g4.fillRect(20, 2, 6, 14);
-    g4.fillRect(28, 0, 8, 12);
-    g4.fillRect(38, 2, 6, 14);
-
-    // Middle foliage layer
-    g4.fillStyle(0x388e3c, 1);
-    g4.fillRect(14, 20, 36, 14);
-
-    // Leaf vein details (lighter streaks)
-    g4.fillStyle(0x4caf50, 1);
-    g4.fillRect(18, 10, 2, 12);
-    g4.fillRect(32, 6, 2, 14);
-    g4.fillRect(44, 10, 2, 12);
-    g4.fillRect(4, 26, 2, 14);
-    g4.fillRect(58, 26, 2, 14);
-
-    // Leaf highlights
-    g4.fillStyle(0x66bb6a, 1);
-    g4.fillRect(22, 4, 4, 6);
-    g4.fillRect(36, 4, 4, 6);
-    g4.fillRect(24, 16, 6, 4);
-    g4.fillRect(34, 18, 6, 4);
-
-    // Banana bunch (hanging from left side)
-    g4.fillStyle(0xffeb3b, 1);
-    g4.fillRect(10, 32, 4, 8);
-    g4.fillRect(14, 34, 3, 6);
-    g4.fillRect(8, 34, 3, 6);
-
-    // Banana shadows
-    g4.fillStyle(0xfbc02d, 1);
-    g4.fillRect(10, 36, 2, 4);
-    g4.fillRect(14, 36, 2, 4);
-
-    // Banana stem
-    g4.fillStyle(0x558b2f, 1);
-    g4.fillRect(11, 28, 3, 5);
-
-    // Second banana bunch (right side)
-    g4.fillStyle(0xffeb3b, 1);
-    g4.fillRect(48, 30, 4, 8);
-    g4.fillRect(52, 32, 3, 6);
-    g4.fillRect(46, 32, 3, 6);
-
-    // Banana shadows
-    g4.fillStyle(0xfbc02d, 1);
-    g4.fillRect(48, 34, 2, 4);
-    g4.fillRect(52, 34, 2, 4);
-
-    // Banana stem
-    g4.fillStyle(0x558b2f, 1);
-    g4.fillRect(49, 26, 3, 5);
-
-    g4.generateTexture('jungle_tree', treeWidth, treeHeight);
-    g4.destroy();
 
     // Vine decoration
     const g5 = this.make.graphics({ x: 0, y: 0 });
