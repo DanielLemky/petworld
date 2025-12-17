@@ -456,38 +456,47 @@ export class HomeScene extends Phaser.Scene {
     const verticalGateStartY = startY + Math.floor(height / 2) - 1;
     const verticalGateEndY = verticalGateStartY + 2;
 
-    // Top fence (with gate)
+    // Top fence (with gate) - horizontal
     for (let x = startX; x < startX + width; x++) {
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
-      this.createFencePost(fences, x, startY);
+      this.createFencePost(fences, x, startY, false);
     }
 
-    // Bottom fence (with gate)
+    // Bottom fence (with gate) - horizontal
     for (let x = startX; x < startX + width; x++) {
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
-      this.createFencePost(fences, x, startY + height - 1);
+      this.createFencePost(fences, x, startY + height - 1, false);
     }
 
-    // Left fence (with gate)
+    // Left fence (with gate) - vertical
     for (let y = startY + 1; y < startY + height - 1; y++) {
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
-      this.createFencePost(fences, startX, y);
+      this.createFencePost(fences, startX, y, true);
     }
 
-    // Right fence (with gate)
+    // Right fence (with gate) - vertical
     for (let y = startY + 1; y < startY + height - 1; y++) {
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
-      this.createFencePost(fences, startX + width - 1, y);
+      this.createFencePost(fences, startX + width - 1, y, true);
     }
   }
 
-  private createFencePost(fences: Phaser.Physics.Arcade.StaticGroup, tileX: number, tileY: number): void {
+  private createFencePost(fences: Phaser.Physics.Arcade.StaticGroup, tileX: number, tileY: number, isVertical: boolean = false): void {
     const x = tileX * TILE_SIZE + TILE_SIZE / 2;
     const y = tileY * TILE_SIZE + TILE_SIZE / 2;
 
-    // Visual fence post using sprite (scaled to 32px / 2 tiles)
-    const post = this.add.image(x, y, 'fence');
-    post.setScale(32 / 1191); // Scale 1191px sprite to 32px (0.027)
+    // Visual fence post using appropriate sprite based on orientation
+    const spriteKey = isVertical ? 'fence_vertical' : 'fence';
+    const post = this.add.image(x, y, spriteKey);
+
+    if (isVertical) {
+      // Vertical fence: scale to fit tile width (32px for 2-tile visual)
+      post.setScale(32 / 424); // Scale 424px sprite to 32px (0.075)
+    } else {
+      // Horizontal fence: scale to 32px width
+      post.setScale(32 / 1191); // Scale 1191px sprite to 32px (0.027)
+    }
+
     post.setDepth(tileY * TILE_SIZE);
 
     // Physics collider (unchanged)
@@ -649,28 +658,28 @@ export class HomeScene extends Phaser.Scene {
     const verticalGateStartY = startY + Math.floor(height / 2) - 1;
     const verticalGateEndY = verticalGateStartY + 2;
 
-    // Top fence (with gate)
+    // Top fence (with gate) - horizontal
     for (let x = startX; x < startX + width; x++) {
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
-      this.createFencePost(fences, x, startY);
+      this.createFencePost(fences, x, startY, false);
     }
 
-    // Bottom fence (with gate)
+    // Bottom fence (with gate) - horizontal
     for (let x = startX; x < startX + width; x++) {
       if (x >= horizontalGateStartX && x < horizontalGateEndX) continue; // Skip gate
-      this.createFencePost(fences, x, startY + height - 1);
+      this.createFencePost(fences, x, startY + height - 1, false);
     }
 
-    // Left fence (with gate)
+    // Left fence (with gate) - vertical
     for (let y = startY + 1; y < startY + height - 1; y++) {
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
-      this.createFencePost(fences, startX, y);
+      this.createFencePost(fences, startX, y, true);
     }
 
-    // Right fence (with gate)
+    // Right fence (with gate) - vertical
     for (let y = startY + 1; y < startY + height - 1; y++) {
       if (y >= verticalGateStartY && y < verticalGateEndY) continue; // Skip gate
-      this.createFencePost(fences, startX + width - 1, y);
+      this.createFencePost(fences, startX + width - 1, y, true);
     }
   }
 

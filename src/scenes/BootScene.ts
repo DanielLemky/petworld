@@ -41,8 +41,9 @@ export class BootScene extends Phaser.Scene {
     // Load waterfall sprite
     this.load.image('waterfall', '/assets/sprites/waterfall.png');
 
-    // Load fence sprite
+    // Load fence sprites
     this.load.image('fence', '/assets/sprites/fence.png');
+    this.load.image('fence_vertical', '/assets/sprites/fence_vertical.png');
 
     // Generate other sprites programmatically
     this.createPetSprites();
