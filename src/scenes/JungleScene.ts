@@ -236,6 +236,17 @@ export class JungleScene extends Phaser.Scene {
         pos.y * TILE_SIZE + treeHeight / 2,
         'jungle_tree'
       );
+
+      // Scale jungle tree sprite to fit expected dimensions (maintains aspect ratio)
+      const spriteWidth = 1568;
+      const spriteHeight = 2720;
+      const targetWidth = treeWidth;
+      const targetHeight = treeHeight;
+      const scaleX = targetWidth / spriteWidth;
+      const scaleY = targetHeight / spriteHeight;
+      const scale = Math.min(scaleX, scaleY); // 0.0353
+      tree.setScale(scale);
+
       tree.setDepth(pos.y * TILE_SIZE + treeHeight);
 
       const collider = this.trees.create(
