@@ -4,23 +4,35 @@ import { getSpriteKey, applyPetSpriteConfig } from './PetSpriteConfig';
 import { TILE_SIZE, HORSE_RIDE_SPEED, HORSE_GALLOP_MULTIPLIER } from '../utils/constants';
 import { PLAYER_CONFIG } from './PlayerConfig';
 
-// Riding configuration
+// Riding configuration - dynamically calculated based on visual sprite dimensions
+const RIDING_SCALE = 0.05;
+const RIDING_SPRITE_HEIGHT = 1790;
+
+// Collision body uses same dimensions as walking (800x400) but positioned at horse feet
+const RIDING_BODY_WIDTH = 800;
+const RIDING_BODY_HEIGHT = 400;
+
+// Calculate offsets based on visual sprite dimensions
+const ridingVisualHeight = RIDING_SPRITE_HEIGHT * RIDING_SCALE;  // ~89.5px
+const ridingFeetPosition = ridingVisualHeight * 0.88; // 88% down from sprite origin
+const ridingFeetWorldPos = ridingFeetPosition / RIDING_SCALE; // Convert to world coords (1575.2)
+// Position collision body so bottom aligns with horse feet
+const RIDING_BODY_OFFSET_Y = ridingFeetWorldPos - RIDING_BODY_HEIGHT; // 1175.2
+
 const RIDING_CONFIG = {
   // Player scale when riding - larger than normal to compensate for smaller sprite dimensions
   // Riding sprites are ~693x1790 vs regular player ~1568x2720, so scale up ~2.2x
-  RIDING_SCALE: 0.05,
+  RIDING_SCALE,
 
-  // Collision body for riding sprite (693x1790)
-  // Positioned at horse's feet, similar scaled size to normal player collision
-  RIDING_BODY_WIDTH: 360,     // ~18px scaled at 0.05
-  RIDING_BODY_HEIGHT: 180,    // ~9px scaled at 0.05
-  RIDING_BODY_OFFSET_X: 165,  // Center horizontally (693-360)/2
-  RIDING_BODY_OFFSET_Y: 1600, // Near bottom of sprite (horse's feet)
+  // Collision body for riding sprite - same size as walking but positioned at horse feet
+  RIDING_BODY_WIDTH,      // 800 (same as walking)
+  RIDING_BODY_HEIGHT,     // 400 (same as walking)
+  RIDING_BODY_OFFSET_X: 400, // Center horizontally (same as walking)
+  RIDING_BODY_OFFSET_Y,   // 1175.2 (positioned at horse's feet)
 
   // Dismounted horse behavior
   HORSE_IDLE_WANDER_SPEED: 10,
 };
-
 // Sprite keys for riding
 const RIDING_SPRITES = {
   UP: 'player_riding_horse_up',
@@ -64,14 +76,12 @@ export class RidingSystem {
   init(player: Phaser.Physics.Arcade.Sprite): void {
     this.player = player;
 
-    // Store original collision body values (before any modifications)
+    // Store original collision body values (in world coordinates)
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     if (body) {
-      // Store in sprite coordinate space (unscaled)
-      this.originalBodySize = { width: body.width / this.player.scaleX, height: body.height / this.player.scaleY };
-      this.originalBodyOffset = { x: body.offset.x / this.player.scaleX, y: body.offset.y / this.player.scaleY };
+      this.originalBodySize = { width: body.width, height: body.height };
+      this.originalBodyOffset = { x: body.offset.x, y: body.offset.y };
     }
-
     // Restore riding state if player was riding when transitioning scenes
     if (RidingSystem.currentlyRiding && RidingSystem.currentlyRidingHorseId) {
       this.isRiding = true;
@@ -228,6 +238,7 @@ export class RidingSystem {
   }
 
   // Restore player to walking sprite
+  // Restore player to normal walking state
   private restorePlayerSprite(): void {
     if (!this.player) return;
 

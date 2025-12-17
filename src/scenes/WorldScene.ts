@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, PET_TYPES } from '../utils/constants';
+import { PLAYER_CONFIG } from '../systems/PlayerConfig';
 import { CatchingUI, type CatchResult } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -936,9 +937,22 @@ export class WorldScene extends Phaser.Scene {
 
     // Scale will be set by PlayerAnimator
 
-    // Adjust collision box to be at feet level
+    // Adjust collision box to be at feet level - dynamically calculated based on visual sprite dimensions
+    // Walking sprite dimensions: ~1568x2720 pixels, scaled to PLAYER_CONFIG.NORMAL_SCALE (0.0225)
+    const WALKING_SPRITE_HEIGHT = 2720;
+    const walkingScale = PLAYER_CONFIG.NORMAL_SCALE;
+
+    // Calculate visual sprite height
+    const visualHeight = WALKING_SPRITE_HEIGHT * walkingScale; // ~61.2px
+
+    // Set collision body size (maintain 800x400 in world coordinates)
     this.player.setSize(800, 400);
-    this.player.setOffset(400, 2400);
+
+    // Calculate offset to position collision body at feet (88% down from sprite origin)
+    const feetPosition = visualHeight * 0.88; // ~53.86px from sprite origin
+    const worldOffsetY = feetPosition / walkingScale; // Convert to world coordinates (~2394)
+
+    this.player.setOffset(400, Math.round(worldOffsetY)); // Center horizontally, feet position
 
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(this.player.y);
