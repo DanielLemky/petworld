@@ -111,8 +111,9 @@ export const PET_TYPES = {
   TURTLE: { primary: 0x2e8b57, secondary: 0x8fbc8f, name: 'Turtle', difficulty: 2 },
   STARFISH: { primary: 0xffa07a, secondary: 0xff7f50, name: 'Starfish', difficulty: 1 },
   // Mountain pets
-  GOAT: { primary: 0xd7ccc8, secondary: 0x8d6e63, name: 'Mountain Goat', difficulty: 3 },
-  EAGLE: { primary: 0x5d4037, secondary: 0xffd54f, name: 'Eagle', difficulty: 4 },
+   GOAT: { primary: 0xd7ccc8, secondary: 0x8d6e63, name: 'Mountain Goat', difficulty: 3 },
+   HORSE: { primary: 0x8b4513, secondary: 0xd2691e, name: 'Horse', difficulty: 5 }, // Hardest to catch
+   EAGLE: { primary: 0x5d4037, secondary: 0xffd54f, name: 'Eagle', difficulty: 4 },
   FOX: { primary: 0xff7043, secondary: 0xffffff, name: 'Fox', difficulty: 4 },
   BEAR_CUB: { primary: 0x6d4c41, secondary: 0x4e342e, name: 'Bear Cub', difficulty: 4 },
   // Jungle pets
