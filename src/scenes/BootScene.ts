@@ -38,6 +38,9 @@ export class BootScene extends Phaser.Scene {
     // Load jungle tree sprite
     this.load.image('jungle_tree', '/assets/sprites/jungle_tree.png');
 
+    // Load waterfall sprite
+    this.load.image('waterfall', '/assets/sprites/waterfall.png');
+
     // Generate other sprites programmatically
     this.createPetSprites();
     this.createEnvironmentSprites();
@@ -1736,36 +1739,7 @@ export class BootScene extends Phaser.Scene {
     g5.generateTexture('vine', vineWidth, vineHeight);
     g5.destroy();
 
-    // Waterfall (2x3 tiles)
-    const g6 = this.make.graphics({ x: 0, y: 0 });
-    const waterfallWidth = TILE_SIZE * 2;
-    const waterfallHeight = TILE_SIZE * 3;
 
-    // Background rock
-    g6.fillStyle(0x505050, 1);
-    g6.fillRect(0, 0, waterfallWidth, waterfallHeight);
-
-    // Water flowing
-    g6.fillStyle(0x87ceeb, 1);
-    g6.fillRect(8, 0, 16, waterfallHeight);
-
-    // Water foam/white streaks
-    g6.fillStyle(0xe0f0ff, 0.9);
-    g6.fillRect(10, 0, 3, waterfallHeight);
-    g6.fillRect(18, 0, 2, waterfallHeight);
-
-    // Mist at bottom
-    g6.fillStyle(0xffffff, 0.5);
-    g6.fillRect(4, waterfallHeight - 8, 24, 8);
-
-    // Sparkles
-    g6.fillStyle(0xffffff, 0.8);
-    g6.fillRect(12, 8, 2, 2);
-    g6.fillRect(16, 20, 2, 2);
-    g6.fillRect(11, 36, 2, 2);
-
-    g6.generateTexture('waterfall', waterfallWidth, waterfallHeight);
-    g6.destroy();
 
     // Jungle flower decoration (colorful)
     const g7 = this.make.graphics({ x: 0, y: 0 });
