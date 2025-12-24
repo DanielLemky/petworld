@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, getCorrectPenForPet, getPenConfigById } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, getCorrectPenForPet, getPenConfigById, isChristmasSeason } from '../utils/constants';
 import { PetManager } from '../systems/PetManager';
 import type { CaughtPet } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -173,6 +173,11 @@ export class HomeScene extends Phaser.Scene {
     this.createFarmhouse(10, 5);
     this.createBarn(55, 5);
 
+    // Create Christmas tree in center of farm (Dec 1 - Jan 6)
+    if (isChristmasSeason()) {
+      this.createChristmasTree();
+    }
+
     // Create the 6 pens (3x larger, spread across bigger farm)
     // Row 1: Meadow and Snow
     this.createPen('meadow', 5, 20, PEN_WIDTH, PEN_HEIGHT);
@@ -337,6 +342,23 @@ export class HomeScene extends Phaser.Scene {
         collider.refreshBody();
       }
     }
+  }
+
+  private createChristmasTree(): void {
+    // 3x normal tree size (normal is TILE_SIZE * 4 x TILE_SIZE * 6)
+    const targetWidth = TILE_SIZE * 4 * 3;   // 192px
+    const targetHeight = TILE_SIZE * 6 * 3;  // 288px
+
+    // Position in center of farm on main path
+    const treeX = 82 * TILE_SIZE;
+    const treeY = 17 * TILE_SIZE;
+
+    const tree = this.add.image(treeX, treeY + targetHeight / 2, 'christmas_tree');
+
+    // Scale to target size (image is 637 x 1050)
+    const scale = Math.min(targetWidth / 637, targetHeight / 1050);
+    tree.setScale(scale);
+    tree.setDepth(treeY + targetHeight);
   }
 
   private createPen(penId: string, startX: number, startY: number, width: number, height: number): void {

@@ -10,6 +10,16 @@ export const PLAYER_RUN_MULTIPLIER = 2; // 2x speed when running
 export const HORSE_RIDE_SPEED = 225; // 1.5x walk speed
 export const HORSE_GALLOP_MULTIPLIER = 2; // 2x riding speed = 450 (faster than run at 300)
 
+// Seasonal features
+export function isChristmasSeason(): boolean {
+  const now = new Date();
+  const month = now.getMonth(); // 0-indexed: 0 = Jan, 11 = Dec
+  const day = now.getDate();
+
+  // Dec 1 - Jan 6
+  return (month === 11) || (month === 0 && day <= 6);
+}
+
 // Stardew Valley inspired color palette
 export const PALETTE = {
   // Grass colors
