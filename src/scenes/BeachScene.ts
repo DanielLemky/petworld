@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, isChristmasSeason } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -90,6 +90,11 @@ export class BeachScene extends Phaser.Scene {
     this.cameras.main.setZoom(1.0);
 
     this.createUI();
+
+    // Christmas snowfall effect (Dec 1 - Jan 6)
+    if (isChristmasSeason()) {
+      this.createChristmasSnowfall();
+    }
 
     SoundManager.playMusic('beach');
   }
@@ -840,5 +845,27 @@ export class BeachScene extends Phaser.Scene {
 
     this.tweens.add({ targets: message, alpha: 1, scale: 1, duration: 200, ease: 'Back.easeOut' });
     this.tweens.add({ targets: message, alpha: 0, y: message.y - 30, duration: 500, delay: 1500, ease: 'Quad.easeIn', onComplete: () => message.destroy() });
+  }
+
+  private createChristmasSnowfall(): void {
+    const g = this.make.graphics({ x: 0, y: 0 });
+    g.fillStyle(0xffffff, 0.8);
+    g.fillRect(0, 0, 2, 2);
+    g.generateTexture('snowflake', 2, 2);
+    g.destroy();
+
+    const snowflakes = this.add.particles(0, 0, 'snowflake', {
+      x: { min: 0, max: this.cameras.main.width },
+      y: -10,
+      lifespan: 8000,
+      speedY: { min: 30, max: 60 },
+      speedX: { min: -10, max: 10 },
+      scale: { min: 0.5, max: 1 },
+      alpha: { start: 0.8, end: 0 },
+      frequency: 40,
+      blendMode: 'ADD',
+    });
+    snowflakes.setScrollFactor(0);
+    snowflakes.setDepth(999);
   }
 }
