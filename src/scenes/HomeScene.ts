@@ -1672,5 +1672,31 @@ export class HomeScene extends Phaser.Scene {
     });
     snowflakes.setScrollFactor(0);
     snowflakes.setDepth(999);
+
+    // Add snow accumulation
+    this.createSnowAccumulation();
+  }
+
+  private createSnowAccumulation(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    const snowOverlay = this.add.rectangle(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      0xffffff,
+      0
+    );
+    snowOverlay.setScrollFactor(0);
+    snowOverlay.setDepth(-9);
+
+    this.tweens.add({
+      targets: snowOverlay,
+      fillAlpha: 0.9,
+      duration: 120000,
+      ease: 'Sine.easeOut'
+    });
   }
 }

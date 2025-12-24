@@ -1211,5 +1211,58 @@ export class MountainScene extends Phaser.Scene {
     });
     snowflakes.setScrollFactor(0);
     snowflakes.setDepth(999);
+
+    // Add snow accumulation effects
+    this.createSnowAccumulation();
+    this.createSurfaceSnow();
+  }
+
+  private createSnowAccumulation(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
+    const snowOverlay = this.add.rectangle(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      0xffffff,
+      0
+    );
+    snowOverlay.setScrollFactor(0);
+    snowOverlay.setDepth(-9);
+
+    this.tweens.add({
+      targets: snowOverlay,
+      fillAlpha: 0.9,
+      duration: 120000,
+      ease: 'Sine.easeOut'
+    });
+  }
+
+  private createSurfaceSnow(): void {
+    // Create snow cap texture
+    const g = this.make.graphics({ x: 0, y: 0 });
+    g.fillStyle(0xffffff, 0.9);
+    g.fillEllipse(16, 4, 32, 8);
+    g.generateTexture('snow_cap', 32, 8);
+    g.destroy();
+
+    // Add snow caps to boulders
+    this.boulders.children.each((boulder: Phaser.GameObjects.GameObject) => {
+      const sprite = boulder as Phaser.Physics.Arcade.Sprite;
+      const snowCap = this.add.image(sprite.x, sprite.y - 10, 'snow_cap');
+      snowCap.setDepth(sprite.depth + 1);
+      snowCap.setAlpha(0);
+
+      this.tweens.add({
+        targets: snowCap,
+        alpha: 1,
+        duration: 60000,
+        delay: Math.random() * 30000,
+        ease: 'Sine.easeOut'
+      });
+      return true;
+    });
   }
 }
