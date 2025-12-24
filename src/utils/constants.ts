@@ -20,6 +20,49 @@ export function isChristmasSeason(): boolean {
   return (month === 11) || (month === 0 && day <= 6);
 }
 
+// Snow accumulation tracking (persists across scene changes)
+let snowAccumulationLevel = 0;
+const SNOW_TARGET_LEVEL = 0.9;
+const SNOW_DURATION = 300000; // 5 minutes
+
+export function getSnowAccumulation(): number {
+  return snowAccumulationLevel;
+}
+
+export function setSnowAccumulation(level: number): void {
+  snowAccumulationLevel = Math.min(Math.max(level, 0), SNOW_TARGET_LEVEL);
+}
+
+export function createSnowAccumulation(scene: Phaser.Scene): void {
+  const width = scene.cameras.main.width;
+  const height = scene.cameras.main.height;
+  const currentLevel = getSnowAccumulation();
+
+  const snowOverlay = scene.add.rectangle(
+    width / 2,
+    height / 2,
+    width,
+    height,
+    0xffffff,
+    currentLevel
+  );
+  snowOverlay.setScrollFactor(0);
+  snowOverlay.setDepth(-9);
+
+  if (currentLevel < SNOW_TARGET_LEVEL) {
+    const remainingDuration = SNOW_DURATION * (1 - currentLevel / SNOW_TARGET_LEVEL);
+    scene.tweens.add({
+      targets: snowOverlay,
+      fillAlpha: SNOW_TARGET_LEVEL,
+      duration: remainingDuration,
+      ease: 'Sine.easeOut',
+      onUpdate: () => {
+        setSnowAccumulation(snowOverlay.fillAlpha);
+      }
+    });
+  }
+}
+
 // Stardew Valley inspired color palette
 export const PALETTE = {
   // Grass colors

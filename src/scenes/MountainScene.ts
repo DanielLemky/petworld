@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, isChristmasSeason } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, isChristmasSeason, createSnowAccumulation } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -1213,31 +1213,8 @@ export class MountainScene extends Phaser.Scene {
     snowflakes.setDepth(999);
 
     // Add snow accumulation effects
-    this.createSnowAccumulation();
+    createSnowAccumulation(this);
     this.createSurfaceSnow();
-  }
-
-  private createSnowAccumulation(): void {
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
-
-    const snowOverlay = this.add.rectangle(
-      width / 2,
-      height / 2,
-      width,
-      height,
-      0xffffff,
-      0
-    );
-    snowOverlay.setScrollFactor(0);
-    snowOverlay.setDepth(-9);
-
-    this.tweens.add({
-      targets: snowOverlay,
-      fillAlpha: 0.9,
-      duration: 120000,
-      ease: 'Sine.easeOut'
-    });
   }
 
   private createSurfaceSnow(): void {

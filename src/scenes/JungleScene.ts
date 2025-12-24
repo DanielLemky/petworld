@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT, isChristmasSeason } from '../utils/constants';
+import { SCENES, TILE_SIZE, PLAYER_SPEED, PLAYER_RUN_MULTIPLIER, PLAYER_HEIGHT } from '../utils/constants';
 import { CatchingUI } from '../ui/CatchingUI';
 import { PetManager } from '../systems/PetManager';
 import { SoundManager } from '../systems/SoundManager';
@@ -92,11 +92,6 @@ export class JungleScene extends Phaser.Scene {
 
     this.createUI();
     this.createMistEffect();
-
-    // Christmas snowfall effect (Dec 1 - Jan 6)
-    if (isChristmasSeason()) {
-      this.createChristmasSnowfall();
-    }
 
     // Play jungle music
     SoundManager.playMusic('jungle');
@@ -1012,80 +1007,5 @@ export class JungleScene extends Phaser.Scene {
 
   private updateInventoryUI(): void {
     this.inventoryText.setText(this.getInventoryText());
-  }
-
-  private createChristmasSnowfall(): void {
-    const g = this.make.graphics({ x: 0, y: 0 });
-    g.fillStyle(0xffffff, 0.8);
-    g.fillRect(0, 0, 2, 2);
-    g.generateTexture('snowflake', 2, 2);
-    g.destroy();
-
-    const snowflakes = this.add.particles(0, 0, 'snowflake', {
-      x: { min: 0, max: this.cameras.main.width },
-      y: -10,
-      lifespan: 8000,
-      speedY: { min: 30, max: 60 },
-      speedX: { min: -10, max: 10 },
-      scale: { min: 0.5, max: 1 },
-      alpha: { start: 0.8, end: 0 },
-      frequency: 40,
-      blendMode: 'ADD',
-    });
-    snowflakes.setScrollFactor(0);
-    snowflakes.setDepth(999);
-
-    // Add snow accumulation effects
-    this.createSnowAccumulation();
-    this.createSurfaceSnow();
-  }
-
-  private createSnowAccumulation(): void {
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
-
-    const snowOverlay = this.add.rectangle(
-      width / 2,
-      height / 2,
-      width,
-      height,
-      0xffffff,
-      0
-    );
-    snowOverlay.setScrollFactor(0);
-    snowOverlay.setDepth(-9);
-
-    this.tweens.add({
-      targets: snowOverlay,
-      fillAlpha: 0.9,
-      duration: 120000,
-      ease: 'Sine.easeOut'
-    });
-  }
-
-  private createSurfaceSnow(): void {
-    // Create snow cap texture
-    const g = this.make.graphics({ x: 0, y: 0 });
-    g.fillStyle(0xffffff, 0.9);
-    g.fillEllipse(16, 4, 32, 8);
-    g.generateTexture('snow_cap', 32, 8);
-    g.destroy();
-
-    // Add snow caps to jungle trees
-    this.trees.children.each((tree: Phaser.GameObjects.GameObject) => {
-      const sprite = tree as Phaser.Physics.Arcade.Sprite;
-      const snowCap = this.add.image(sprite.x, sprite.y - 40, 'snow_cap');
-      snowCap.setDepth(sprite.depth + 1);
-      snowCap.setAlpha(0);
-
-      this.tweens.add({
-        targets: snowCap,
-        alpha: 1,
-        duration: 60000,
-        delay: Math.random() * 30000,
-        ease: 'Sine.easeOut'
-      });
-      return true;
-    });
   }
 }
