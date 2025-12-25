@@ -10,6 +10,11 @@ export const PLAYER_RUN_MULTIPLIER = 2; // 2x speed when running
 export const HORSE_RIDE_SPEED = 225; // 1.5x walk speed
 export const HORSE_GALLOP_MULTIPLIER = 2; // 2x riding speed = 450 (faster than run at 300)
 
+// Sleigh riding speeds
+export const SLEIGH_RIDE_SPEED = 250; // Slightly faster than horse
+export const SLEIGH_GALLOP_MULTIPLIER = 2;
+export const REQUIRED_REINDEER_FOR_SLEIGH = 3;
+
 // Seasonal features
 export function isChristmasSeason(): boolean {
   const now = new Date();
@@ -162,6 +167,7 @@ export const PET_TYPES = {
   POLAR_BEAR: { primary: 0xffffff, secondary: 0xe8e8e8, name: 'Polar Bear', difficulty: 3 },
   SNOW_BUNNY: { primary: 0xffffff, secondary: 0xffb6c1, name: 'Snow Bunny', difficulty: 2 },
   SEAL: { primary: 0x708090, secondary: 0xa9a9a9, name: 'Seal', difficulty: 1 },
+  REINDEER: { primary: 0x8b4513, secondary: 0xdeb887, name: 'Reindeer', difficulty: 2 },
   // Beach pets
   CRAB: { primary: 0xff6347, secondary: 0xff4500, name: 'Crab', difficulty: 2 },
   SEAGULL: { primary: 0xffffff, secondary: 0x808080, name: 'Seagull', difficulty: 3 },
@@ -200,7 +206,7 @@ export const PEN_TYPES = {
   SNOW: {
     id: 'snow',
     name: 'Snow Pen',
-    pets: ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL'],
+    pets: ['PENGUIN', 'POLAR_BEAR', 'SNOW_BUNNY', 'SEAL', 'REINDEER'],
     color: 0xe8f4f8,
     groundTile: 'snow',
   },

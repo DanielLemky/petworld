@@ -12,6 +12,7 @@ import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
 import { RidingSystem } from '../systems/RidingSystem';
+import { SleighRidingSystem } from '../systems/SleighRidingSystem';
 
 export class MountainScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -40,6 +41,7 @@ export class MountainScene extends Phaser.Scene {
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
   private ridingSystem!: RidingSystem;
+  private sleighRidingSystem!: SleighRidingSystem;
   private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
@@ -75,8 +77,12 @@ export class MountainScene extends Phaser.Scene {
     this.ridingSystem = new RidingSystem(this);
     this.ridingSystem.init(this.player);
 
+    // Initialize sleigh riding system
+    this.sleighRidingSystem = new SleighRidingSystem(this);
+    this.sleighRidingSystem.init(this.player);
+
     // Hide companion if player is riding (restored from scene transition)
-    if (this.ridingSystem.getIsRiding()) {
+    if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
       this.companionSystem.setVisible(false);
     }
 
@@ -123,6 +129,7 @@ export class MountainScene extends Phaser.Scene {
     this.companionSystem.update();
     this.fetchSystem.update();
     this.ridingSystem.update();
+    this.sleighRidingSystem.update();
     this.checkExitZone();
   }
 
@@ -638,7 +645,7 @@ export class MountainScene extends Phaser.Scene {
     }
     // Y button (3) - Mount/Dismount horse if applicable, else go to World
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      if (this.ridingSystem.getIsRiding()) {
+      if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
         this.handleRideToggle();
       } else {
         const nearHorse = this.findNearestMountableHorse();
@@ -789,6 +796,8 @@ export class MountainScene extends Phaser.Scene {
     let speed: number;
     if (this.ridingSystem.getIsRiding()) {
       speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      speed = this.sleighRidingSystem.getRidingSpeed(isRunning);
     } else {
       speed = PLAYER_SPEED;
       if (isRunning) {
@@ -843,7 +852,7 @@ export class MountainScene extends Phaser.Scene {
     const moving = velocityX !== 0 || velocityY !== 0;
 
     // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
-    if (!this.ridingSystem.getIsRiding()) {
+    if (!this.ridingSystem.getIsRiding() && !this.sleighRidingSystem.getIsRiding()) {
       this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
     }
 
@@ -1065,6 +1074,20 @@ export class MountainScene extends Phaser.Scene {
         this.physics.add.collider(horse, this.boulders);
         this.physics.add.collider(horse, this.cliffs);
       }
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      // Dismount from sleigh
+      const sleigh = this.sleighRidingSystem.dismount();
+      if (sleigh) {
+        showCatchMessage(this, 'Dismounted sleigh', '#888888');
+        SoundManager.playClick();
+        // Reinitialize player animator to restore proper scale
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+        // Show companion again
+        this.companionSystem.setVisible(true);
+        // Add collider for dismounted sleigh
+        this.physics.add.collider(sleigh, this.boulders);
+        this.physics.add.collider(sleigh, this.cliffs);
+      }
     } else {
       // Try to mount nearby horse
       const nearHorse = this.findNearestMountableHorse();
@@ -1087,6 +1110,7 @@ export class MountainScene extends Phaser.Scene {
 
     // Handle dismounted horse on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 

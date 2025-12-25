@@ -143,6 +143,10 @@ class PetManagerClass {
     return this.caughtPets.length;
   }
 
+  getReindeerCount(): number {
+    return this.caughtPets.filter(p => p.type === 'REINDEER').length;
+  }
+
   getPetById(id: string): CaughtPet | undefined {
     return this.caughtPets.find(pet => pet.id === id);
   }

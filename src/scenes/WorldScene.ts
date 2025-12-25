@@ -13,6 +13,7 @@ import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
 import { RidingSystem } from '../systems/RidingSystem';
+import { SleighRidingSystem } from '../systems/SleighRidingSystem';
 
 export class WorldScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -46,6 +47,7 @@ export class WorldScene extends Phaser.Scene {
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
   private ridingSystem!: RidingSystem;
+  private sleighRidingSystem!: SleighRidingSystem;
   private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
@@ -85,8 +87,12 @@ export class WorldScene extends Phaser.Scene {
     this.ridingSystem = new RidingSystem(this);
     this.ridingSystem.init(this.player);
 
+    // Initialize sleigh riding system
+    this.sleighRidingSystem = new SleighRidingSystem(this);
+    this.sleighRidingSystem.init(this.player);
+
     // Hide companion if player is riding (restored from scene transition)
-    if (this.ridingSystem.getIsRiding()) {
+    if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
       this.companionSystem.setVisible(false);
     }
 
@@ -164,6 +170,7 @@ export class WorldScene extends Phaser.Scene {
     this.companionSystem.update();
     this.fetchSystem.update();
     this.ridingSystem.update();
+    this.sleighRidingSystem.update();
 
     // Handle water effects
     this.handleWaterEffects(delta, wasInWater);
@@ -178,9 +185,9 @@ export class WorldScene extends Phaser.Scene {
       this.handleInteraction();
     }
 
-    // Y button (3) - Mount/Dismount horse if applicable, else Go Home
+    // Y button (3) - Mount/Dismount horse/sleigh if applicable, else Go Home
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      if (this.ridingSystem.getIsRiding()) {
+      if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
         this.handleRideToggle();
       } else {
         const nearHorse = this.findNearestMountableHorse();
@@ -1312,32 +1319,41 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private handleRideToggle(): void {
+    // Check if currently riding horse
     if (this.ridingSystem.getIsRiding()) {
-      // Dismount
       const horse = this.ridingSystem.dismount();
       if (horse) {
         showCatchMessage(this, 'Dismounted horse', '#888888');
         SoundManager.playClick();
-        // Reinitialize player animator to restore proper scale
         this.playerAnimator = new PlayerAnimator(this, this.player);
-        // Show companion again
         this.companionSystem.setVisible(true);
-        // Add collider for dismounted horse
         this.physics.add.collider(horse, this.trees);
       }
-    } else {
-      // Try to mount nearby horse
-      const nearHorse = this.findNearestMountableHorse();
-      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
-        if (this.ridingSystem.mount(nearHorse)) {
-          showCatchMessage(this, 'Mounted horse!', '#4ade80');
-          SoundManager.playSuccess();
-          // Hide companion while riding
-          this.companionSystem.setVisible(false);
-        }
-      } else {
-        showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
+      return;
+    }
+
+    // Check if currently riding sleigh
+    if (this.sleighRidingSystem.getIsRiding()) {
+      const sleigh = this.sleighRidingSystem.dismount();
+      if (sleigh) {
+        showCatchMessage(this, 'Dismounted sleigh', '#888888');
+        SoundManager.playClick();
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+        this.companionSystem.setVisible(true);
       }
+      return;
+    }
+
+    // Try to mount nearby horse
+    const nearHorse = this.findNearestMountableHorse();
+    if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+      if (this.ridingSystem.mount(nearHorse)) {
+        showCatchMessage(this, 'Mounted horse!', '#4ade80');
+        SoundManager.playSuccess();
+        this.companionSystem.setVisible(false);
+      }
+    } else {
+      showCatchMessage(this, 'No horse nearby to mount', '#ef4444');
     }
   }
 
@@ -1345,8 +1361,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // Handle dismounted horse on scene exit (returns to home pen)
+    // Handle dismounted horse/sleigh on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     // Play transition sound
     SoundManager.playClick();
@@ -1370,8 +1387,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // Handle dismounted horse on scene exit
+    // Handle dismounted horse/sleigh on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1386,8 +1404,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // Handle dismounted horse on scene exit
+    // Handle dismounted horse/sleigh on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1402,8 +1421,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // Handle dismounted horse on scene exit
+    // Handle dismounted horse/sleigh on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1418,8 +1438,9 @@ export class WorldScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // Handle dismounted horse on scene exit
+    // Handle dismounted horse/sleigh on scene exit
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -1445,6 +1466,12 @@ export class WorldScene extends Phaser.Scene {
       speed = this.ridingSystem.getRidingSpeed(isRunning);
       if (this.isInWater) {
         speed *= 0.7; // Horses still slow down in water, but not as much
+      }
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      // Sleigh speed (Santa's magic keeps it fast!)
+      speed = this.sleighRidingSystem.getRidingSpeed(isRunning);
+      if (this.isInWater) {
+        speed *= 0.8; // Sleigh barely slows in water
       }
     } else {
       speed = this.isInWater ? PLAYER_SPEED * 0.5 : PLAYER_SPEED;
@@ -1499,8 +1526,8 @@ export class WorldScene extends Phaser.Scene {
     // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
 
-    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
-    if (!this.ridingSystem.getIsRiding()) {
+    // Only use PlayerAnimator when not riding - RidingSystem/SleighRidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding() && !this.sleighRidingSystem.getIsRiding()) {
       this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
     }
 

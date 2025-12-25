@@ -8,6 +8,7 @@ import { getSpriteKey, applyPetSpriteConfig, updatePetSpriteDirection } from '..
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
 import { RidingSystem } from '../systems/RidingSystem';
+import { SleighRidingSystem } from '../systems/SleighRidingSystem';
 
 // Farm dimensions
 const FARM_WIDTH = 200;
@@ -56,6 +57,8 @@ export class HomeScene extends Phaser.Scene {
   private penHighlight: Phaser.GameObjects.Rectangle | null = null;
   private playerAnimator!: PlayerAnimator;
   private ridingSystem!: RidingSystem;
+  private sleighRidingSystem!: SleighRidingSystem;
+  private sleighSprite: Phaser.GameObjects.Sprite | null = null;
   private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
@@ -76,6 +79,10 @@ export class HomeScene extends Phaser.Scene {
     this.ridingSystem = new RidingSystem(this);
     this.ridingSystem.init(this.player);
 
+    // Initialize sleigh riding system
+    this.sleighRidingSystem = new SleighRidingSystem(this);
+    this.sleighRidingSystem.init(this.player);
+
     // Create pets from the player's collection
     this.createOwnedPets();
 
@@ -95,6 +102,7 @@ export class HomeScene extends Phaser.Scene {
     // Christmas snowfall effect (Dec 1 - Jan 6)
     if (isChristmasSeason()) {
       this.createChristmasSnowfall();
+      this.createSleigh();
     }
 
     // Start home music
@@ -117,6 +125,7 @@ export class HomeScene extends Phaser.Scene {
 
     // Update riding system
     this.ridingSystem.update();
+    this.sleighRidingSystem.update();
   }
 
   private handleGamepadButtons(): void {
@@ -132,13 +141,14 @@ export class HomeScene extends Phaser.Scene {
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.LB)) {
       this.handleTakeWithMe();
     }
-    // Y/Triangle button (3) - Mount/Dismount horse if applicable, else Go to World
+    // Y/Triangle button (3) - Mount/Dismount horse/sleigh if applicable, else Go to World
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      if (this.ridingSystem.getIsRiding()) {
+      if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
         this.handleRideToggle();
       } else {
         const nearHorse = this.findNearestHorse();
-        if (nearHorse) {
+        const nearSleigh = this.findNearestSleigh();
+        if (nearHorse || nearSleigh) {
           this.handleRideToggle();
         } else {
           this.goToWorld();
@@ -364,6 +374,47 @@ export class HomeScene extends Phaser.Scene {
     const scale = Math.min(targetWidth / 637, targetHeight / 1050);
     tree.setScale(scale);
     tree.setDepth(treeY + targetHeight);
+  }
+
+  private createSleigh(): void {
+    // Don't create if already riding sleigh (sleigh travels with player)
+    if (SleighRidingSystem.isCurrentlyRiding()) return;
+
+    // Position sleigh next to the Christmas tree
+    const sleighX = 75 * TILE_SIZE;
+    const sleighY = 23 * TILE_SIZE;
+
+    this.sleighSprite = this.add.sprite(sleighX, sleighY, 'santa_in_sleigh');
+    this.sleighSprite.setScale(0.12); // Appropriate scale for home display
+    this.sleighSprite.setDepth(sleighY + TILE_SIZE);
+    this.sleighSprite.setData('isSleigh', true);
+  }
+
+  private findNearestSleigh(): Phaser.GameObjects.Sprite | null {
+    // Check the sleigh sprite in home
+    if (this.sleighSprite && this.sleighSprite.visible && this.sleighSprite.active) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        this.sleighSprite.x, this.sleighSprite.y
+      );
+      if (distance < TILE_SIZE * 3) {
+        return this.sleighSprite;
+      }
+    }
+
+    // Also check dismounted sleigh
+    const dismountedSleigh = this.sleighRidingSystem.getDismountedSleighSprite();
+    if (dismountedSleigh && dismountedSleigh.visible) {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y,
+        dismountedSleigh.x, dismountedSleigh.y
+      );
+      if (distance < TILE_SIZE * 3) {
+        return dismountedSleigh;
+      }
+    }
+
+    return null;
   }
 
   private createPen(penId: string, startX: number, startY: number, width: number, height: number): void {
@@ -998,6 +1049,8 @@ export class HomeScene extends Phaser.Scene {
     let speed: number;
     if (this.ridingSystem.getIsRiding()) {
       speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      speed = this.sleighRidingSystem.getRidingSpeed(isRunning);
     } else {
       speed = PLAYER_SPEED;
       if (isRunning) {
@@ -1051,8 +1104,8 @@ export class HomeScene extends Phaser.Scene {
     // Handle player animations
     const moving = velocityX !== 0 || velocityY !== 0;
 
-    // Only use PlayerAnimator when not riding - RidingSystem handles riding sprites
-    if (!this.ridingSystem.getIsRiding()) {
+    // Only use PlayerAnimator when not riding - RidingSystem/SleighRidingSystem handles riding sprites
+    if (!this.ridingSystem.getIsRiding() && !this.sleighRidingSystem.getIsRiding()) {
       this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
     }
 
@@ -1399,32 +1452,60 @@ export class HomeScene extends Phaser.Scene {
   private handleRideToggle(): void {
     if (this.isCarryingPet) return; // Can't mount while carrying
 
+    // Check if currently riding horse
     if (this.ridingSystem.getIsRiding()) {
-      // Dismount
       const horse = this.ridingSystem.dismount();
       if (horse) {
         this.showMessage('Dismounted from horse', '#888888');
         SoundManager.playClick();
-        // Reinitialize player animator to restore proper scale
         this.playerAnimator = new PlayerAnimator(this, this.player);
       }
-    } else {
-      // Try to mount nearby horse
-      const nearHorse = this.findNearestHorse();
-      if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
-        if (this.ridingSystem.mount(nearHorse)) {
-          this.showMessage('Mounted horse! R to dismount, SHIFT to gallop', '#4ade80');
+      return;
+    }
+
+    // Check if currently riding sleigh
+    if (this.sleighRidingSystem.getIsRiding()) {
+      const sleigh = this.sleighRidingSystem.dismount();
+      if (sleigh) {
+        this.showMessage('Dismounted from sleigh', '#888888');
+        SoundManager.playClick();
+        this.playerAnimator = new PlayerAnimator(this, this.player);
+      }
+      return;
+    }
+
+    // Not riding - try to mount nearby sleigh first (Christmas priority!)
+    const nearSleigh = this.findNearestSleigh();
+    if (nearSleigh) {
+      const check = this.sleighRidingSystem.canMount();
+      if (check.canMount) {
+        if (this.sleighRidingSystem.mount(nearSleigh)) {
+          this.showMessage("Ho ho ho! Riding Santa's sleigh! R to dismount, SHIFT to go fast!", '#ff4444');
           SoundManager.playSuccess();
+          return;
         }
       } else {
-        this.showMessage('No horse nearby to mount', '#888888');
+        this.showMessage(check.reason || 'Cannot ride sleigh', '#ff8888');
+        return;
       }
+    }
+
+    // Try to mount nearby horse
+    const nearHorse = this.findNearestHorse();
+    if (nearHorse && this.ridingSystem.canMount(nearHorse)) {
+      if (this.ridingSystem.mount(nearHorse)) {
+        this.showMessage('Mounted horse! R to dismount, SHIFT to gallop', '#4ade80');
+        SoundManager.playSuccess();
+      }
+    } else if (!nearSleigh) {
+      this.showMessage('No horse or sleigh nearby to mount', '#888888');
     }
   }
 
   private goToWorld(): void {
     // Handle dismounted horse on scene exit (returns to home pen)
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     this.cameras.main.fadeOut(300, 0, 0, 0);
 

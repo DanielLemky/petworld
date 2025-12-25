@@ -28,7 +28,8 @@ export const PET_SPRITE_CONFIG: Record<string, PetSpriteInfo> = {
   polar_bear: { left: 'polar_bear_left', right: 'polar_bear_right', scale: 0.036, offset: { x: 170, y: 330 } },
   snow_bunny: { left: 'snow_bunny_left', right: 'snow_bunny_right', scale: 0.042, offset: { x: 80, y: 230 } },
   seal: { left: 'seal_left', right: 'seal_right', scale: 0.03, offset: { x: 170, y: 260 } },
-  
+  reindeer: { left: 'reindeer_left', right: 'reindeer_right', scale: 0.04, offset: { x: 180, y: 350 } },
+
   // Beach pets
   crab: { left: 'crab_left', right: 'crab_right', scale: 0.018, offset: { x: 200, y: 350 } },
   seagull: { left: 'seagull_left', right: 'seagull_right', scale: 0.018, offset: { x: 170, y: 420 } },

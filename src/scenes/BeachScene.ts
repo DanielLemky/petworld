@@ -12,6 +12,7 @@ import { fleePetFromPlayer, showCatchMessage } from '../utils/petUtils';
 import { AccountManager } from '../systems/AccountManager';
 import { PlayerAnimator } from '../systems/PlayerAnimator';
 import { RidingSystem } from '../systems/RidingSystem';
+import { SleighRidingSystem } from '../systems/SleighRidingSystem';
 
 const BEACH_PET_TYPES = ['CRAB', 'SEAGULL', 'TURTLE', 'STARFISH'];
 
@@ -41,6 +42,7 @@ export class BeachScene extends Phaser.Scene {
   private companionSystem!: CompanionSystem;
   private fetchSystem!: FetchSystem;
   private ridingSystem!: RidingSystem;
+  private sleighRidingSystem!: SleighRidingSystem;
   private rideKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
@@ -77,8 +79,12 @@ export class BeachScene extends Phaser.Scene {
     // Add collider for dismounted horses
     this.ridingSystem.addCollider(this.trees);
 
+    // Initialize sleigh riding system
+    this.sleighRidingSystem = new SleighRidingSystem(this);
+    this.sleighRidingSystem.init(this.player);
+
     // Hide companion if player is riding (restored from scene transition)
-    if (this.ridingSystem.getIsRiding()) {
+    if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
       this.companionSystem.setVisible(false);
     }
 
@@ -113,6 +119,7 @@ export class BeachScene extends Phaser.Scene {
     this.companionSystem.update();
     this.fetchSystem.update();
     this.ridingSystem.update();
+    this.sleighRidingSystem.update();
     this.checkExitZone();
   }
 
@@ -395,7 +402,7 @@ export class BeachScene extends Phaser.Scene {
     }
     // Y button - Mount/dismount horse, or go to world if not near horse
     if (GamepadManager.isButtonJustPressed(GAMEPAD_BUTTONS.Y)) {
-      if (this.ridingSystem.getIsRiding()) {
+      if (this.ridingSystem.getIsRiding() || this.sleighRidingSystem.getIsRiding()) {
         this.handleRideToggle();
       } else {
         const nearestHorse = this.findNearestMountableHorse();
@@ -526,6 +533,8 @@ export class BeachScene extends Phaser.Scene {
     let speed: number;
     if (this.ridingSystem.getIsRiding()) {
       speed = this.ridingSystem.getRidingSpeed(isRunning);
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      speed = this.sleighRidingSystem.getRidingSpeed(isRunning);
     } else {
       speed = this.isInWater ? PLAYER_SPEED * 0.6 : PLAYER_SPEED;
       if (isRunning) {
@@ -578,7 +587,7 @@ export class BeachScene extends Phaser.Scene {
 
     // Handle player animations using unified animator (skip when riding - RidingSystem handles it)
     const moving = velocityX !== 0 || velocityY !== 0;
-    if (!this.ridingSystem.getIsRiding()) {
+    if (!this.ridingSystem.getIsRiding() && !this.sleighRidingSystem.getIsRiding()) {
       this.playerAnimator.updateAnimation(moving, velocityX, isRunning);
     }
 
@@ -731,6 +740,7 @@ export class BeachScene extends Phaser.Scene {
 
     // Handle riding system scene exit (dismounted horses return to home)
     this.ridingSystem.onSceneExit();
+    this.sleighRidingSystem.onSceneExit();
 
     SoundManager.playClick();
 
@@ -760,9 +770,13 @@ export class BeachScene extends Phaser.Scene {
     if (this.isCatching || this.isTransitioning) return;
 
     if (this.ridingSystem.getIsRiding()) {
-      // Dismount
+      // Dismount horse
       this.ridingSystem.dismount();
       showCatchMessage(this, 'Dismounted horse', '#888888');
+    } else if (this.sleighRidingSystem.getIsRiding()) {
+      // Dismount sleigh
+      this.sleighRidingSystem.dismount();
+      showCatchMessage(this, 'Dismounted sleigh', '#888888');
     } else {
       // Try to mount
       const nearestHorse = this.findNearestMountableHorse();

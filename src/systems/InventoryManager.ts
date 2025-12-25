@@ -25,6 +25,7 @@ export const PET_TOOL_REQUIREMENTS: Record<string, ToolType | null> = {
   POLAR_BEAR: 'TREATS',
   SNOW_BUNNY: 'TRAP',
   SEAL: 'FISHING_ROD',
+  REINDEER: 'TREATS',
 
   // Beach pets
   CRAB: 'FISHING_ROD',
